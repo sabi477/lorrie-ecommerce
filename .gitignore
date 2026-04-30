@@ -1,0 +1,18 @@
+# Backend
+backend/springboot/target/
+backend/springboot/.mvn/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+
+# AI Chatbot
+**/__pycache__/
+*.pyc
+ai-chatbot/.env
+ai-chatbot/venv/
+
+# System
+.DS_Store
+*.log

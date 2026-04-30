@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DataPulse — AI Veri Asistanı</title>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #f0f2f5;
+      height: 100dvh;
+      display: flex;
+      overflow: hidden;
+      color: #111827;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 220px;
+      flex-shrink: 0;
+      background: #fff;
+      border-right: 1px solid #e5e7eb;
+      display: flex;
+      flex-direction: column;
+      height: 100dvh;
+      overflow: hidden;
+    }
+
+    .sidebar-brand {
+      padding: 18px 20px 14px;
+      font-size: 18px;
+      font-weight: 800;
+      color: #111827;
+      letter-spacing: -0.5px;
+      border-bottom: 1px solid #f3f4f6;
+    }
+
+    .sidebar-user {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 16px;
+      border-bottom: 1px solid #f3f4f6;
+    }
+
+    .user-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #f27a1a;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .user-info .name {
+      font-size: 13px;
+      font-weight: 600;
+      color: #111827;
+    }
+
+    .user-info .role {
+      font-size: 11px;
+      color: #6b7280;
+    }
+
+    .sidebar-nav {
+      padding: 10px 10px;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 10px;
+      border-radius: 8px;
+      font-size: 13px;
+      color: #4b5563;
+      cursor: pointer;
+      transition: background 0.15s;
+      font-weight: 500;
+      position: relative;
+    }
+
+    .nav-item:hover { background: #f9fafb; }
+
+    .nav-item.active {
+      background: #ede9fe;
+      color: #5b21b6;
+      font-weight: 600;
+    }
+
+    .nav-icon { font-size: 14px; width: 18px; text-align: center; }
+
+    .nav-badge {
+      margin-left: auto;
+      background: #7c3aed;
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 10px;
+      min-width: 18px;
+      text-align: center;
+    }
+
+    .sidebar-footer {
+      padding: 12px 16px;
+      border-top: 1px solid #f3f4f6;
+    }
+
+    .role-selector-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .role-selector-label {
+      font-size: 10px;
+      color: #9ca3af;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .role-selector {
+      font-size: 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      padding: 5px 8px;
+      background: #fff;
+      color: #374151;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    /* ── Main area ── */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100dvh;
+      overflow: hidden;
+      min-width: 0;
+    }
+
+    /* ── Chat header ── */
+    .chat-header {
+      background: #fff;
+      border-bottom: 1px solid #e5e7eb;
+      padding: 0 24px;
+      height: 62px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+      box-shadow: 0 1px 3px rgba(0,0,0,.05);
+    }
+
+    .status-dot {
+      width: 9px;
+      height: 9px;
+      background: #22c55e;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .chat-header-info .title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #111827;
+    }
+
+    .chat-header-info .subtitle {
+      font-size: 12px;
+      color: #6b7280;
+      margin-top: 1px;
+    }
+
+    /* ── Chat area ── */
+    #chat-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      scroll-behavior: smooth;
+    }
+
+    /* ── Welcome ── */
+    .welcome {
+      margin: auto;
+      text-align: center;
+      padding: 32px 24px;
+      color: #6b7280;
+      max-width: 560px;
+    }
+
+    .welcome-icon { font-size: 44px; margin-bottom: 10px; }
+
+    .welcome h2 {
+      font-size: 19px;
+      font-weight: 700;
+      color: #111827;
+      margin-bottom: 6px;
+    }
+
+    .welcome p { font-size: 13px; line-height: 1.6; margin-bottom: 20px; }
+
+    .suggestion-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    .chip {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 20px;
+      padding: 7px 14px;
+      font-size: 13px;
+      color: #374151;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+
+    .chip:hover {
+      background: #ede9fe;
+      border-color: #a78bfa;
+      color: #5b21b6;
+    }
+
+    /* ── Scenario divider ── */
+    .scenario-divider {
+      text-align: center;
+      font-size: 12px;
+      color: #9ca3af;
+      padding: 4px 0;
+      position: relative;
+    }
+
+    .scenario-divider::before,
+    .scenario-divider::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      width: 30%;
+      height: 1px;
+      background: #e5e7eb;
+    }
+
+    .scenario-divider::before { left: 0; }
+    .scenario-divider::after { right: 0; }
+
+    /* ── Message row ── */
+    .message-row {
+      display: flex;
+      gap: 10px;
+      max-width: 740px;
+      width: 100%;
+    }
+
+    .message-row.user  { align-self: flex-end; flex-direction: row-reverse; }
+    .message-row.bot   { align-self: flex-start; }
+    .message-row.guard { align-self: flex-start; }
+
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .bot .avatar   { background: #ede9fe; color: #5b21b6; border: 1px solid #c4b5fd; }
+    .user .avatar  { background: #f27a1a; color: #fff; font-size: 12px; }
+    .guard .avatar { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+
+    .bubble-wrap { display: flex; flex-direction: column; gap: 8px; min-width: 0; flex: 1; }
+
+    /* ── User bubble ── */
+    .user-bubble {
+      background: #7c3aed;
+      color: #fff;
+      padding: 10px 16px;
+      border-radius: 18px 4px 18px 18px;
+      font-size: 14px;
+      line-height: 1.6;
+      word-break: break-word;
+      align-self: flex-end;
+      max-width: 480px;
+    }
+
+    /* ── Bot response card ── */
+    .response-card {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      padding: 16px;
+      font-size: 14px;
+      line-height: 1.6;
+      box-shadow: 0 1px 4px rgba(0,0,0,.05);
+    }
+
+    .response-card .answer-text {
+      color: #111827;
+      margin-bottom: 12px;
+    }
+
+    /* ── Chart ── */
+    .chart-wrap {
+      border: 1px solid #f3f4f6;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+
+    /* ── SQL block ── */
+    .sql-block {
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 10px;
+    }
+
+    .sql-block pre {
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 12px;
+      color: #374151;
+      white-space: pre-wrap;
+      word-break: break-all;
+      line-height: 1.5;
+    }
+
+    /* ── Execution meta ── */
+    .exec-meta {
+      font-size: 11px;
+      color: #9ca3af;
+      padding-top: 4px;
+      border-top: 1px solid #f3f4f6;
+    }
+
+    /* ── Guardrail card ── */
+    .guard-card {
+      background: #fff;
+      border: 1px solid #fecdd3;
+      border-radius: 14px;
+      padding: 16px;
+      font-size: 14px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.05);
+    }
+
+    .guard-card .guard-text {
+      color: #111827;
+      margin-bottom: 10px;
+      font-size: 14px;
+    }
+
+    /* ── Badges ── */
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 12px;
+      letter-spacing: 0.2px;
+      margin-bottom: 12px;
+    }
+
+    .badge-blocked  { background: #fee2e2; color: #b91c1c; }
+    .badge-injection{ background: #fef3c7; color: #92400e; }
+    .badge-outscope { background: #f3f4f6; color: #374151; }
+    .badge-info     { background: #f3f4f6; color: #374151; }
+    .badge-loggedp  { background: #fee2e2; color: #b91c1c; }
+    .badge-green    { background: #dcfce7; color: #166534; }
+
+    /* ── Alert box ── */
+    .alert-box {
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin-bottom: 12px;
+    }
+
+    .alert-box.danger {
+      background: #fff5f5;
+      border: 1px solid #fecdd3;
+    }
+
+    .alert-box.warning {
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+    }
+
+    .alert-box.success {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+    }
+
+    .alert-header {
+      font-size: 13px;
+      font-weight: 700;
+      color: #b91c1c;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .alert-box.warning .alert-header { color: #92400e; }
+
+    .alert-details {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 5px 16px;
+      font-size: 12px;
+    }
+
+    .detail-key   { color: #6b7280; white-space: nowrap; }
+    .detail-value { color: #ef4444; font-weight: 600; }
+
+    .alternative-box {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      color: #166534;
+      margin-bottom: 12px;
+    }
+
+    .alternative-title {
+      font-weight: 700;
+      margin-bottom: 4px;
+      font-size: 12px;
+    }
+
+    /* ── Strikethrough SQL ── */
+    .blocked-sql {
+      background: #fff5f5;
+      border: 1px solid #fecdd3;
+      border-radius: 8px;
+      padding: 8px 12px;
+      margin-bottom: 10px;
+    }
+
+    .blocked-sql pre {
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 12px;
+      color: #9ca3af;
+      text-decoration: line-through;
+      white-space: pre-wrap;
+    }
+
+    .guard-note {
+      font-size: 13px;
+      color: #4b5563;
+      margin-bottom: 10px;
+    }
+
+    /* ── Timestamp ── */
+    .timestamp {
+      font-size: 11px;
+      color: #9ca3af;
+      padding: 0 4px;
+    }
+
+    .user .timestamp { text-align: right; }
+
+    /* ── Typing indicator ── */
+    .typing-bubble {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 12px 16px;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      width: fit-content;
+    }
+
+    .dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #7c3aed;
+      animation: bounce 1.2s infinite ease-in-out;
+    }
+
+    .dot:nth-child(2) { animation-delay: .2s; }
+    .dot:nth-child(3) { animation-delay: .4s; }
+
+    @keyframes bounce {
+      0%,80%,100% { transform: scale(.65); opacity: .4; }
+      40%          { transform: scale(1);   opacity: 1;   }
+    }
+
+    /* ── Input area ── */
+    #input-area {
+      background: #fff;
+      border-top: 1px solid #e5e7eb;
+      padding: 12px 24px;
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+      flex-shrink: 0;
+    }
+
+    #question-input {
+      flex: 1;
+      font-family: inherit;
+      font-size: 14px;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 10px 14px;
+      resize: none;
+      outline: none;
+      line-height: 1.5;
+      color: #111827;
+      background: #f9fafb;
+      min-height: 42px;
+      max-height: 120px;
+      transition: border-color 0.15s;
+    }
+
+    #question-input:focus {
+      border-color: #a78bfa;
+      background: #fff;
+    }
+
+    #question-input::placeholder { color: #9ca3af; }
+
+    #send-btn {
+      background: #7c3aed;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 18px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.15s;
+      flex-shrink: 0;
+      height: 42px;
+    }
+
+    #send-btn:hover:not(:disabled) { background: #6d28d9; }
+    #send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ── Scrollbar ── */
+    #chat-area::-webkit-scrollbar { width: 5px; }
+    #chat-area::-webkit-scrollbar-track { background: transparent; }
+    #chat-area::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<!-- ── Sidebar ── -->
+<aside class="sidebar">
+  <div class="sidebar-brand">DataPulse</div>
+
+  <div class="sidebar-user">
+    <div class="user-avatar" id="user-avatar">AŞ</div>
+    <div class="user-info">
+      <div class="name" id="user-name">Ahmet Şahin</div>
+      <div class="role" id="user-role-label">Corporate User</div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-item">
+      <span class="nav-icon">⊞</span> Dashboard
+    </div>
+    <div class="nav-item active">
+      <span class="nav-icon">◎</span> AI Asistan
+      <span class="nav-badge" id="nav-badge">Yeni</span>
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">↗</span> Analitik
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">≡</span> Siparişler
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">□</span> Ürünler
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">⁚</span> Müşteriler
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">▷</span> Sevkiyat
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">★</span> Yorumlar
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="role-selector-wrap">
+      <span class="role-selector-label">Rol</span>
+      <select class="role-selector" id="role-select">
+        <option value="ADMIN">👑 Admin</option>
+        <option value="CORPORATE" selected>🏢 Kurumsal</option>
+        <option value="INDIVIDUAL">👤 Bireysel</option>
+      </select>
+    </div>
+  </div>
+</aside>
+
+<!-- ── Main ── -->
+<div class="main">
+
+  <!-- ── Chat header ── -->
+  <div class="chat-header">
+    <div class="status-dot"></div>
+    <div class="chat-header-info">
+      <div class="title">AI Veri Asistanı</div>
+      <div class="subtitle" id="header-subtitle">Mağaza verinizi doğal dilde sorgulayın — SQL bilmenize gerek yok</div>
+    </div>
+  </div>
+
+  <!-- ── Chat area ── -->
+  <div id="chat-area">
+    <div class="welcome" id="welcome-block">
+      <div class="welcome-icon">💬</div>
+      <h2>Merhaba Ahmet!</h2>
+      <p>Mağazanızla ilgili her soruyu sorabilirsiniz.</p>
+      <div class="suggestion-chips" id="suggestion-chips"></div>
+    </div>
+  </div>
+
+  <!-- ── Input area ── -->
+  <div id="input-area">
+    <textarea
+      id="question-input"
+      rows="1"
+      placeholder="Sorunuzu yazın..."
+    ></textarea>
+    <button id="send-btn">Gönder</button>
+  </div>
+
+</div>
+
+<script>
+  /* ── Config ── */
+  const ROLE_CONFIG = {
+    ADMIN:       { name: 'Admin',         initials: 'AD', roleLabel: 'Admin User',      storeId: null, userId: null },
+    CORPORATE:   { name: 'Ahmet Şahin',   initials: 'AŞ', roleLabel: 'Corporate User',  storeId: 1042, userId: null },
+    INDIVIDUAL:  { name: 'Bireysel Kullanıcı', initials: 'BK', roleLabel: 'Individual User', storeId: null, userId: 1 },
+  };
+
+  const SUGGESTIONS = [
+    'Geçen aya göre satışlar nasıl değişti?',
+    'Stoku 10\'un altına düşen ürünler?',
+    'En değerli 5 müşterim kimler?',
+    'Bekleyen siparişlerin toplam değeri nedir?',
+    'Hangi kategoride iade oranı en yüksek?',
+    'Bu hafta yapılan sevkiyatların durumu?',
+    '1 yıldız alan ürünleri listele',
+    'Aylık gelir trendini grafik olarak göster',
+  ];
+
+  /* ── State ── */
+  let currentRole = 'CORPORATE';
+  let messageCount = 0;
+  let plotlyCounter = 0;
+  let sessionActive = false;
+
+  /* ── DOM refs ── */
+  const chatArea      = document.getElementById('chat-area');
+  const questionInput = document.getElementById('question-input');
+  const sendBtn       = document.getElementById('send-btn');
+  const roleSelect    = document.getElementById('role-select');
+  const headerSubtitle = document.getElementById('header-subtitle');
+  const navBadge      = document.getElementById('nav-badge');
+  const userAvatar    = document.getElementById('user-avatar');
+  const userName      = document.getElementById('user-name');
+  const userRoleLabel = document.getElementById('user-role-label');
+
+  /* ── Suggestion chips ── */
+  const chipsEl = document.getElementById('suggestion-chips');
+  SUGGESTIONS.forEach(s => {
+    const btn = document.createElement('button');
+    btn.className = 'chip';
+    btn.textContent = s;
+    btn.addEventListener('click', () => sendMessage(s));
+    chipsEl.appendChild(btn);
+  });
+
+  /* ── Role change ── */
+  function applyRole(role) {
+    currentRole = role;
+    const cfg = ROLE_CONFIG[role];
+    userAvatar.textContent = cfg.initials;
+    userName.textContent   = cfg.name;
+    userRoleLabel.textContent = cfg.roleLabel;
+    updateHeaderSubtitle();
+  }
+
+  roleSelect.addEventListener('change', () => {
+    applyRole(roleSelect.value);
+    resetChat();
+  });
+
+  applyRole('CORPORATE');
+
+  function updateHeaderSubtitle() {
+    const cfg = ROLE_CONFIG[currentRole];
+    if (!sessionActive) {
+      if (currentRole === 'CORPORATE' && cfg.storeId) {
+        headerSubtitle.textContent = `Mağaza verinize özel — store_id: #${cfg.storeId}`;
+      } else {
+        headerSubtitle.textContent = 'Mağaza verinizi doğal dilde sorgulayın — SQL bilmenize gerek yok';
+      }
+    } else {
+      const cfg = ROLE_CONFIG[currentRole];
+      const storeInfo = cfg.storeId ? ` · store_id: #${cfg.storeId}` : '';
+      headerSubtitle.textContent = `Aktif oturum${storeInfo} · Guardrail: Açık`;
+    }
+  }
+
+  /* ── Timestamp ── */
+  function timestamp() {
+    return new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  /* ── Remove welcome ── */
+  function removeWelcome() {
+    const el = document.getElementById('welcome-block');
+    if (el) el.remove();
+  }
+
+  function resetChat() {
+    chatArea.innerHTML = '';
+    const welcome = document.createElement('div');
+    welcome.className = 'welcome';
+    welcome.id = 'welcome-block';
+    const cfg = ROLE_CONFIG[currentRole];
+    welcome.innerHTML = `
+      <div class="welcome-icon">💬</div>
+      <h2>Merhaba ${cfg.name.split(' ')[0]}!</h2>
+      <p>Mağazanızla ilgili her soruyu sorabilirsiniz.</p>
+      <div class="suggestion-chips" id="suggestion-chips"></div>
+    `;
+    chatArea.appendChild(welcome);
+    const chips = welcome.querySelector('#suggestion-chips');
+    SUGGESTIONS.forEach(s => {
+      const btn = document.createElement('button');
+      btn.className = 'chip';
+      btn.textContent = s;
+      btn.addEventListener('click', () => sendMessage(s));
+      chips.appendChild(btn);
+    });
+    messageCount = 0;
+    sessionActive = false;
+    navBadge.textContent = 'Yeni';
+    updateHeaderSubtitle();
+  }
+
+  /* ── Add user message ── */
+  function addUserMessage(text) {
+    removeWelcome();
+    const cfg = ROLE_CONFIG[currentRole];
+
+    const row = document.createElement('div');
+    row.className = 'message-row user';
+
+    const avatar = document.createElement('div');
+    avatar.className = 'avatar';
+    avatar.textContent = cfg.initials;
+
+    const wrap = document.createElement('div');
+    wrap.className = 'bubble-wrap';
+
+    const bubble = document.createElement('div');
+    bubble.className = 'user-bubble';
+    bubble.textContent = text;
+    wrap.appendChild(bubble);
+
+    const ts = document.createElement('div');
+    ts.className = 'timestamp';
+    ts.textContent = timestamp();
+    wrap.appendChild(ts);
+
+    row.appendChild(avatar);
+    row.appendChild(wrap);
+    chatArea.appendChild(row);
+    chatArea.scrollTop = chatArea.scrollHeight;
+  }
+
+  /* ── Add bot response ── */
+  function addBotMessage(data) {
+    const row = document.createElement('div');
+    row.className = 'message-row bot';
+
+    const avatar = document.createElement('div');
+    avatar.className = 'avatar';
+    avatar.textContent = 'AI';
+
+    const wrap = document.createElement('div');
+    wrap.className = 'bubble-wrap';
+
+    const card = document.createElement('div');
+    card.className = 'response-card';
+
+    // Answer text
+    const answerEl = document.createElement('div');
+    answerEl.className = 'answer-text';
+    answerEl.textContent = data.answer;
+    card.appendChild(answerEl);
+
+    // Chart
+    if (data.visualization_code) {
+      try {
+        const plotlyData = JSON.parse(data.visualization_code);
+        const chartWrap = document.createElement('div');
+        chartWrap.className = 'chart-wrap';
+        const chartDiv = document.createElement('div');
+        const chartId = `chart-${++plotlyCounter}`;
+        chartDiv.id = chartId;
+        chartDiv.style.height = '280px';
+        chartWrap.appendChild(chartDiv);
+        card.appendChild(chartWrap);
+        setTimeout(() => {
+          try {
+            Plotly.newPlot(chartId, plotlyData.data || [], {
+              ...(plotlyData.layout || {}),
+              margin: { t: 36, r: 16, b: 40, l: 52 },
+              paper_bgcolor: 'transparent',
+              plot_bgcolor: 'transparent',
+              font: { family: 'Inter, sans-serif', size: 11 },
+              autosize: true,
+            }, { responsive: true, displayModeBar: false });
+          } catch (e) {
+            chartDiv.textContent = 'Grafik oluşturulamadı.';
+          }
+        }, 60);
+      } catch (_) {}
+    }
+
+    // SQL block
+    if (data.sql_query) {
+      const sqlBlock = document.createElement('div');
+      sqlBlock.className = 'sql-block';
+      const pre = document.createElement('pre');
+      pre.textContent = data.sql_query;
+      sqlBlock.appendChild(pre);
+      card.appendChild(sqlBlock);
+    }
+
+    // Execution meta
+    if (data.execution_meta) {
+      const meta = document.createElement('div');
+      meta.className = 'exec-meta';
+      meta.textContent = `${data.execution_meta.row_count} satır döndü · ${data.execution_meta.elapsed_time}s`;
+      card.appendChild(meta);
+    }
+
+    wrap.appendChild(card);
+
+    const ts = document.createElement('div');
+    ts.className = 'timestamp';
+    ts.textContent = timestamp();
+    wrap.appendChild(ts);
+
+    row.appendChild(avatar);
+    row.appendChild(wrap);
+    chatArea.appendChild(row);
+    chatArea.scrollTop = chatArea.scrollHeight;
+  }
+
+  /* ── Add guardrail message ── */
+  function addGuardrailMessage(data) {
+    const ev = data.guardrail_event;
+    const row = document.createElement('div');
+    row.className = 'message-row guard';
+
+    const avatar = document.createElement('div');
+    avatar.className = 'avatar';
+    avatar.textContent = 'GR';
+
+    const wrap = document.createElement('div');
+    wrap.className = 'bubble-wrap';
+
+    const card = document.createElement('div');
+    card.className = 'guard-card';
+
+    // Main text
+    const txt = document.createElement('div');
+    txt.className = 'guard-text';
+    txt.textContent = data.answer;
+    card.appendChild(txt);
+
+    // Top badge
+    const badge = document.createElement('span');
+    badge.className = `badge ${getBadgeClass(ev.type)}`;
+    badge.textContent = `Guardrail Agent — ${ev.badge_label}`;
+    card.appendChild(badge);
+
+    // Alert box with details
+    const alertBox = document.createElement('div');
+    alertBox.className = `alert-box ${getAlertClass(ev.type)}`;
+
+    const alertHeader = document.createElement('div');
+    alertHeader.className = 'alert-header';
+    alertHeader.innerHTML = `⚠ ${ev.title}`;
+    alertBox.appendChild(alertHeader);
+
+    if (ev.details && ev.details.length) {
+      const grid = document.createElement('div');
+      grid.className = 'alert-details';
+      ev.details.forEach(([key, val]) => {
+        const k = document.createElement('span');
+        k.className = 'detail-key';
+        k.textContent = key;
+        const v = document.createElement('span');
+        v.className = 'detail-value';
+        v.textContent = val;
+        grid.appendChild(k);
+        grid.appendChild(v);
+      });
+      alertBox.appendChild(grid);
+    }
+
+    card.appendChild(alertBox);
+
+    // Blocked SQL (Prompt Injection only)
+    if (ev.example_sql) {
+      const blockedSql = document.createElement('div');
+      blockedSql.className = 'blocked-sql';
+      const pre = document.createElement('pre');
+      pre.textContent = ev.example_sql;
+      blockedSql.appendChild(pre);
+      card.appendChild(blockedSql);
+    }
+
+    // Note text
+    if (ev.note) {
+      const note = document.createElement('div');
+      note.className = 'guard-note';
+      note.textContent = ev.note;
+      card.appendChild(note);
+    }
+
+    // Alternative suggestion
+    if (ev.alternative) {
+      const altBox = document.createElement('div');
+      altBox.className = 'alternative-box';
+      const altTitle = document.createElement('div');
+      altTitle.className = 'alternative-title';
+      altTitle.textContent = 'Bunun yerine yapabilirim:';
+      altBox.appendChild(altTitle);
+      altBox.appendChild(document.createTextNode(ev.alternative));
+      card.appendChild(altBox);
+    }
+
+    // Footer badge
+    if (ev.footer_badge) {
+      const footerBadge = document.createElement('span');
+      footerBadge.className = `badge ${getFooterBadgeClass(ev.type)}`;
+      footerBadge.textContent = ev.footer_badge;
+      card.appendChild(footerBadge);
+    }
+
+    wrap.appendChild(card);
+
+    const ts = document.createElement('div');
+    ts.className = 'timestamp';
+    ts.textContent = timestamp();
+    wrap.appendChild(ts);
+
+    row.appendChild(avatar);
+    row.appendChild(wrap);
+    chatArea.appendChild(row);
+    chatArea.scrollTop = chatArea.scrollHeight;
+  }
+
+  function getBadgeClass(type) {
+    if (type === 'PROMPT_INJECTION') return 'badge-injection';
+    if (type === 'CROSS_STORE_ACCESS') return 'badge-blocked';
+    if (type === 'FILTER_BYPASS') return 'badge-outscope';
+    return 'badge-info';
+  }
+
+  function getAlertClass(type) {
+    if (type === 'PROMPT_INJECTION') return 'warning';
+    if (type === 'CROSS_STORE_ACCESS') return 'danger';
+    if (type === 'FILTER_BYPASS') return 'danger';
+    return 'danger';
+  }
+
+  function getFooterBadgeClass(type) {
+    if (type === 'PROMPT_INJECTION') return 'badge-loggedp';
+    if (type === 'FILTER_BYPASS') return 'badge-outscope';
+    return 'badge-info';
+  }
+
+  /* ── Typing indicator ── */
+  function showTyping() {
+    removeWelcome();
+    const row = document.createElement('div');
+    row.className = 'message-row bot';
+    row.id = 'typing-row';
+
+    const avatar = document.createElement('div');
+    avatar.className = 'avatar';
+    avatar.textContent = 'AI';
+
+    const wrap = document.createElement('div');
+    wrap.className = 'bubble-wrap';
+
+    const typing = document.createElement('div');
+    typing.className = 'typing-bubble';
+    typing.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
+    wrap.appendChild(typing);
+
+    row.appendChild(avatar);
+    row.appendChild(wrap);
+    chatArea.appendChild(row);
+    chatArea.scrollTop = chatArea.scrollHeight;
+  }
+
+  function removeTyping() {
+    const el = document.getElementById('typing-row');
+    if (el) el.remove();
+  }
+
+  /* ── Send message ── */
+  async function sendMessage(text) {
+    const question = (text || questionInput.value).trim();
+    if (!question) return;
+
+    questionInput.value = '';
+    sendBtn.disabled = true;
+
+    addUserMessage(question);
+    showTyping();
+
+    if (!sessionActive) {
+      sessionActive = true;
+      updateHeaderSubtitle();
+    }
+
+    messageCount++;
+    navBadge.textContent = messageCount;
+
+    const cfg = ROLE_CONFIG[currentRole];
+
+    try {
+      const res = await fetch('/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept-Language': 'tr' },
+        body: JSON.stringify({
+          question,
+          user_role: currentRole,
+          store_id: cfg.storeId,
+          user_id: cfg.userId,
+        }),
+      });
+
+      removeTyping();
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        addBotMessage({ answer: '⚠️ ' + (err.detail || 'Bir hata oluştu, lütfen tekrar deneyin.') });
+      } else {
+        const data = await res.json();
+        if (data.guardrail_event) {
+          addGuardrailMessage(data);
+        } else {
+          addBotMessage(data);
+        }
+      }
+    } catch (e) {
+      removeTyping();
+      addBotMessage({ answer: '⚠️ Sunucuya bağlanılamadı. Lütfen tekrar deneyin.' });
+    }
+
+    sendBtn.disabled = false;
+    questionInput.focus();
+  }
+
+  /* ── Keyboard shortcuts ── */
+  questionInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+
+  // Auto-resize textarea
+  questionInput.addEventListener('input', () => {
+    questionInput.style.height = 'auto';
+    questionInput.style.height = Math.min(questionInput.scrollHeight, 120) + 'px';
+  });
+
+  sendBtn.addEventListener('click', () => sendMessage());
+</script>
+</body>
+</html>
