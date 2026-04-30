@@ -1,0 +1,59 @@
+<div class="page-layout">
+  <app-sidebar />
+
+  <div class="main-area">
+    <header class="topbar">
+      <div class="topbar-title">
+        <h2>Kullanıcılar</h2>
+        <span class="topbar-subtitle">Kayıtlı kullanıcıları yönetin</span>
+      </div>
+      <div class="topbar-right">
+        <span class="role-badge-chip role-badge--admin">Admin</span>
+        <span class="record-count">{{ users.length }} kullanıcı</span>
+      </div>
+    </header>
+
+    <main class="content">
+      <div class="table-card">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Ad Soyad</th>
+              <th>E-posta</th>
+              <th>Rol</th>
+              <th>Kayıt Tarihi</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (user of users; track user.id; let i = $index) {
+              <tr class="table-row" [style.animation-delay]="(i * 60) + 'ms'">
+                <td class="order-id">#{{ user.id }}</td>
+                <td>
+                  <div class="user-cell">
+                    <div class="user-avatar">{{ user.fullName.charAt(0) }}</div>
+                    <span class="customer-name">{{ user.fullName }}</span>
+                  </div>
+                </td>
+                <td class="date">{{ user.email }}</td>
+                <td>
+                  <select
+                    class="role-select role-select--{{ user.role.toLowerCase() }}"
+                    [value]="user.role"
+                    (change)="updateRole(user, $event)">
+                    @for (opt of roleOptions; track opt) {
+                      <option [value]="opt" [selected]="opt === user.role">
+                        {{ roleLabel[opt] }}
+                      </option>
+                    }
+                  </select>
+                </td>
+                <td class="date">{{ user.joinDate }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+</div>

@@ -1,0 +1,85 @@
+<div class="register-wrapper">
+
+  <!-- Background decoration -->
+  <div class="bg-orb bg-orb--1"></div>
+  <div class="bg-orb bg-orb--2"></div>
+
+  <div class="register-card">
+
+    <!-- Brand -->
+    <div class="brand">
+      <div class="brand-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" fill="currentColor"/>
+        </svg>
+      </div>
+      <span class="brand-name">Lorrie</span>
+    </div>
+
+    <!-- Heading -->
+    <div class="card-header">
+      <h1>Hesap Oluştur</h1>
+      <p>Lorrie'ye ücretsiz katılın</p>
+    </div>
+
+    <!-- Error -->
+    @if (error) {
+      <div class="error-banner" role="alert">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><line x1="12" y1="8" x2="12" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="16" r="1" fill="currentColor"/></svg>
+        {{ error }}
+      </div>
+    }
+
+    <!-- Form -->
+    <form class="register-form" (ngSubmit)="onRegister()">
+      <div class="field">
+        <label class="input-label" for="register-fullname">Ad Soyad</label>
+        <input
+          id="register-fullname"
+          class="input"
+          type="text"
+          [(ngModel)]="fullName"
+          name="fullName"
+          placeholder="Adınız Soyadınız"
+          autocomplete="name"
+          required />
+      </div>
+
+      <div class="field">
+        <label class="input-label" for="register-email">E-posta</label>
+        <input
+          id="register-email"
+          class="input"
+          type="email"
+          [(ngModel)]="email"
+          name="email"
+          placeholder="ornek@mail.com"
+          autocomplete="email"
+          required />
+      </div>
+
+      <div class="field">
+        <label class="input-label" for="register-password">Şifre</label>
+        <input
+          id="register-password"
+          class="input"
+          type="password"
+          [(ngModel)]="password"
+          name="password"
+          placeholder="••••••••"
+          autocomplete="new-password"
+          required />
+      </div>
+
+      <button type="submit" class="cta-btn">Kayıt Ol</button>
+    </form>
+
+    <!-- Footer -->
+    <p class="login-prompt">
+      Zaten hesabın var mı?
+      <a routerLink="/login" class="login-link">Giriş Yap</a>
+    </p>
+
+  </div>
+
+</div>

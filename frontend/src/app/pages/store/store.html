@@ -1,0 +1,263 @@
+<div class="s">
+
+  <!-- ══════════ TOAST ══════════════════════════════════════════ -->
+  @if (showToast) {
+    <div class="toast">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+      {{ toastMsg }}
+    </div>
+  }
+
+  <!-- ══════════ NAVBAR ═════════════════════════════════════════ -->
+  <header class="navbar">
+    <div class="navbar__inner">
+
+      <!-- Logo -->
+      <a class="navbar__brand" (click)="goBack()">
+        <div class="brand-mark">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" fill="currentColor"/>
+          </svg>
+        </div>
+        <span class="brand-text">lorrie</span>
+      </a>
+
+      <!-- Search -->
+      <div class="navbar__search">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input
+          class="navbar__search-input"
+          type="text"
+          placeholder="Ürün, kategori veya marka ara"
+          [(ngModel)]="searchQuery" />
+        <button class="navbar__search-btn">Ara</button>
+      </div>
+
+      <!-- Right actions -->
+      <div class="navbar__actions">
+        @if (isLoggedIn) {
+          <button class="navbar__user">
+            <div class="user-avatar">{{ userInitial }}</div>
+            <span>{{ userEmail.split('@')[0] }}</span>
+          </button>
+        } @else {
+          <button class="navbar__login" (click)="goLogin()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+            Giriş Yap
+          </button>
+        }
+        <button class="navbar__fav">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+          </svg>
+          <span>Favorilerim</span>
+        </button>
+        <button class="navbar__cart">
+          <div class="cart-icon-wrap">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+            </svg>
+            @if (cartCount > 0) { <span class="cart-badge">{{ cartCount }}</span> }
+          </div>
+          <span>Sepetim</span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ══════════ CATEGORY TABS ══════════════════════════════════ -->
+  <nav class="cattabs">
+    <div class="cattabs__inner">
+      @for (tab of tabs; track tab) {
+        <button
+          class="cattab"
+          [class.cattab--active]="activeTab === tab"
+          [class.cattab--sale]="tab === 'İndirim'"
+          (click)="activeTab = tab">
+          {{ tab }}
+          @if (tab === 'İndirim') { <span class="cattab__badge">%</span> }
+        </button>
+      }
+    </div>
+  </nav>
+
+  <!-- ══════════ CAMPAIGNS ══════════════════════════════════════ -->
+  <section class="campaigns">
+    <div class="campaigns__inner">
+      @for (c of campaigns; track c.label) {
+        <button class="campaign-item" [style.background]="c.color">
+          <span class="campaign-icon">{{ c.icon }}</span>
+          <span class="campaign-label">{{ c.label }}</span>
+        </button>
+      }
+    </div>
+  </section>
+
+  <!-- ══════════ POPULAR SECTION ════════════════════════════════ -->
+  <section class="section">
+    <div class="section__head">
+      <h2 class="section__title">Popüler Ürünler</h2>
+      <a class="section__more">Tümünü Gör ›</a>
+    </div>
+    <div class="product-row">
+      @for (p of popularProducts; track p.id; let i = $index) {
+        <article class="pcard" [style.--delay]="(i*60)+'ms'">
+          <div class="pcard__img" [style.background]="p.bg">
+            @if (p.badge) {
+              <span class="pcard__badge pcard__badge--{{ p.badge === 'EN ÇOK SATAN' ? 'hot' : p.badge === 'YENİ' ? 'new' : 'sale' }}">
+                {{ p.badge }}
+              </span>
+            }
+            <button class="pcard__fav" [class.pcard__fav--on]="p.favorited" (click)="toggleFav(p, $event)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" [attr.fill]="p.favorited ? 'currentColor' : 'none'"/></svg>
+            </button>
+            <div class="pcard__visual" [style.color]="p.accent" [innerHTML]="p.icon"></div>
+          </div>
+          <div class="pcard__body">
+            <p class="pcard__brand">{{ p.brand }}</p>
+            <p class="pcard__name">{{ p.name }}</p>
+            <div class="pcard__stars">
+              @for (s of stars(p.rating); track s) {
+                <span class="star" [class.star--on]="s <= p.rating">★</span>
+              }
+              <span class="pcard__rc">({{ p.reviews.toLocaleString('tr-TR') }})</span>
+            </div>
+            <div class="pcard__prices">
+              <span class="pcard__price">{{ formatPrice(p.price) }}</span>
+              @if (p.originalPrice) {
+                <span class="pcard__old">{{ formatPrice(p.originalPrice) }}</span>
+                <span class="pcard__disc">%{{ discount(p) }}</span>
+              }
+            </div>
+            @if (p.badge === 'İYİ FİYAT' || p.badge === 'ÇARPICI FİYAT') {
+              <span class="good-price">{{ p.badge }}</span>
+            }
+          </div>
+          <div class="pcard__btns">
+            <button class="btn-add" (click)="addToCart(p, $event)">Sepete Ekle</button>
+            <button class="btn-buy" (click)="buyNow(p)">Hemen Al</button>
+          </div>
+        </article>
+      }
+    </div>
+  </section>
+
+  <!-- ══════════ ALL / FILTERED PRODUCTS ═══════════════════════ -->
+  <section class="section">
+    <div class="section__head">
+      <h2 class="section__title">
+        {{ activeTab === 'Tümü' ? 'Tüm Ürünler' : activeTab }}
+        <span class="section__count">{{ filteredProducts.length }} ürün</span>
+      </h2>
+    </div>
+    <div class="product-grid">
+      @for (p of filteredProducts; track p.id; let i = $index) {
+        <article class="pcard" [style.--delay]="(i*40)+'ms'">
+          <div class="pcard__img" [style.background]="p.bg">
+            @if (p.badge) {
+              <span class="pcard__badge pcard__badge--{{ p.badge === 'EN ÇOK SATAN' ? 'hot' : p.badge === 'YENİ' ? 'new' : 'sale' }}">
+                {{ p.badge }}
+              </span>
+            }
+            <button class="pcard__fav" [class.pcard__fav--on]="p.favorited" (click)="toggleFav(p, $event)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" [attr.fill]="p.favorited ? 'currentColor' : 'none'"/></svg>
+            </button>
+            <div class="pcard__visual" [style.color]="p.accent" [innerHTML]="p.icon"></div>
+          </div>
+          <div class="pcard__body">
+            <p class="pcard__brand">{{ p.brand }}</p>
+            <p class="pcard__name">{{ p.name }}</p>
+            <div class="pcard__stars">
+              @for (s of stars(p.rating); track s) {
+                <span class="star" [class.star--on]="s <= p.rating">★</span>
+              }
+              <span class="pcard__rc">({{ p.reviews.toLocaleString('tr-TR') }})</span>
+            </div>
+            <div class="pcard__prices">
+              <span class="pcard__price">{{ formatPrice(p.price) }}</span>
+              @if (p.originalPrice) {
+                <span class="pcard__old">{{ formatPrice(p.originalPrice) }}</span>
+                <span class="pcard__disc">%{{ discount(p) }}</span>
+              }
+            </div>
+          </div>
+          <div class="pcard__btns">
+            <button class="btn-add" (click)="addToCart(p, $event)">Sepete Ekle</button>
+            <button class="btn-buy" (click)="buyNow(p)">Hemen Al</button>
+          </div>
+        </article>
+      }
+
+      @if (filteredProducts.length === 0) {
+        <div class="empty-state">
+          <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <p>Ürün bulunamadı</p>
+          <button (click)="searchQuery=''; activeTab='Tümü'">Filtreleri Temizle</button>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- ══════════ CTA BANNER ════════════════════════════════════ -->
+  <section class="cta-banner">
+    <div class="cta-banner__left">
+      <h2>Yeni Sezonu<br>Keşfet</h2>
+      <p>Premium koleksiyonlar, özel fiyatlarla. Her zaman yanında.</p>
+      @if (!isLoggedIn) {
+        <button class="cta-banner__btn" (click)="goLogin()">Üye Ol, Kazan</button>
+      } @else {
+        <button class="cta-banner__btn">Kampanyaları Gör</button>
+      }
+    </div>
+    <div class="cta-banner__right">
+      <div class="cta-email-row">
+        <input type="email" placeholder="E-posta adresiniz" class="cta-email-input"/>
+        <button class="cta-email-btn">Abone Ol</button>
+      </div>
+      <p class="cta-note">Haftalık kampanyalar ve yeni ürün bildirimleri için abone ol.</p>
+    </div>
+  </section>
+
+  <!-- ══════════ FOOTER ════════════════════════════════════════ -->
+  <footer class="footer">
+    <div class="footer__inner">
+      <div class="footer__brand-col">
+        <div class="footer__logo">
+          <div class="brand-mark brand-mark--sm">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" fill="currentColor"/></svg>
+          </div>
+          <span>lorrie</span>
+        </div>
+        <p>Premium moda &amp; aksesuar</p>
+      </div>
+      <div class="footer__col">
+        <h5>Hakkımızda</h5>
+        <a>Blog</a><a>Ekibimiz</a><a>Kariyer</a><a>İletişim</a>
+      </div>
+      <div class="footer__col">
+        <h5>Destek</h5>
+        <a>Kargo Bilgisi</a><a>İade &amp; Değişim</a><a>SSS</a><a>Bize Ulaşın</a>
+      </div>
+      <div class="footer__col">
+        <h5>Sosyal Medya</h5>
+        <div class="footer__socials">
+          <button>𝕏</button><button>f</button><button>in</button><button>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1.5" fill="currentColor" stroke="none"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="footer__bar">
+      <span>© 2026 Lorrie. Tüm hakları saklıdır.</span>
+      <div><a>Kullanım Koşulları</a><a>Gizlilik Politikası</a><a>Çerezler</a></div>
+    </div>
+  </footer>
+
+</div>
