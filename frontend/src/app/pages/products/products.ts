@@ -1,25 +1,10 @@
-import { Component, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { Component, CUSTOM_ELEMENTS_SCHEMA, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Sidebar } from '../../shared/sidebar/sidebar';
 import { AuthService } from '../../services/auth';
+import { ProductService, Product } from '../../services/product';
 
-type AppRole = 'CUSTOMER' | 'SELLER' | 'ADMIN';
-
-interface Product {
-  id: number; name: string; price: string; stock: number; category: string; emoji: string;
-}
-
-const ALL_PRODUCTS: Product[] = [
-  { id: 1, name: 'Klasik Deri Çanta',     price: '₺1.299', stock: 24, category: 'Çanta',    emoji: '👜' },
-  { id: 2, name: 'Minimal Erkek Saat',    price: '₺2.450', stock: 8,  category: 'Aksesuar', emoji: '⌚' },
-  { id: 3, name: 'Pamuklu Yazlık Elbise', price: '₺649',   stock: 41, category: 'Giyim',    emoji: '👗' },
-  { id: 4, name: 'Sneaker Pro X',         price: '₺1.890', stock: 15, category: 'Ayakkabı', emoji: '👟' },
-  { id: 5, name: 'İpek Fular',            price: '₺380',   stock: 62, category: 'Aksesuar', emoji: '🧣' },
-  { id: 6, name: 'Oversize Kapüşonlu',    price: '₺780',   stock: 3,  category: 'Giyim',    emoji: '🧥' },
-];
-
-// SELLER'ın kendi ürünleri
-const SELLER_PRODUCTS: Product[] = [ALL_PRODUCTS[0], ALL_PRODUCTS[4], ALL_PRODUCTS[5]];
+type AppRole = 'CUSTOMER' | 'CORPORATE' | 'ADMIN';
 
 @Component({
   selector: 'app-products',
@@ -28,26 +13,49 @@ const SELLER_PRODUCTS: Product[] = [ALL_PRODUCTS[0], ALL_PRODUCTS[4], ALL_PRODUC
   styleUrl: './products.scss',
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
-export class Products {
+export class Products implements OnInit {
   role: AppRole;
-  products: Product[];
+  products: Product[] = [];
+  loading = true;
+  error = '';
 
-  constructor(private authService: AuthService) {
+  constructor(private authService: AuthService, private productService: ProductService) {
     this.role = (authService.getRole() as AppRole) ?? 'CUSTOMER';
-    this.products = this.role === 'SELLER' ? [...SELLER_PRODUCTS] : [...ALL_PRODUCTS];
   }
 
-  get pageTitle(): string { return this.role === 'SELLER' ? 'Ürünlerim' : 'Ürünler'; }
-  get roleLabel(): string { return { ADMIN: 'Admin', SELLER: 'Satıcı', CUSTOMER: 'Müşteri' }[this.role]; }
+  ngOnInit(): void {
+    this.productService.getAll().subscribe({
+      next: (data) => {
+        this.products = data;
+        this.loading = false;
+      },
+      error: () => {
+        this.error = 'Ürünler yüklenemedi.';
+        this.loading = false;
+      }
+    });
+  }
+
+  get pageTitle(): string { return this.role === 'CORPORATE' ? 'Ürünlerim' : 'Ürünler'; }
+  get roleLabel(): string { return { ADMIN: 'Admin', CORPORATE: 'Kurumsal', CUSTOMER: 'Müşteri' }[this.role]; }
   get roleBadgeClass(): string { return `role-badge--${this.role.toLowerCase()}`; }
-  get canEdit(): boolean  { return this.role === 'ADMIN' || this.role === 'SELLER'; }
+  get canEdit(): boolean { return this.role === 'ADMIN' || this.role === 'CORPORATE'; }
+
+  getImageUrl(product: Product): string {
+    return product.imageUrl ?? `https://picsum.photos/seed/${product.id}/400/400`;
+  }
+
+  getCategoryName(product: Product): string {
+    return product.category?.name ?? 'Genel';
+  }
 
   deleteProduct(id: number): void {
-    this.products = this.products.filter(p => p.id !== id);
+    this.productService.delete(id).subscribe(() => {
+      this.products = this.products.filter(p => p.id !== id);
+    });
   }
 
   editProduct(product: Product): void {
-    // API entegrasyonu sonrası
     console.log('Edit:', product);
   }
 }

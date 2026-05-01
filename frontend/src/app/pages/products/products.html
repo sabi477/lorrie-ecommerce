@@ -7,7 +7,7 @@
         <h2>{{ pageTitle }}</h2>
         <span class="topbar-subtitle">
           @if (role === 'ADMIN')    { Tüm ürünleri yönetin }
-          @if (role === 'SELLER')   { Kendi ürünlerinizi yönetin }
+          @if (role === 'CORPORATE') { Kendi ürünlerinizi yönetin }
           @if (role === 'CUSTOMER') { Ürün kataloğuna göz atın }
         </span>
       </div>
@@ -22,42 +22,51 @@
     </header>
 
     <main class="content">
-      <div class="products-grid">
-        @for (product of products; track product.id; let i = $index) {
-          <div class="product-card" [style.animation-delay]="(i * 80) + 'ms'">
-            <div class="product-emoji">{{ product.emoji }}</div>
-            <div class="product-body">
-              <span class="product-category">{{ product.category }}</span>
-              <h3 class="product-name">{{ product.name }}</h3>
-              <div class="product-footer">
-                <span class="product-price">{{ product.price }}</span>
-                <span class="product-stock" [class.low-stock]="product.stock < 10">
-                  Stok: {{ product.stock }}
-                </span>
+      @if (loading) {
+        <div class="state-msg">Ürünler yükleniyor...</div>
+      } @else if (error) {
+        <div class="state-msg state-msg--error">{{ error }}</div>
+      } @else {
+        <div class="products-grid">
+          @for (product of products; track product.id; let i = $index) {
+            <div class="product-card" [style.animation-delay]="(i * 40) + 'ms'">
+              <div class="product-image">
+                <img [src]="getImageUrl(product)" [alt]="product.name" loading="lazy"
+                     onerror="this.src='https://picsum.photos/seed/default/400/400'" />
               </div>
-              @if (canEdit) {
-                <div class="product-actions">
-                  <button class="action-btn action-btn--edit" (click)="editProduct(product)">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                    </svg>
-                    Düzenle
-                  </button>
-                  <button class="action-btn action-btn--delete" (click)="deleteProduct(product.id)">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                      <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-                      <path d="M10 11v6"/><path d="M14 11v6"/>
-                      <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
-                    </svg>
-                    Sil
-                  </button>
+              <div class="product-body">
+                <span class="product-category">{{ getCategoryName(product) }}</span>
+                <h3 class="product-name">{{ product.name }}</h3>
+                <div class="product-footer">
+                  <span class="product-price">${{ product.price | number:'1.2-2' }}</span>
+                  <span class="product-stock" [class.low-stock]="product.stockQuantity < 10">
+                    Stok: {{ product.stockQuantity }}
+                  </span>
                 </div>
-              }
+                @if (canEdit) {
+                  <div class="product-actions">
+                    <button class="action-btn action-btn--edit" (click)="editProduct(product)">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                      </svg>
+                      Düzenle
+                    </button>
+                    <button class="action-btn action-btn--delete" (click)="deleteProduct(product.id)">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                        <path d="M10 11v6"/><path d="M14 11v6"/>
+                        <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                      </svg>
+                      Sil
+                    </button>
+                  </div>
+                }
+              </div>
             </div>
-          </div>
-        }
-      </div>
+          }
+        </div>
+      }
     </main>
   </div>
 </div>

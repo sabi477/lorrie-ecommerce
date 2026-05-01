@@ -1,3 +1,4 @@
+from typing import Optional
 from llm import llm
 from langchain_core.messages import SystemMessage, HumanMessage
 import logging
@@ -64,7 +65,7 @@ def has_escalation_attempt(question: str) -> bool:
     q_lower = question.lower()
     return any(pattern in q_lower for pattern in ESCALATION_PATTERNS)
 
-def _build_filter(role_config: dict, user_id, store_id) -> str | None:
+def _build_filter(role_config: dict, user_id, store_id) -> Optional[str]:
     """
     Rol filtresini gerçek ID'lerle doldurur.
     Placeholder kalmışsa None döner → erişim engellenir.

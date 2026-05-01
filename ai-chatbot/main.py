@@ -8,7 +8,7 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from collections import defaultdict
-from typing import Optional
+from typing import Optional, Union
 import unicodedata
 import logging
 import threading
@@ -106,10 +106,10 @@ class ChatRequest(BaseModel):
 
 class ChatResponse(BaseModel):
     answer: str
-    visualization_code: str | None = None
-    sql_query: str | None = None
-    guardrail_event: dict | None = None
-    execution_meta: dict | None = None
+    visualization_code: Union[str, None] = None
+    sql_query: Union[str, None] = None
+    guardrail_event: Union[dict, None] = None
+    execution_meta: Union[dict, None] = None
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat(request: Request, body: ChatRequest):

@@ -7,58 +7,64 @@
         <h2>{{ pageTitle }}</h2>
         <span class="topbar-subtitle">
           @if (role === 'ADMIN')    { Tüm siparişleri görüntüleyin ve yönetin }
-          @if (role === 'SELLER')   { Ürünlerinizi içeren siparişler }
+          @if (role === 'CORPORATE') { Ürünlerinizi içeren siparişler }
           @if (role === 'CUSTOMER') { Kendi siparişlerinizi takip edin }
         </span>
       </div>
       <div class="topbar-right">
         <span class="role-badge-chip {{ roleBadgeClass }}">{{ roleLabel }}</span>
-        <span class="record-count">{{ orders.length }} sipariş</span>
+        @if (!loading) { <span class="record-count">{{ orders.length }} sipariş</span> }
       </div>
     </header>
 
     <main class="content">
-      <div class="table-card">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Sipariş ID</th>
-              <th>Müşteri</th>
-              <th>Tutar</th>
-              <th>Durum</th>
-              <th>Tarih</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (order of orders; track order.id; let i = $index) {
-              <tr class="table-row" [style.animation-delay]="(i * 60) + 'ms'">
-                <td class="order-id">{{ order.id }}</td>
-                <td class="customer-name">{{ order.customer }}</td>
-                <td class="amount">{{ order.amount }}</td>
-                <td>
-                  @if (canUpdateStatus) {
-                    <select
-                      class="status-select status-select--{{ order.status.toLowerCase() }}"
-                      [value]="order.status"
-                      (change)="updateStatus(order, $event)">
-                      @for (s of statusOptions; track s) {
-                        <option [value]="s" [selected]="s === order.status">
-                          {{ statusLabel[s] }}
-                        </option>
-                      }
-                    </select>
-                  } @else {
-                    <span class="status-badge status-badge--{{ order.status.toLowerCase() }}">
-                      {{ statusLabel[order.status] }}
-                    </span>
-                  }
-                </td>
-                <td class="date">{{ order.date }}</td>
+      @if (loading) {
+        <div class="state-msg">Siparişler yükleniyor...</div>
+      } @else if (error) {
+        <div class="state-msg state-msg--error">{{ error }}</div>
+      } @else {
+        <div class="table-card">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Sipariş ID</th>
+                <th>Müşteri</th>
+                <th>Tutar</th>
+                <th>Durum</th>
+                <th>Tarih</th>
               </tr>
-            }
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              @for (order of orders; track order.id; let i = $index) {
+                <tr class="table-row" [style.animation-delay]="(i * 40) + 'ms'">
+                  <td class="order-id">#{{ order.id }}</td>
+                  <td class="customer-name">{{ getCustomerName(order) }}</td>
+                  <td class="amount">{{ formatAmount(order.totalAmount) }}</td>
+                  <td>
+                    @if (canUpdateStatus) {
+                      <select
+                        class="status-select status-select--{{ order.status.toLowerCase() }}"
+                        [value]="order.status"
+                        (change)="updateStatus(order, $event)">
+                        @for (s of statusOptions; track s) {
+                          <option [value]="s" [selected]="s === order.status">
+                            {{ statusLabel[s] }}
+                          </option>
+                        }
+                      </select>
+                    } @else {
+                      <span class="status-badge status-badge--{{ order.status.toLowerCase() }}">
+                        {{ statusLabel[order.status] }}
+                      </span>
+                    }
+                  </td>
+                  <td class="date">{{ formatDate(order.createdAt) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
     </main>
   </div>
 </div>

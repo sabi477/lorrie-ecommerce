@@ -1,4 +1,5 @@
 import re
+from typing import Optional, Union, Tuple
 from llm import llm
 from langchain_core.messages import SystemMessage, HumanMessage
 import logging
@@ -31,7 +32,7 @@ DANGEROUS_SQL_KEYWORDS = [
 ]
 
 
-def _detect_keyword_type(question: str) -> tuple[str | None, str]:
+def _detect_keyword_type(question: str) -> Tuple[Optional[str], str]:
     """Returns (violation_type, matched_keyword) or (None, '')."""
     q_lower = question.lower()
     for kw in PROMPT_INJECTION_KEYWORDS:
@@ -46,7 +47,7 @@ def _detect_keyword_type(question: str) -> tuple[str | None, str]:
     return None, ""
 
 
-def _extract_store_id(question: str) -> int | None:
+def _extract_store_id(question: str) -> Optional[int]:
     for pattern in [r'store\s*#(\d+)', r'store\s+(\d+)', r'mağaza\s*#(\d+)', r'mağaza\s+(\d+)', r'#(\d+)']:
         m = re.search(pattern, question, re.IGNORECASE)
         if m:

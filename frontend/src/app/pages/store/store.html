@@ -136,7 +136,16 @@
     </div>
   </section>
 
+  <!-- ══════════ LOADING ══════════════════════════════════════════ -->
+  @if (loading) {
+    <div class="loading-state">
+      <div class="loading-spinner"></div>
+      <p>Ürünler yükleniyor...</p>
+    </div>
+  }
+
   <!-- ══════════ POPULAR SECTION ════════════════════════════════ -->
+  @if (!loading) {
   <section class="section">
     <div class="section__head">
       <h2 class="section__title">Popüler Ürünler</h2>
@@ -144,7 +153,7 @@
     </div>
     <div class="product-row">
       @for (p of popularProducts; track p.id; let i = $index) {
-        <article class="pcard" [style.--delay]="(i*60)+'ms'" (click)="router.navigate(['/customer/product-detail', p.id])">
+        <article class="pcard" [style.--delay]="(i > 20 ? 400 : i * 20) + 'ms'" (click)="router.navigate(['/customer/product-detail', p.id])">
           <div class="pcard__img" [style.background]="p.bg">
             @if (p.badge) {
               <span class="pcard__badge pcard__badge--{{ p.badge === 'EN ÇOK SATAN' ? 'hot' : p.badge === 'YENİ' ? 'new' : 'sale' }}">
@@ -154,7 +163,8 @@
             <button class="pcard__fav" [class.pcard__fav--on]="favSvc.isFavorited(p.id)" (click)="toggleFav(p, $event)">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" [attr.fill]="favSvc.isFavorited(p.id) ? 'currentColor' : 'none'"/></svg>
             </button>
-            <div class="pcard__visual" [style.color]="p.accent" [innerHTML]="p.icon"></div>
+            <img class="pcard__photo" [src]="p.imageUrl" [alt]="p.name" loading="lazy"
+                 onerror="this.src='https://picsum.photos/seed/0/400/400'" />
           </div>
           <div class="pcard__body">
             <p class="pcard__brand">{{ p.brand }}</p>
@@ -195,7 +205,7 @@
     </div>
     <div class="product-grid">
       @for (p of filteredProducts; track p.id; let i = $index) {
-        <article class="pcard" [style.--delay]="(i*40)+'ms'" (click)="router.navigate(['/customer/product-detail', p.id])">
+        <article class="pcard" [style.--delay]="(i > 24 ? 300 : i * 12) + 'ms'" (click)="router.navigate(['/customer/product-detail', p.id])">
           <div class="pcard__img" [style.background]="p.bg">
             @if (p.badge) {
               <span class="pcard__badge pcard__badge--{{ p.badge === 'EN ÇOK SATAN' ? 'hot' : p.badge === 'YENİ' ? 'new' : 'sale' }}">
@@ -205,7 +215,8 @@
             <button class="pcard__fav" [class.pcard__fav--on]="favSvc.isFavorited(p.id)" (click)="toggleFav(p, $event)">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" [attr.fill]="favSvc.isFavorited(p.id) ? 'currentColor' : 'none'"/></svg>
             </button>
-            <div class="pcard__visual" [style.color]="p.accent" [innerHTML]="p.icon"></div>
+            <img class="pcard__photo" [src]="p.imageUrl" [alt]="p.name" loading="lazy"
+                 onerror="this.src='https://picsum.photos/seed/0/400/400'" />
           </div>
           <div class="pcard__body">
             <p class="pcard__brand">{{ p.brand }}</p>
@@ -240,6 +251,7 @@
       }
     </div>
   </section>
+  } <!-- end @if (!loading) -->
 
   <!-- ══════════ CTA BANNER ════════════════════════════════════ -->
   <section class="cta-banner">

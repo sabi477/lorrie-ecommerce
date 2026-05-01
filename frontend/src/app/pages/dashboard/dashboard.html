@@ -27,7 +27,7 @@
 
       <!-- Stat Cards -->
       <div class="stats-grid">
-        @for (stat of stats; track stat.label; let i = $index) {
+        @for (stat of visibleStats; track stat.label; let i = $index) {
           <div class="stat-card" [style.animation-delay]="(i * 100) + 'ms'">
             <div class="stat-icon-wrap">{{ stat.icon }}</div>
             <div class="stat-body">
