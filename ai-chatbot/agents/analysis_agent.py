@@ -1,12 +1,17 @@
 from llm import llm
 from langchain_core.messages import SystemMessage, HumanMessage
+import json
+import logging
+
+logger = logging.getLogger("chatbot")
+
 
 def analysis_agent(state):
-    question = state["question"]
+    question     = state["question"]
     query_result = state["query_result"]
-    sql = state["sql_query"]
-    lang = state.get("lang", "EN")
-    lang_name = "Turkish" if lang == "TR" else "English"
+    sql          = state["sql_query"]
+    lang         = state.get("lang", "EN")
+    lang_name    = "Turkish" if lang == "TR" else "English"
 
     if not query_result:
         return {
@@ -15,31 +20,78 @@ def analysis_agent(state):
                 "Sorunuzla ilgili herhangi bir veri bulunamadı."
                 if lang == "TR" else
                 "No data found for your question."
-            )
+            ),
+            "visualization_code": None,
         }
+
+    # Tek bir LLM çağrısında hem analiz hem grafik kararı
+    needs_chart = isinstance(query_result, list) and len(query_result) >= 2
+
+    chart_instruction = (
+        """
+Task 2 (CHART): The data has multiple rows — decide if a Plotly chart would help.
+- If YES: include a valid Plotly JSON with "data" and "layout" keys as the "chart" value.
+- If NO: set "chart" to null.
+Chart is useful for comparisons, trends, rankings. Not needed for single values or text.
+All chart labels/titles must be in {lang_name}."""
+        if needs_chart else
+        """
+Task 2 (CHART): Only 1 row of data — set "chart" to null."""
+    ).format(lang_name=lang_name)
 
     messages = [
         SystemMessage(content=f"""You are a helpful e-commerce data analyst.
-Analyze the query results and explain them clearly.
 
-IMPORTANT: Always respond in {lang_name}. Do NOT mix languages.
-- Always include key numbers and insights.
-- Keep it under 5 sentences.
-- Be friendly and professional."""),
+Task 1 (ANALYSIS): Analyze the SQL query results in 3-5 sentences.
+- Highlight key numbers and insights.
+- Be friendly and professional.
+- Respond ONLY in {lang_name}.
+{chart_instruction}
+
+CRITICAL: Respond with ONLY valid JSON — no markdown, no backticks, no extra text.
+Format:
+{{"answer": "<your analysis>", "chart": <plotly_json_or_null>}}"""),
         HumanMessage(content=f"""Question: {question}
 
 SQL used:
 {sql}
 
 Results:
-{query_result}
-
-Provide a clear analysis in {lang_name}.""")
+{query_result}""")
     ]
 
     response = llm.invoke(messages)
+    raw = response.content.strip().replace("```json", "").replace("```", "").strip()
+
+    # JSON parse et
+    try:
+        parsed = json.loads(raw)
+        answer = parsed.get("answer", "").strip()
+        chart  = parsed.get("chart")
+
+        # chart geçerli JSON mu kontrol et
+        if chart is not None:
+            if isinstance(chart, str):
+                try:
+                    json.loads(chart)
+                    viz_code = chart
+                except Exception:
+                    viz_code = None
+            elif isinstance(chart, dict):
+                viz_code = json.dumps(chart)
+            else:
+                viz_code = None
+        else:
+            viz_code = None
+
+    except Exception:
+        # JSON parse hatası → ham yanıtı cevap olarak kullan, grafik yok
+        logger.warning("ANALYSIS_PARSE_ERROR | raw=%.120r", raw)
+        answer   = raw if raw else ("Veri analizi yapılamadı." if lang == "TR" else "Could not analyze data.")
+        viz_code = None
 
     return {
         **state,
-        "final_answer": response.content.strip()
+        "final_answer":       answer,
+        "visualization_code": viz_code,
     }

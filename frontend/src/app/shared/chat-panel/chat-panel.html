@@ -1,0 +1,74 @@
+<div class="chat-widget">
+
+  <!-- Floating button -->
+  <button class="chat-fab" (click)="toggle()" [class.chat-fab--open]="isOpen" aria-label="AI Asistan">
+    @if (!isOpen) {
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+    } @else {
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    }
+  </button>
+
+  <!-- Chat panel -->
+  @if (isOpen) {
+    <div class="chat-panel">
+
+      <!-- Header -->
+      <div class="chat-panel__header">
+        <div class="chat-panel__status-dot"></div>
+        <div class="chat-panel__header-info">
+          <div class="chat-panel__title">AI Asistan</div>
+          <div class="chat-panel__subtitle">Çevrimiçi</div>
+        </div>
+      </div>
+
+      <!-- Messages -->
+      <div class="chat-panel__messages" #messagesContainer>
+        @for (msg of messages(); track $index) {
+          <div class="msg-row" [class.msg-row--user]="msg.role === 'user'" [class.msg-row--bot]="msg.role === 'bot'">
+            @if (msg.role === 'bot') {
+              <div class="msg-avatar">AI</div>
+            }
+            <div class="msg-bubble-wrap">
+              @if (msg.typing) {
+                <div class="typing-bubble">
+                  <div class="dot"></div>
+                  <div class="dot"></div>
+                  <div class="dot"></div>
+                </div>
+              } @else {
+                <div class="msg-bubble">{{ msg.text }}</div>
+              }
+            </div>
+          </div>
+        }
+        <div #messagesEnd></div>
+      </div>
+
+      <!-- Input -->
+      <div class="chat-panel__footer">
+        <input
+          class="chat-panel__input"
+          type="text"
+          placeholder="Mesajınızı yazın..."
+          [(ngModel)]="input"
+          [disabled]="loading"
+          (keydown)="onEnter($event)" />
+        <button
+          class="chat-panel__send"
+          (click)="send()"
+          [disabled]="loading || !input.trim()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+        </button>
+      </div>
+
+    </div>
+  }
+
+</div>

@@ -1,8 +1,10 @@
 import { Component, CUSTOM_ELEMENTS_SCHEMA, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth';
+import { CartService } from '../../services/cart';
+import { FavoritesService } from '../../services/favorites';
 
 export interface StoreProduct {
   id: number;
@@ -23,16 +25,16 @@ export interface StoreProduct {
 
 @Component({
   selector: 'app-store',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './store.html',
   styleUrl: './store.scss',
-  schemas: [CUSTOM_ELEMENTS_SCHEMA]
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class Store implements OnInit {
   isLoggedIn   = false;
   userEmail    = '';
   userInitial  = '';
-  cartCount    = 0;
+  userRole     = '';
   cartNotice   = false;
   searchQuery  = '';
   activeTab    = 'Tümü';
@@ -144,12 +146,25 @@ export class Store implements OnInit {
 
   get popularProducts() { return [...this.allProducts].sort((a,b) => b.reviews - a.reviews).slice(0,6); }
 
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(
+    private authService: AuthService,
+    public router: Router,
+    public cartSvc: CartService,
+    public favSvc: FavoritesService,
+  ) {}
 
   ngOnInit() {
     this.isLoggedIn  = this.authService.isLoggedIn();
     this.userEmail   = this.authService.getEmail() ?? '';
     this.userInitial = this.userEmail.charAt(0).toUpperCase();
+    this.userRole    = this.authService.getRole() ?? '';
+  }
+
+  logout() {
+    this.authService.logout();
+    this.isLoggedIn = false;
+    this.userEmail = '';
+    this.userRole = '';
   }
 
   formatPrice(n: number) { return '₺' + n.toLocaleString('tr-TR'); }
@@ -159,19 +174,21 @@ export class Store implements OnInit {
   toggleFav(p: StoreProduct, e: Event) {
     e.stopPropagation();
     if (!this.isLoggedIn) { this.toast('Favorilere eklemek için giriş yapın'); return; }
-    p.favorited = !p.favorited;
+    this.favSvc.toggle(p);
   }
 
   addToCart(p: StoreProduct, e?: Event) {
     e?.stopPropagation();
     if (!this.isLoggedIn) { this.toast('Sepete eklemek için giriş yapın'); return; }
-    this.cartCount++;
+    this.cartSvc.add(p);
     this.toast(`"${p.name}" sepete eklendi`);
   }
 
-  buyNow(p: StoreProduct) {
+  buyNow(p: StoreProduct, e?: Event) {
+    e?.stopPropagation();
     if (!this.isLoggedIn) { this.router.navigate(['/login']); return; }
-    this.addToCart(p);
+    this.cartSvc.add(p);
+    this.router.navigate(['/customer/cart']);
   }
 
   toast(msg: string) {

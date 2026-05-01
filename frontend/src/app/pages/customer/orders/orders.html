@@ -1,0 +1,51 @@
+<div class="orders-page">
+
+  <div class="page-header">
+    <h1 class="page-title">Siparişlerim</h1>
+    <p class="page-sub">{{ allOrders.length }} sipariş</p>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters">
+    @for (f of filters; track f) {
+      <button class="filter-btn" [class.filter-btn--active]="activeFilter === f"
+        (click)="activeFilter = f">{{ f }}
+        @if (f === 'Tümü') { <span class="filter-count">{{ allOrders.length }}</span> }
+      </button>
+    }
+  </div>
+
+  <!-- Order list -->
+  <div class="order-list">
+    @for (o of filteredOrders; track o.id; let i = $index) {
+      <a class="ocard" [routerLink]="['/customer/order-detail', o.id]"
+         [style.animation-delay]="(i * 55) + 'ms'">
+        <div class="ocard__status-bar ocard__status-bar--{{ o.status.toLowerCase() }}"></div>
+        <div class="ocard__body">
+          <div class="ocard__top">
+            <div>
+              <p class="ocard__id">#{{ o.id }}</p>
+              <p class="ocard__date">{{ o.date }}</p>
+            </div>
+            <span class="status-badge status-badge--{{ o.status.toLowerCase() }}">{{ statusLabel[o.status] }}</span>
+          </div>
+          <p class="ocard__items">{{ o.items }}</p>
+          <div class="ocard__bottom">
+            <span class="ocard__total">{{ formatPrice(o.total) }}</span>
+            <span class="ocard__arrow">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+            </span>
+          </div>
+        </div>
+      </a>
+    }
+
+    @if (filteredOrders.length === 0) {
+      <div class="empty">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <p>Bu filtrede sipariş bulunamadı.</p>
+      </div>
+    }
+  </div>
+
+</div>

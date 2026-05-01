@@ -1,0 +1,153 @@
+<div class="checkout">
+
+  <!-- ── Confirmation overlay ──────────────────────────────────── -->
+  @if (confirmed) {
+    <div class="confirm-overlay">
+      <div class="confirm-card">
+        <div class="checkmark">
+          <svg viewBox="0 0 52 52" fill="none">
+            <circle class="checkmark__circle" cx="26" cy="26" r="25" stroke="#22c55e" stroke-width="2"/>
+            <path class="checkmark__check" d="M14 27l8 8 16-16" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <h2>Siparişiniz Alındı!</h2>
+        <p>Sipariş numaranız: <strong>#ORR-00900</strong></p>
+        <p class="confirm-sub">Sipariş durumunuzu "Siparişlerim" sayfasından takip edebilirsiniz.</p>
+        <a class="confirm-btn" routerLink="/customer/orders">Siparişlerimi Gör</a>
+      </div>
+    </div>
+  }
+
+  <h1 class="page-title">Ödeme</h1>
+
+  <div class="checkout__grid">
+
+    <!-- ── Left: Address + Payment ───────────────────────────── -->
+    <div class="checkout__left">
+
+      <!-- Address -->
+      <div class="card">
+        <h3 class="card__title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          Teslimat Adresi
+        </h3>
+        <div class="form-grid">
+          <div class="field">
+            <label>Ad</label>
+            <input type="text" placeholder="Ayşe" [(ngModel)]="form.firstName" />
+          </div>
+          <div class="field">
+            <label>Soyad</label>
+            <input type="text" placeholder="Yılmaz" [(ngModel)]="form.lastName" />
+          </div>
+          <div class="field field--full">
+            <label>Adres</label>
+            <input type="text" placeholder="Mahalle, cadde, kapı no..." [(ngModel)]="form.address" />
+          </div>
+          <div class="field">
+            <label>Şehir</label>
+            <input type="text" placeholder="İstanbul" [(ngModel)]="form.city" />
+          </div>
+          <div class="field">
+            <label>Posta Kodu</label>
+            <input type="text" placeholder="34000" [(ngModel)]="form.zip" maxlength="5" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment -->
+      <div class="card">
+        <h3 class="card__title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          Ödeme Bilgileri
+        </h3>
+
+        <!-- Card visual -->
+        <div class="credit-card">
+          <div class="credit-card__chip">
+            <div class="chip-inner"></div>
+          </div>
+          <p class="credit-card__number">
+            {{ card.number || '•••• •••• •••• ••••' }}
+          </p>
+          <div class="credit-card__bottom">
+            <div>
+              <p class="credit-card__label">Kart Sahibi</p>
+              <p class="credit-card__val">{{ (form.firstName + ' ' + form.lastName).trim() || 'AD SOYAD' }}</p>
+            </div>
+            <div>
+              <p class="credit-card__label">Son Kullanım</p>
+              <p class="credit-card__val">{{ card.expiry || 'AA/YY' }}</p>
+            </div>
+            <div class="credit-card__logo">VISA</div>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="field field--full">
+            <label>Kart Numarası</label>
+            <input type="text" placeholder="0000 0000 0000 0000"
+              [value]="card.number" (input)="onCardInput($event)" maxlength="19" />
+          </div>
+          <div class="field">
+            <label>Son Kullanım</label>
+            <input type="text" placeholder="AA/YY"
+              [value]="card.expiry" (input)="onExpiryInput($event)" maxlength="5" />
+          </div>
+          <div class="field">
+            <label>CVV</label>
+            <input type="password" placeholder="•••" [(ngModel)]="card.cvv" maxlength="4" />
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── Right: Order Summary ──────────────────────────────── -->
+    <div class="checkout__right">
+      <div class="card summary-card">
+        <h3 class="card__title">Sipariş Özeti</h3>
+
+        <div class="summary-items">
+          @for (item of items; track item.name) {
+            <div class="summary-item">
+              <div class="summary-item__img" [style.background]="item.bg"></div>
+              <div class="summary-item__info">
+                <p class="summary-item__name">{{ item.name }}</p>
+                <p class="summary-item__qty">{{ item.qty }} adet</p>
+              </div>
+              <p class="summary-item__price">{{ formatPrice(item.price * item.qty) }}</p>
+            </div>
+          }
+        </div>
+
+        <div class="summary-totals">
+          <div class="tot-row"><span>Ara Toplam</span><span>{{ formatPrice(subtotal) }}</span></div>
+          <div class="tot-row">
+            <span>Kargo</span>
+            <span [class.free]="shipping === 0">{{ shipping === 0 ? 'Ücretsiz' : formatPrice(shipping) }}</span>
+          </div>
+          @if (subtotal < 1500) {
+            <p class="free-hint">₺{{ (1500 - subtotal).toLocaleString('tr-TR') }} daha ekleyin, kargo ücretsiz!</p>
+          }
+          <div class="tot-row tot-row--total"><span>Toplam</span><span>{{ formatPrice(total) }}</span></div>
+        </div>
+
+        <button class="submit-btn" [disabled]="!canSubmit || loading" (click)="submit()">
+          @if (loading) {
+            <span class="spinner"></span> İşleniyor...
+          } @else {
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            Siparişi Tamamla
+          }
+        </button>
+
+        <p class="secure-note">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          256-bit SSL ile güvenli ödeme
+        </p>
+      </div>
+    </div>
+
+  </div>
+</div>

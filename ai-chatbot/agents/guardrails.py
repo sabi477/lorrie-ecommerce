@@ -150,50 +150,55 @@ def guardrails_agent(state):
         return {**state, "is_in_scope": False, "final_answer": answer,
                 "guardrail_event": {"type": "DANGEROUS_SQL"}}
 
-    # ── Step 2: LLM injection check ───────────────────────────────────────────
-    if is_llm_injection(question):
-        logger.warning("LLM_INJECTION | lang=%s question=%.80r", lang, question)
-        guardrail_event = {
-            "type": "PROMPT_INJECTION",
-            "title": "Prompt Injection Tespit Edildi" if tr else "Prompt Injection Detected",
-            "badge_label": "PROMPT INJECTION",
-            "details": [
-                ("Tespit türü" if tr else "Detection type", "Prompt Injection (LLM)"),
-                ("Eylem" if tr else "Action",
-                 "İstek tamamen reddedildi" if tr else "Request fully rejected"),
-            ],
-            "note": (
-                "Sistem promptunu değiştirmeye yönelik girişimler engellenir ve kayıt altına alınır."
-                if tr else
-                "Attempts to modify the system prompt are blocked and logged."
-            ),
-            "footer_badge": "Güvenlik olayı loglandı" if tr else "Security event logged",
-        }
+    # ── Step 2: Selamlama keyword kontrolü (LLM çağrısı YOK) ────────────────────
+    GREETINGS = {
+        "selam", "merhaba", "hey", "hi", "hello", "heyy", "selamlar",
+        "günaydın", "iyi günler", "iyi akşamlar", "nasılsın", "naber",
+        "good morning", "good afternoon", "good evening", "how are you",
+        "what's up", "whats up", "yo", "sup",
+    }
+    q_clean = question.strip().lower().rstrip("!?.,:").strip()
+    if q_clean in GREETINGS or (len(q_clean) <= 20 and q_clean in GREETINGS):
+        logger.info("GREETING_KEYWORD | q=%r", q_clean)
         answer = (
-            "Bu mesaj güvenlik filtrelerini tetikledi."
+            "Merhaba! 👋 E-ticaret veri asistanınım. Satışlar, siparişler, ürünler ve müşteriler hakkında sorularınızı yanıtlayabilirim."
             if tr else
-            "This message triggered security filters."
+            "Hello! 👋 I'm your e-commerce data assistant. Ask me about sales, orders, products, or customers!"
         )
-        return {**state, "is_in_scope": False, "final_answer": answer,
-                "guardrail_event": guardrail_event}
+        return {**state, "is_in_scope": False, "final_answer": answer}
 
-    # ── Step 3: Intent classification ─────────────────────────────────────────
+    # ── Step 3: E-ticaret keyword'leri ile hızlı IN_SCOPE tespiti ───────────────
+    ECOMMERCE_KEYWORDS = [
+        # Türkçe
+        "sipariş", "ürün", "satış", "gelir", "ciro", "müşteri", "mağaza",
+        "kargo", "teslimat", "stok", "envanter", "fiyat", "indirim", "kampanya",
+        "değerlendirme", "yorum", "puan", "kategori", "marka", "sepet",
+        # İngilizce
+        "order", "product", "sale", "revenue", "customer", "store", "shop",
+        "shipment", "delivery", "stock", "inventory", "price", "discount",
+        "review", "rating", "category", "brand", "cart",
+    ]
+    q_lower = question.lower()
+    if any(kw in q_lower for kw in ECOMMERCE_KEYWORDS):
+        logger.info("ECOMMERCE_KEYWORD_MATCH | fast IN_SCOPE")
+        return {**state, "is_in_scope": True}
+
+    # ── Step 4: Kısa / anlamsız mesajları LLM'siz reddet ─────────────────────────
+    if len(question.strip()) <= 3:
+        answer = (
+            "Lütfen e-ticaret verileri hakkında daha açıklayıcı bir soru sorun."
+            if tr else
+            "Please ask a more specific question about e-commerce data."
+        )
+        return {**state, "is_in_scope": False, "final_answer": answer}
+
+    # ── Step 5: Belirsiz sorular için LLM intent classification ──────────────────
     lang_instruction = "Turkish" if tr else "English"
     messages = [
         SystemMessage(content=f"""You are a strict guardrails system.
-Classify questions about e-commerce data analysis in ANY language.
-
-Respond with ONLY one of:
-- IN_SCOPE: question is specifically about e-commerce data (sales, orders, products, customers, reviews, shipments, revenue, inventory, stores)
-- GREETING: question is ONLY a greeting with no other content (hello, merhaba, selam, hi, good morning, nasılsın, how are you)
-- OUT_OF_SCOPE: anything else including weather, news, general knowledge, math, cooking, sports
-
-Examples:
-- "merhaba" → GREETING
-- "hava durumu nasıl?" → OUT_OF_SCOPE
-- "show me sales" → IN_SCOPE
-- "siparişlerimi göster" → IN_SCOPE
-- "2+2 kaç?" → OUT_OF_SCOPE
+Classify the question. Respond with ONLY one word:
+- IN_SCOPE  (e-commerce data: sales, orders, products, customers, revenue, inventory)
+- OUT_OF_SCOPE  (anything else)
 
 Always respond in {lang_instruction}."""),
         HumanMessage(content=question)
@@ -202,14 +207,6 @@ Always respond in {lang_instruction}."""),
     response = llm.invoke(messages)
     result = response.content.strip().upper()
     logger.info("GUARDRAIL | result=%s lang=%s", result.strip(), lang)
-
-    if "GREETING" in result:
-        answer = (
-            "Merhaba! Ben e-ticaret veri asistanınım. Satışlar, siparişler, ürünler ve müşteriler hakkında sorularınızı yanıtlayabilirim."
-            if tr else
-            "Hello! I'm your e-commerce data assistant. Ask me about sales, orders, products, or customers!"
-        )
-        return {**state, "is_in_scope": False, "final_answer": answer}
 
     if "OUT_OF_SCOPE" in result:
         answer = (

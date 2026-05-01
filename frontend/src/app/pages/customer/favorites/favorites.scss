@@ -1,0 +1,49 @@
+$primary:#f27a1a;$text:#111827;$muted:#6b7280;$border:#e5e7eb;$bg:#f3f4f6;$surface:#fff;$radius:10px;$font:'Inter',-apple-system,sans-serif;
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+a{text-decoration:none;color:inherit} button{cursor:pointer;border:none;background:none;font-family:$font} :host{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+
+.fav-page{font-family:$font;color:$text}
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem}
+.page-title{font-size:1.5rem;font-weight:900;letter-spacing:-.03em;display:flex;align-items:center;gap:.6rem}
+.count-badge{background:$primary;color:#fff;font-size:.7rem;font-weight:800;padding:.15rem .55rem;border-radius:100px}
+
+.empty{text-align:center;padding:4rem 1rem;display:flex;flex-direction:column;align-items:center;gap:1rem}
+.empty-icon{width:96px;height:96px;background:#fff5f5;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fca5a5}
+.empty h3{font-size:1.15rem;font-weight:800} .empty p{color:$muted;font-size:.875rem}
+.btn-shop{display:inline-block;padding:.7rem 1.75rem;background:$primary;color:#fff;border-radius:10px;font-weight:700;font-size:.875rem;transition:background .15s;
+  &:hover{background:#d96a0e}}
+
+.filters{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.25rem}
+.filter-btn{display:flex;align-items:center;gap:.3rem;padding:.4rem .9rem;border-radius:100px;font-size:.8rem;font-weight:600;color:$muted;border:1.5px solid $border;background:$surface;transition:all .15s;
+  &:hover{border-color:$primary;color:$primary}
+  &--active{background:$primary;border-color:$primary;color:#fff}}
+.fc{background:rgba(0,0,0,.12);border-radius:100px;padding:.05rem .35rem;font-size:.68rem;font-weight:700}
+
+.fav-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem}
+
+.fav-card{background:$surface;border:1px solid $border;border-radius:$radius;overflow:hidden;position:relative;opacity:0;animation:fadeUp .35s ease both;transition:transform .18s,box-shadow .18s;
+  &:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,.08)}}
+
+.fav-img-wrap{display:flex;align-items:center;justify-content:center;aspect-ratio:1/1;position:relative;cursor:pointer}
+.fav-icon{width:50%;height:50%; ::ng-deep svg{width:100%;height:100%}}
+.fav-badge{position:absolute;bottom:8px;left:8px;background:$primary;color:#fff;font-size:.6rem;font-weight:800;padding:.2rem .5rem;border-radius:100px}
+
+.btn-remove{position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;background:#fff;border:1px solid #fecaca;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.1);transition:all .15s;
+  &:hover{background:#fee2e2;transform:scale(1.1)}}
+
+.fav-info{padding:.85rem}
+.fav-brand{font-size:.65rem;font-weight:700;color:$muted;text-transform:uppercase;letter-spacing:.07em;margin-bottom:.2rem}
+.fav-name{font-size:.875rem;font-weight:700;line-height:1.35;display:block;margin-bottom:.4rem;
+  &:hover{color:$primary}}
+.fav-rating{display:flex;align-items:center;gap:.3rem;margin-bottom:.5rem;
+  .stars{display:flex;gap:1px}
+  span{font-size:.7rem;color:$muted}}
+.fav-price-row{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;margin-bottom:.65rem}
+.fav-price{font-size:1rem;font-weight:900}
+.fav-original{font-size:.75rem;color:#9ca3af;text-decoration:line-through}
+.fav-discount{font-size:.65rem;font-weight:800;background:#fef3c7;color:#92400e;padding:.15rem .4rem;border-radius:100px}
+
+.btn-add-cart{display:flex;align-items:center;justify-content:center;gap:.35rem;width:100%;padding:.55rem;border-radius:8px;font-size:.8rem;font-weight:700;background:$primary;color:#fff;transition:background .15s;
+  &:hover{background:#d96a0e}
+  &--added{background:#22c55e}}

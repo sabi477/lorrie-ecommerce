@@ -1,0 +1,110 @@
+<div class="od" *ngIf="order">
+
+  <!-- Back -->
+  <a class="back-link" routerLink="/customer/orders">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+    Siparişlerime Dön
+  </a>
+
+  <!-- Header -->
+  <div class="od__header">
+    <div>
+      <h1 class="od__id">#{{ order.id }}</h1>
+      <p class="od__date">{{ order.date }}</p>
+    </div>
+    <span class="status-badge status-badge--{{ order.status.toLowerCase() }}">
+      @switch (order.status) {
+        @case ('PENDING')   { Beklemede }
+        @case ('CONFIRMED') { Onaylandı }
+        @case ('SHIPPED')   { Kargoda }
+        @case ('DELIVERED') { Teslim Edildi }
+        @case ('CANCELLED') { İptal Edildi }
+      }
+    </span>
+  </div>
+
+  <!-- Timeline -->
+  @if (!isCancelled) {
+    <div class="timeline-card">
+      <div class="timeline">
+        @for (step of timeline; track step.key; let i = $index) {
+          <div class="timeline__step" [class.timeline__step--done]="i <= currentStep" [class.timeline__step--active]="i === currentStep">
+            <div class="timeline__icon">{{ step.icon }}</div>
+            <div class="timeline__line" [class.timeline__line--filled]="i < currentStep"></div>
+            <p class="timeline__label">{{ step.label }}</p>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <div class="od__grid">
+
+    <!-- Items -->
+    <div class="card">
+      <h3 class="card__title">Ürünler</h3>
+      <div class="items-list">
+        @for (item of order.items; track item.name) {
+          <div class="item-row">
+            <div class="item-img" [style.background]="item.bg"></div>
+            <div class="item-info">
+              <p class="item-name">{{ item.name }}</p>
+              <p class="item-qty">{{ item.qty }} adet</p>
+            </div>
+            <p class="item-price">{{ formatPrice(item.price * item.qty) }}</p>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Right column -->
+    <div class="od__right">
+
+      <!-- Shipping -->
+      <div class="card">
+        <h3 class="card__title">Teslimat Bilgileri</h3>
+        <div class="ship-info">
+          <p class="ship-name">{{ order.shipping.name }}</p>
+          <p class="ship-addr">{{ order.shipping.address }}</p>
+          <p class="ship-city">{{ order.shipping.city }}, {{ order.shipping.zip }}</p>
+          <div class="ship-carrier">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+            {{ order.shipping.carrier }}
+            @if (order.shipping.trackingNo !== '-') {
+              · <strong>{{ order.shipping.trackingNo }}</strong>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Total -->
+      <div class="card">
+        <h3 class="card__title">Sipariş Özeti</h3>
+        <div class="totals">
+          <div class="totals__row">
+            <span>Ara Toplam</span>
+            <span>{{ formatPrice(order.subtotal) }}</span>
+          </div>
+          <div class="totals__row">
+            <span>Kargo</span>
+            <span>{{ order.shippingCost === 0 ? 'Ücretsiz' : formatPrice(order.shippingCost) }}</span>
+          </div>
+          <div class="totals__row totals__row--total">
+            <span>Toplam</span>
+            <span>{{ formatPrice(total) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cancel -->
+      @if (isPending) {
+        <button class="cancel-btn">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+          Siparişi İptal Et
+        </button>
+      }
+
+    </div>
+  </div>
+
+</div>

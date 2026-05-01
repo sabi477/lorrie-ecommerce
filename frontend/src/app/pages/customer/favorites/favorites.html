@@ -1,0 +1,99 @@
+<div class="fav-page">
+
+  <div class="page-header">
+    <h1 class="page-title">
+      Favorilerim
+      @if (favSvc.count() > 0) {
+        <span class="count-badge">{{ favSvc.count() }}</span>
+      }
+    </h1>
+  </div>
+
+  @if (favSvc.items().length === 0) {
+    <div class="empty">
+      <div class="empty-icon">
+        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+        </svg>
+      </div>
+      <h3>Henüz favori eklemediniz</h3>
+      <p>Beğendiğiniz ürünleri favorilere ekleyin.</p>
+      <a class="btn-shop" routerLink="/store">Ürünleri Keşfet</a>
+    </div>
+
+  } @else {
+
+    <!-- Filtreler -->
+    <div class="filters">
+      @for (cat of categories(); track cat) {
+        <button class="filter-btn" [class.filter-btn--active]="activeFilter() === cat"
+          (click)="activeFilter.set(cat)">
+          {{ cat }}
+          @if (cat === 'Tümü') { <span class="fc">{{ favSvc.count() }}</span> }
+        </button>
+      }
+    </div>
+
+    <!-- Grid -->
+    <div class="fav-grid">
+      @for (item of filtered(); track item.id; let i = $index) {
+        <div class="fav-card" [style.animation-delay]="(i * 50) + 'ms'">
+
+          <!-- Görsel -->
+          <a [routerLink]="['/customer/product-detail', item.id]" class="fav-img-wrap"
+             [style.background]="item.bg" [style.color]="item.accent">
+            @if (item.badge) { <span class="fav-badge">{{ item.badge }}</span> }
+            <div class="fav-icon" [innerHTML]="item.icon"></div>
+          </a>
+
+          <!-- Kaldır -->
+          <button class="btn-remove" (click)="favSvc.remove(item.id)" title="Favorilerden kaldır">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="#ef4444" stroke="#ef4444" stroke-width="1.5">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+            </svg>
+          </button>
+
+          <!-- Bilgi -->
+          <div class="fav-info">
+            <p class="fav-brand">{{ item.brand }}</p>
+            <a [routerLink]="['/customer/product-detail', item.id]" class="fav-name">{{ item.name }}</a>
+
+            <!-- Rating -->
+            <div class="fav-rating">
+              <div class="stars">
+                @for (filled of stars(item.rating); track $index) {
+                  <svg width="11" height="11" viewBox="0 0 24 24" [attr.fill]="filled ? '#f59e0b' : 'none'" stroke="#f59e0b" stroke-width="2">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                  </svg>
+                }
+              </div>
+              <span>{{ item.rating }} ({{ item.reviews.toLocaleString() }})</span>
+            </div>
+
+            <!-- Fiyat -->
+            <div class="fav-price-row">
+              <span class="fav-price">{{ formatPrice(item.price) }}</span>
+              @if (item.originalPrice) {
+                <span class="fav-original">{{ formatPrice(item.originalPrice) }}</span>
+                <span class="fav-discount">%{{ discount(item) }}</span>
+              }
+            </div>
+
+            <button class="btn-add-cart"
+              [class.btn-add-cart--added]="addedId() === item.id"
+              (click)="addToCart(item)">
+              @if (addedId() === item.id) {
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                Eklendi
+              } @else {
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                Sepete Ekle
+              }
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+</div>

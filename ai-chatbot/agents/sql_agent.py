@@ -109,7 +109,26 @@ def sql_agent(state):
     filter_str = _build_filter(role_config, user_id, store_id)
     if filter_str is None:
         logger.error("MISSING_ID | role=%s user_id=%s store_id=%s", user_role, user_id, store_id)
-        return {**state, "sql_query": "SELECT 'Access denied: missing user context' as message;", "error": None}
+        lang        = state.get("lang", "EN")
+        is_logged_in = state.get("is_logged_in", False)
+        tr = lang == "TR"
+        if is_logged_in:
+            answer = (
+                "Hesabınız sisteme bağlı ancak demo modunda bireysel sipariş/profil verisi "
+                "sorgulanamıyor. Genel satış, ürün veya kategori analizleri için soru sorabilirsiniz!"
+                if tr else
+                "Your account is connected but personal order/profile data isn't available in demo mode. "
+                "You can ask about general sales, products, or category analysis!"
+            )
+        else:
+            answer = (
+                "Kişisel verilerinize erişmek için lütfen giriş yapın. "
+                "Genel ürün veya kampanya sorularınızı da yanıtlayabilirim!"
+                if tr else
+                "Please log in to access your personal data. "
+                "I can also answer general questions about products or promotions!"
+            )
+        return {**state, "final_answer": answer, "sql_query": None, "error": None}
 
     messages = [
         SystemMessage(content=f"""You are a senior SQL developer for an e-commerce database.

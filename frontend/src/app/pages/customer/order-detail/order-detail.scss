@@ -1,0 +1,154 @@
+$primary:#f27a1a; $primary-lt:#fff3e6; $text:#111827; $muted:#6b7280; $border:#e5e7eb; $bg:#f3f4f6; $surface:#fff; $radius:10px; $radius-sm:6px; $font:'Inter',-apple-system,sans-serif;
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+a { text-decoration: none; color: inherit; cursor: pointer; }
+button { cursor: pointer; border: none; background: none; font-family: $font; }
+:host { display: block; }
+
+@keyframes fadeInUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
+@keyframes fillLine { from { width: 0; } to { width: 100%; } }
+
+.od { display: flex; flex-direction: column; gap: 1.25rem; animation: fadeInUp .35s ease both; }
+
+.back-link {
+  display: inline-flex; align-items: center; gap: .35rem;
+  font-size: .82rem; font-weight: 600; color: $muted;
+  transition: color .15s;
+  &:hover { color: $primary; }
+}
+
+.od__header {
+  display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: .75rem;
+}
+.od__id   { font-size: 1.4rem; font-weight: 900; letter-spacing: -.03em; }
+.od__date { font-size: .82rem; color: $muted; margin-top: .2rem; }
+
+// ── Timeline ──────────────────────────────────────────────────────
+.timeline-card {
+  background: $surface; border: 1px solid $border; border-radius: $radius;
+  padding: 1.5rem 2rem; box-shadow: 0 1px 3px rgba(0,0,0,.04);
+  animation: fadeInUp .38s .08s ease both;
+}
+
+.timeline {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 0;
+  position: relative;
+}
+
+.timeline__step {
+  display: flex; flex-direction: column; align-items: center; gap: .45rem;
+  flex: 1; position: relative;
+  opacity: .35; transition: opacity .3s;
+
+  &--done   { opacity: 1; }
+  &--active { opacity: 1; .timeline__icon { box-shadow: 0 0 0 4px rgba($primary,.18); } }
+}
+
+.timeline__icon {
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  background: $bg; border: 2px solid $border;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; z-index: 1;
+  transition: border-color .3s, background .3s;
+
+  .timeline__step--done & { background: $primary-lt; border-color: $primary; }
+  .timeline__step--active & { background: $primary; border-color: $primary; }
+}
+
+.timeline__line {
+  position: absolute;
+  top: 21px; left: calc(50% + 21px);
+  width: calc(100% - 42px);
+  height: 2px;
+  background: $border;
+  z-index: 0;
+
+  &--filled {
+    &::after {
+      content: ''; display: block; height: 100%;
+      background: $primary;
+      animation: fillLine .5s ease both;
+    }
+  }
+}
+
+.timeline__label {
+  font-size: .72rem; font-weight: 600; color: $muted; text-align: center; white-space: nowrap;
+  .timeline__step--done & { color: $text; }
+}
+
+// ── Grid ──────────────────────────────────────────────────────────
+.od__grid {
+  display: grid; grid-template-columns: 1fr 340px; gap: 1.25rem; align-items: start;
+}
+
+.od__right { display: flex; flex-direction: column; gap: 1rem; }
+
+// ── Card ──────────────────────────────────────────────────────────
+.card {
+  background: $surface; border: 1px solid $border; border-radius: $radius;
+  padding: 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,.04);
+  animation: fadeInUp .4s ease both;
+
+  &__title { font-size: .875rem; font-weight: 800; margin-bottom: 1rem; letter-spacing: -.01em; }
+}
+
+// ── Items ─────────────────────────────────────────────────────────
+.items-list { display: flex; flex-direction: column; gap: .75rem; }
+
+.item-row {
+  display: flex; align-items: center; gap: .9rem;
+  padding-bottom: .75rem; border-bottom: 1px solid $bg;
+  &:last-child { border-bottom: none; padding-bottom: 0; }
+}
+
+.item-img {
+  width: 52px; height: 52px; border-radius: $radius-sm;
+  border: 1px solid $border; flex-shrink: 0;
+}
+
+.item-info { flex: 1; }
+.item-name { font-size: .875rem; font-weight: 600; color: $text; }
+.item-qty  { font-size: .75rem; color: $muted; margin-top: .15rem; }
+.item-price{ font-size: .95rem; font-weight: 800; color: $text; white-space: nowrap; }
+
+// ── Shipping ──────────────────────────────────────────────────────
+.ship-info { display: flex; flex-direction: column; gap: .3rem; font-size: .85rem; }
+.ship-name { font-weight: 700; }
+.ship-addr, .ship-city { color: $muted; }
+.ship-carrier {
+  display: flex; align-items: center; gap: .35rem;
+  margin-top: .35rem; font-size: .78rem; color: $muted;
+  svg { flex-shrink: 0; }
+  strong { color: $text; }
+}
+
+// ── Totals ────────────────────────────────────────────────────────
+.totals { display: flex; flex-direction: column; gap: .6rem; }
+.totals__row {
+  display: flex; justify-content: space-between; font-size: .875rem; color: $muted;
+  &--total {
+    font-size: 1rem; font-weight: 800; color: $text;
+    padding-top: .6rem; border-top: 1.5px solid $border; margin-top: .15rem;
+  }
+}
+
+// ── Cancel btn ────────────────────────────────────────────────────
+.cancel-btn {
+  width: 100%; padding: .7rem; border-radius: $radius-sm;
+  border: 1.5px solid #fecaca; background: #fff5f5;
+  color: #dc2626; font-size: .85rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; gap: .45rem;
+  transition: background .15s, border-color .15s;
+  &:hover { background: #fee2e2; border-color: #dc2626; }
+}
+
+// ── Status badges ──────────────────────────────────────────────────
+.status-badge {
+  padding: .28rem .85rem; border-radius: 100px; font-size: .75rem; font-weight: 700;
+  &--pending   { background: #fef3c7; color: #92400e; }
+  &--confirmed { background: #dbeafe; color: #1e40af; }
+  &--shipped   { background: #ede9fe; color: #5b21b6; }
+  &--delivered { background: #dcfce7; color: #166534; }
+  &--cancelled { background: #fee2e2; color: #991b1b; }
+}

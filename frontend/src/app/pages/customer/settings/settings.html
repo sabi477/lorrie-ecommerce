@@ -1,0 +1,147 @@
+<div class="settings">
+
+  <h1 class="page-title">Hesap Ayarları</h1>
+
+  <!-- ── Profile ───────────────────────────────────────────────── -->
+  <div class="card" style="animation-delay:0ms">
+    <h3 class="card__title">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Profil Bilgileri
+    </h3>
+    <div class="form-grid">
+      <div class="field">
+        <label>Ad</label>
+        <input type="text" [(ngModel)]="profile.firstName" />
+      </div>
+      <div class="field">
+        <label>Soyad</label>
+        <input type="text" [(ngModel)]="profile.lastName" />
+      </div>
+      <div class="field field--full">
+        <label>E-posta <span class="readonly-tag">Değiştirilemez</span></label>
+        <input type="email" [value]="profile.email" readonly class="input--readonly" />
+      </div>
+      <div class="field field--full">
+        <label>Telefon</label>
+        <input type="tel" [(ngModel)]="profile.phone" placeholder="+90 5__ ___ __ __" />
+      </div>
+    </div>
+    <div class="card__footer">
+      @if (saved) {
+        <span class="save-ok">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Kaydedildi
+        </span>
+      }
+      <button class="save-btn" (click)="saveProfile()">Değişiklikleri Kaydet</button>
+    </div>
+  </div>
+
+  <!-- ── Password ──────────────────────────────────────────────── -->
+  <div class="card" style="animation-delay:80ms">
+    <h3 class="card__title">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      Şifre Değiştir
+    </h3>
+    <div class="form-col">
+      <div class="field">
+        <label>Mevcut Şifre</label>
+        <input type="password" [(ngModel)]="password.current" placeholder="••••••••" />
+      </div>
+      <div class="field">
+        <label>Yeni Şifre</label>
+        <input type="password" [(ngModel)]="password.newPw" placeholder="En az 8 karakter" />
+      </div>
+      <div class="field">
+        <label>Yeni Şifre Tekrar</label>
+        <input type="password" [(ngModel)]="password.confirm" placeholder="••••••••"
+          [class.input--error]="!pwMatch" />
+        @if (!pwMatch) { <span class="field-error">Şifreler eşleşmiyor</span> }
+      </div>
+    </div>
+    <div class="card__footer">
+      @if (pwSaved) {
+        <span class="save-ok">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Şifre güncellendi
+        </span>
+      }
+      <button class="save-btn" (click)="savePassword()"
+        [disabled]="!pwMatch || !password.current || !password.newPw">
+        Şifreyi Güncelle
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Notifications ──────────────────────────────────────────── -->
+  <div class="card" style="animation-delay:160ms">
+    <h3 class="card__title">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      Bildirim Tercihleri
+    </h3>
+    <div class="notif-list">
+      <div class="notif-row">
+        <div class="notif-info">
+          <p class="notif-label">Sipariş Güncellemeleri</p>
+          <p class="notif-sub">Kargo ve teslimat bilgileri</p>
+        </div>
+        <button class="toggle" [class.toggle--on]="notifications.orderUpdates"
+          (click)="notifications.orderUpdates = !notifications.orderUpdates">
+          <span class="toggle__thumb"></span>
+        </button>
+      </div>
+      <div class="notif-row">
+        <div class="notif-info">
+          <p class="notif-label">Kampanya ve İndirimler</p>
+          <p class="notif-sub">Özel fırsatlar ve indirim kodları</p>
+        </div>
+        <button class="toggle" [class.toggle--on]="notifications.promotions"
+          (click)="notifications.promotions = !notifications.promotions">
+          <span class="toggle__thumb"></span>
+        </button>
+      </div>
+      <div class="notif-row">
+        <div class="notif-info">
+          <p class="notif-label">Yeni Ürünler</p>
+          <p class="notif-sub">Koleksiyona eklenen ürünler</p>
+        </div>
+        <button class="toggle" [class.toggle--on]="notifications.newArrivals"
+          (click)="notifications.newArrivals = !notifications.newArrivals">
+          <span class="toggle__thumb"></span>
+        </button>
+      </div>
+      <div class="notif-row">
+        <div class="notif-info">
+          <p class="notif-label">Haftalık E-posta</p>
+          <p class="notif-sub">Öneriler ve trend ürünler</p>
+        </div>
+        <button class="toggle" [class.toggle--on]="notifications.emailDigest"
+          (click)="notifications.emailDigest = !notifications.emailDigest">
+          <span class="toggle__thumb"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Danger zone ────────────────────────────────────────────── -->
+  <div class="card card--danger" style="animation-delay:240ms">
+    <h3 class="card__title card__title--danger">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      Tehlikeli Alan
+    </h3>
+    <p class="danger-desc">Hesabınızı sildiğinizde tüm verileriniz kalıcı olarak kaldırılır. Bu işlem geri alınamaz.</p>
+
+    @if (!showDeleteConfirm) {
+      <button class="delete-btn" (click)="showDeleteConfirm = true">Hesabı Sil</button>
+    } @else {
+      <div class="delete-confirm">
+        <p>Emin misiniz? Bu işlem <strong>geri alınamaz</strong>.</p>
+        <div class="delete-confirm__btns">
+          <button class="cancel-btn" (click)="showDeleteConfirm = false">Vazgeç</button>
+          <button class="delete-btn delete-btn--confirm">Evet, Hesabımı Sil</button>
+        </div>
+      </div>
+    }
+  </div>
+
+</div>

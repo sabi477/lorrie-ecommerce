@@ -54,6 +54,14 @@ app = FastAPI()
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
+from fastapi.middleware.cors import CORSMiddleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:4200"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Statik dosyalar (UI)
 _static_dir = os.path.join(os.path.dirname(__file__), "static")
 app.mount("/static", StaticFiles(directory=_static_dir), name="static")
@@ -91,9 +99,10 @@ def add_response_delay(start_time: float):
 
 class ChatRequest(BaseModel):
     question: str
-    user_role: str = "ADMIN"
-    user_id: Optional[int] = None   # INDIVIDUAL rolü için zorunlu
-    store_id: Optional[int] = None  # CORPORATE rolü için zorunlu
+    user_role: str = "INDIVIDUAL"
+    is_logged_in: bool = False
+    user_id: Optional[int] = None
+    store_id: Optional[int] = None
 
 class ChatResponse(BaseModel):
     answer: str
@@ -136,11 +145,7 @@ async def chat(request: Request, body: ChatRequest):
                             detail="Too many requests. Please wait a moment." if lang == "EN"
                                    else "Çok fazla istek gönderildi. Lütfen bekleyin.")
 
-    # INDIVIDUAL/CORPORATE için gerekli ID kontrolü
-    if role == "INDIVIDUAL" and body.user_id is None:
-        raise HTTPException(status_code=400, detail="user_id is required for INDIVIDUAL role.")
-    if role == "CORPORATE" and body.store_id is None:
-        raise HTTPException(status_code=400, detail="store_id is required for CORPORATE role.")
+    # INDIVIDUAL/CORPORATE için ID yoksa genel cevap döner, hata fırlatılmaz
 
     # SQL pattern kontrolü (context stuffing önlemi)
     if has_sql_pattern(normalized_question):
@@ -156,6 +161,7 @@ async def chat(request: Request, body: ChatRequest):
     result = graph_app.invoke({
         "question": normalized_question,
         "user_role": role,
+        "is_logged_in": body.is_logged_in,
         "user_id": body.user_id,
         "store_id": body.store_id,
         "sql_query": None,

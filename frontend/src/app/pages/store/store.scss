@@ -209,6 +209,63 @@ a { text-decoration: none; color: inherit; cursor: pointer; }
   &:hover { border-color: $primary; background: $primary-lt; color: $primary; }
 }
 
+// Profile dropdown
+.navbar__profile-menu {
+  position: relative;
+
+  &:hover .navbar__dropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+}
+
+.navbar__dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 176px;
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: $radius;
+  box-shadow: 0 8px 24px rgba(0,0,0,.1);
+  padding: .4rem;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-6px);
+  transition: opacity .18s, transform .18s, visibility .18s;
+  z-index: 300;
+
+  a, button {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    width: 100%;
+    padding: .5rem .7rem;
+    border-radius: $radius-sm;
+    font-size: .82rem;
+    font-weight: 500;
+    color: $text;
+    text-decoration: none;
+    text-align: left;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: $font;
+    transition: background .12s;
+    &:hover { background: $bg; }
+    svg { color: $muted; flex-shrink: 0; }
+  }
+
+  &-divider { height: 1px; background: $border; margin: .3rem 0; }
+
+  &-logout {
+    color: #dc2626 !important;
+    svg { color: #dc2626 !important; }
+    &:hover { background: #fef2f2 !important; }
+  }
+}
+
 .navbar__fav,
 .navbar__cart {
   display: flex;
@@ -409,6 +466,7 @@ a { text-decoration: none; color: inherit; cursor: pointer; }
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  cursor: pointer;
   opacity: 0;
   animation: cardUp 0.38s cubic-bezier(0.16,1,0.3,1) var(--delay, 0ms) forwards;
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;

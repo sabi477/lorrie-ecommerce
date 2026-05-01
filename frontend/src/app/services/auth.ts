@@ -50,4 +50,10 @@ export class AuthService {
   isLoggedIn(): boolean {
     return !!this.getToken();
   }
+
+  mockLogin(role: 'CUSTOMER' | 'ADMIN' | 'SELLER', email: string) {
+    localStorage.setItem('token', 'demo-token-' + role.toLowerCase());
+    localStorage.setItem('role', role);
+    localStorage.setItem('email', email);
+  }
 }
