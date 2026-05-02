@@ -16,7 +16,7 @@ export const adminGuard: CanActivateFn = () => {
     return true;
   }
 
-  router.navigate(['/store']);
+  router.navigate(['/']);
   return false;
 };
 

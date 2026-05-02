@@ -50,5 +50,5 @@ export class CustomerOrders {
     CANCELLED: 'İptal Edildi',
   };
 
-  formatPrice(n: number) { return '₺' + n.toLocaleString('tr-TR'); }
+  formatPrice(n: number) { return '$' + n.toLocaleString('en-US'); }
 }

@@ -8,4 +8,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> findBySellerId(Long sellerId);
 
     List<Product> findByCategoryId(Long categoryId);
+
+    boolean existsByThumbnailIsNotNull();
 }

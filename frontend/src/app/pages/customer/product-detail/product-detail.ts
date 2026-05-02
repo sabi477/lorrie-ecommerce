@@ -1,19 +1,33 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, ActivatedRoute } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { RouterLink, ActivatedRoute, Router } from '@angular/router';
+import { AuthService } from '../../../services/auth';
 import { CartService } from '../../../services/cart';
 import { FavoritesService } from '../../../services/favorites';
-import { PRODUCTS } from '../../../shared/products.data';
+import { ProductService, Product } from '../../../services/product';
+import { ReviewService, Review } from '../../../services/review';
 
 @Component({
   selector: 'app-product-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './product-detail.html',
-  styleUrl: './product-detail.scss',
+  styleUrls: ['./product-detail.scss', '../../store/store.scss'],
 })
 export class CustomerProductDetail implements OnInit {
-  product: any = null;
+  product: Product | null = null;
+  reviews: Review[] = [];
+  relatedProducts: Product[] = [];
+  loading = true;
+  relatedLoading = false;
+  error = '';
+  isLoggedIn = false;
+  userEmail = '';
+  userInitial = '';
+  userRole = '';
+  searchQuery = '';
+
   qty = signal(1);
   activeTab = signal<'desc' | 'reviews'>('desc');
   cartAdded = signal(false);
@@ -22,43 +36,225 @@ export class CustomerProductDetail implements OnInit {
     this.product ? this.favSvc.isFavorited(this.product.id) : false
   );
 
-  reviews = [
-    { author: 'Merve K.',    av: 'MK', rating: 5, date: '22 Nis 2026', text: 'Harika bir ürün! Kalitesi gerçekten çok iyi. Kesinlikle tavsiye ederim.' },
-    { author: 'Selin Aydın', av: 'SA', rating: 4, date: '15 Nis 2026', text: 'Görsellerden çok daha güzel geldi. Genel olarak çok memnunum.' },
-    { author: 'Zeynep T.',   av: 'ZT', rating: 5, date: '8 Nis 2026',  text: 'İkinci siparişim, birincisi çok güzel çıktığı için tekrar aldım.' },
-    { author: 'Canan Ö.',    av: 'CÖ', rating: 4, date: '1 Nis 2026',  text: 'Kaliteli ve şık. Lorrie\'den her seferinde memnun kalıyorum.' },
-  ];
-
   constructor(
     private route: ActivatedRoute,
-    private cartSvc: CartService,
+    private router: Router,
+    private authService: AuthService,
+    public cartSvc: CartService,
     public favSvc: FavoritesService,
+    private productSvc: ProductService,
+    private reviewSvc: ReviewService,
+    private cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit() {
-    const id = Number(this.route.snapshot.paramMap.get('id'));
-    this.product = PRODUCTS.find(p => p.id === id) ?? PRODUCTS[0];
+    this.isLoggedIn = this.authService.isLoggedIn();
+    this.userEmail = this.authService.getEmail() ?? '';
+    this.userInitial = this.userEmail.charAt(0).toUpperCase();
+    this.userRole = this.authService.getRole() ?? '';
+
+    this.favSvc.load();
+    this.route.paramMap.subscribe(params => {
+      const id = Number(params.get('id'));
+      this.loadProduct(id);
+    });
   }
 
-  get discount() {
-    return this.product?.originalPrice
-      ? Math.round((1 - this.product.price / this.product.originalPrice) * 100) : 0;
+  private loadProduct(id: number): void {
+    if (!Number.isFinite(id) || id <= 0) {
+      this.error = 'Ürün bulunamadı.';
+      this.loading = false;
+      return;
+    }
+
+    this.loading = true;
+    this.error = '';
+    this.product = null;
+    this.reviews = [];
+    this.relatedProducts = [];
+    this.qty.set(1);
+    this.activeTab.set('desc');
+
+    this.productSvc.getById(id).subscribe({
+      next: (product) => {
+        this.product = product;
+        this.loading = false;
+        this.cdr.detectChanges();
+        this.loadReviews(id);
+        this.loadRelatedProducts(product);
+      },
+      error: () => {
+        this.error = 'Ürün yüklenemedi.';
+        this.loading = false;
+        this.cdr.detectChanges();
+      },
+    });
   }
 
-  formatPrice(n: number) { return '₺' + n.toLocaleString('tr-TR'); }
-  stars(n: number)        { return Array(5).fill(0).map((_, i) => i < Math.floor(n)); }
+  private loadRelatedProducts(product: Product): void {
+    this.relatedLoading = true;
+    this.productSvc.getAll(60, 0).subscribe({
+      next: (products) => {
+        this.relatedProducts = products
+          .filter(p => p.id !== product.id)
+          .map(p => ({ product: p, score: this.relatedScore(product, p) }))
+          .filter(item => item.score > 0)
+          .sort((a, b) => b.score - a.score)
+          .slice(0, 4)
+          .map(item => item.product);
+        this.relatedLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.relatedProducts = [];
+        this.relatedLoading = false;
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  private relatedScore(current: Product, candidate: Product): number {
+    let score = 0;
+    if (current.category?.id && candidate.category?.id === current.category.id) score += 8;
+    if (current.category?.name && candidate.category?.name === current.category.name) score += 6;
+    if (current.brand && candidate.brand === current.brand) score += 3;
+
+    const currentTags = new Set(current.tags ?? []);
+    for (const tag of candidate.tags ?? []) {
+      if (currentTags.has(tag)) score += 2;
+    }
+
+    score += (candidate.averageRating ?? 0) / 10;
+    return score;
+  }
+
+  private loadReviews(productId: number): void {
+    this.reviewSvc.getByProduct(productId).subscribe({
+      next: (reviews) => {
+        this.reviews = reviews;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.reviews = [];
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  get tags(): string[] {
+    return this.product?.tags ?? [];
+  }
+
+  get stockQuantity(): number {
+    return this.product?.stockQuantity ?? 0;
+  }
+
+  // Hesaplanmış orijinal fiyat (indirimden önceki)
+  get originalPrice(): number | null {
+    if (!this.product?.discountPercentage) return null;
+    return Math.round(Number(this.product.price) / (1 - this.product.discountPercentage / 100));
+  }
+
+  get discountLabel(): string {
+    return this.product?.discountPercentage
+      ? `%${Math.round(this.product.discountPercentage)} İndirim`
+      : '';
+  }
+
+  get imageUrl(): string {
+    if (!this.product) return '';
+    return this.product.thumbnail ?? this.product.imageUrl
+      ?? `https://picsum.photos/seed/${this.product.id}/600/600`;
+  }
+
+  productImage(product: Product): string {
+    return product.thumbnail ?? product.imageUrl ?? `https://picsum.photos/seed/${product.id}/400/400`;
+  }
+
+  productOriginalPrice(product: Product): number | null {
+    if (!product.discountPercentage) return null;
+    return Math.round(Number(product.price) / (1 - product.discountPercentage / 100));
+  }
+
+  openProduct(id: number): void {
+    this.router.navigate(['/product-detail', id]);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  formatPrice(n: number) { return '$' + Number(n).toLocaleString('en-US'); }
+
+  stars(n: number | null): boolean[] {
+    const r = n ?? 0;
+    return Array(5).fill(0).map((_, i) => i < Math.round(r));
+  }
+
+  getInitials(fullName: string | null | undefined): string {
+    if (!fullName) return '?';
+    return fullName.split(' ')
+      .map(w => w[0])
+      .slice(0, 2)
+      .join('')
+      .toUpperCase();
+  }
+
+  formatDate(iso: string): string {
+    return new Date(iso).toLocaleDateString('tr-TR', {
+      day: 'numeric', month: 'short', year: 'numeric',
+    });
+  }
+
   decQty() { if (this.qty() > 1) this.qty.update(v => v - 1); }
   incQty() { this.qty.update(v => v + 1); }
 
+  search(): void {
+    const q = this.searchQuery.trim();
+    this.router.navigate(['/'], q ? { queryParams: { q } } : undefined);
+  }
+
+  onEnter(e: KeyboardEvent): void {
+    if (e.key === 'Enter') this.search();
+  }
+
+  goLogin(): void {
+    this.router.navigate(['/login']);
+  }
+
+  logout(): void {
+    this.authService.logout();
+    this.isLoggedIn = false;
+    this.userEmail = '';
+    this.userRole = '';
+  }
+
   addToCart() {
     if (!this.product) return;
-    for (let i = 0; i < this.qty(); i++) this.cartSvc.add(this.product);
+    const cartItem = {
+      id: this.product.id,
+      name: this.product.name,
+      brand: this.product.brand,
+      price: this.product.price,
+      thumbnail: this.product.thumbnail ?? this.product.imageUrl,
+    };
+    for (let i = 0; i < this.qty(); i++) this.cartSvc.add(cartItem);
     this.cartAdded.set(true);
     setTimeout(() => this.cartAdded.set(false), 2000);
   }
 
   toggleFav() {
     if (!this.product) return;
-    this.favSvc.toggle(this.product);
+    if (!this.isLoggedIn) {
+      this.router.navigate(['/login']);
+      return;
+    }
+    const favItem = {
+      id: this.product.id,
+      name: this.product.name,
+      brand: this.product.brand,
+      price: this.product.price,
+      rating: this.product.averageRating,
+      thumbnail: this.product.thumbnail ?? this.product.imageUrl,
+      category: this.product.category,
+    };
+    this.favSvc.toggle(favItem);
   }
 }

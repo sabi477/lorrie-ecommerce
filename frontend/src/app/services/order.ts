@@ -15,7 +15,7 @@ export interface Order {
 
 @Injectable({ providedIn: 'root' })
 export class OrderService {
-  private api = 'http://localhost:8081/api/orders';
+  private api = 'http://localhost:8080/api/orders';
 
   constructor(private http: HttpClient, private auth: AuthService) {}
 

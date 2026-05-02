@@ -18,7 +18,7 @@
       </div>
       <h3>Henüz favori eklemediniz</h3>
       <p>Beğendiğiniz ürünleri favorilere ekleyin.</p>
-      <a class="btn-shop" routerLink="/store">Ürünleri Keşfet</a>
+      <a class="btn-shop" routerLink="/">Ürünleri Keşfet</a>
     </div>
 
   } @else {
@@ -40,10 +40,16 @@
         <div class="fav-card" [style.animation-delay]="(i * 50) + 'ms'">
 
           <!-- Görsel -->
-          <a [routerLink]="['/customer/product-detail', item.id]" class="fav-img-wrap"
-             [style.background]="item.bg" [style.color]="item.accent">
+          <a [routerLink]="['/product-detail', item.id]" class="fav-img-wrap"
+             [style.background]="item.thumbnail ? 'transparent' : (item.bg || '#f3f4f6')"
+             [style.color]="item.accent">
             @if (item.badge) { <span class="fav-badge">{{ item.badge }}</span> }
-            <div class="fav-icon" [innerHTML]="item.icon"></div>
+            @if (item.thumbnail) {
+              <img [src]="item.thumbnail" [alt]="item.name"
+                   style="width:100%;height:100%;object-fit:cover" />
+            } @else if (item.icon) {
+              <div class="fav-icon" [innerHTML]="item.icon"></div>
+            }
           </a>
 
           <!-- Kaldır -->
@@ -56,7 +62,7 @@
           <!-- Bilgi -->
           <div class="fav-info">
             <p class="fav-brand">{{ item.brand }}</p>
-            <a [routerLink]="['/customer/product-detail', item.id]" class="fav-name">{{ item.name }}</a>
+            <a [routerLink]="['/product-detail', item.id]" class="fav-name">{{ item.name }}</a>
 
             <!-- Rating -->
             <div class="fav-rating">
@@ -67,7 +73,7 @@
                   </svg>
                 }
               </div>
-              <span>{{ item.rating }} ({{ item.reviews.toLocaleString() }})</span>
+              <span>{{ item.rating ?? '-' }}{{ item.reviews ? ' (' + item.reviews.toLocaleString() + ')' : '' }}</span>
             </div>
 
             <!-- Fiyat -->

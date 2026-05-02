@@ -16,9 +16,11 @@ public class ProductController {
     private final ProductRepository productRepository;
 
     @GetMapping
-    public List<Product> getAll(@RequestParam(required = false) Integer limit) {
+    public List<Product> getAll(
+            @RequestParam(value = "limit", required = false) Integer limit,
+            @RequestParam(value = "page", required = false, defaultValue = "0") Integer page) {
         if (limit != null && limit > 0) {
-            return productRepository.findAll(org.springframework.data.domain.PageRequest.of(0, limit)).getContent();
+            return productRepository.findAll(org.springframework.data.domain.PageRequest.of(page, limit)).getContent();
         }
         return productRepository.findAll();
     }

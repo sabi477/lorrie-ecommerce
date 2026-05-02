@@ -1,11 +1,99 @@
-@if (product) {
-<div class="pd">
+<div class="s">
+  <header class="navbar">
+    <div class="navbar__inner">
+      <a class="navbar__brand" routerLink="/">
+        <div class="brand-mark">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" fill="currentColor"/>
+          </svg>
+        </div>
+        <span class="brand-text">lorrie</span>
+      </a>
+
+      <div class="navbar__search">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input
+          class="navbar__search-input"
+          type="text"
+          placeholder="Ürün, kategori veya marka ara"
+          [(ngModel)]="searchQuery"
+          (keydown)="onEnter($event)" />
+        <button class="navbar__search-btn" (click)="search()">Ara</button>
+      </div>
+
+      <div class="navbar__actions">
+        <a class="navbar__fav" routerLink="/customer/favorites">
+          <div class="cart-icon-wrap">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+            </svg>
+            @if (favSvc.count() > 0) { <span class="cart-badge">{{ favSvc.count() }}</span> }
+          </div>
+          <span>Favorilerim</span>
+        </a>
+
+        <a class="navbar__cart" routerLink="/customer/cart">
+          <div class="cart-icon-wrap">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+            </svg>
+            @if (cartSvc.count() > 0) { <span class="cart-badge">{{ cartSvc.count() }}</span> }
+          </div>
+          <span>Sepetim</span>
+        </a>
+
+        @if (isLoggedIn) {
+          <div class="navbar__profile-menu">
+            <button class="navbar__user">
+              <div class="user-avatar">{{ userInitial }}</div>
+              <span>{{ userEmail.split('@')[0] }}</span>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="navbar__dropdown">
+              @if (userRole === 'CUSTOMER') {
+                <a routerLink="/customer/profile">Profilim</a>
+                <a routerLink="/customer/orders">Siparişlerim</a>
+                <a routerLink="/customer/cart">Sepetim</a>
+                <a routerLink="/customer/settings">Ayarlar</a>
+              } @else {
+                <a routerLink="/dashboard">Dashboard</a>
+              }
+              <div class="navbar__dropdown-divider"></div>
+              <button class="navbar__dropdown-logout" (click)="logout()">Çıkış Yap</button>
+            </div>
+          </div>
+        } @else {
+          <button class="navbar__login" (click)="goLogin()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+            Giriş Yap
+          </button>
+        }
+      </div>
+    </div>
+  </header>
+
+  @if (loading) {
+    <div class="pd-state">Ürün yükleniyor...</div>
+  }
+
+  @if (error) {
+    <div class="pd-state pd-state--error">{{ error }}</div>
+  }
+
+  @if (!loading && product) {
+  <div class="pd">
 
   <!-- Breadcrumb -->
   <nav class="pd-crumb">
-    <a routerLink="/store">Mağaza</a>
+    <a routerLink="/">Mağaza</a>
     <span>/</span>
-    <span>{{ product.category }}</span>
+    <span>{{ product.category?.name ?? 'Kategori' }}</span>
     <span>/</span>
     <span>{{ product.name }}</span>
   </nav>
@@ -14,43 +102,86 @@
 
     <!-- ── Sol: Görsel ────────────────────────────────────── -->
     <div class="pd-gallery">
-      <div class="pd-img" [style.background]="product.bg" [style.color]="product.accent">
-        @if (product.badge) {
-          <span class="pd-badge">{{ product.badge }}</span>
+      <div class="pd-img-wrapper">
+        @if (product.discountPercentage) {
+          <span class="pd-badge">%{{ product.discountPercentage | number:'1.0-0' }} İndirim</span>
         }
-        <div class="pd-icon" [innerHTML]="product.icon"></div>
+        <img [src]="imageUrl" [alt]="product.name"
+             onerror="this.src='https://picsum.photos/seed/fallback/600/600'" />
       </div>
+      @if (tags.length) {
+        <div class="pd-tags">
+          @for (tag of tags; track tag) {
+            <span class="pd-tag">{{ tag }}</span>
+          }
+        </div>
+      }
     </div>
 
     <!-- ── Sağ: Bilgi ─────────────────────────────────────── -->
     <div class="pd-info">
 
-      <p class="pd-brand">{{ product.brand }}</p>
+      <div class="pd-header-meta">
+        @if (product.brand) { <p class="pd-brand">{{ product.brand }}</p> }
+        @if (product.sku)   { <p class="pd-sku">SKU: {{ product.sku }}</p> }
+      </div>
+
       <h1 class="pd-name">{{ product.name }}</h1>
 
       <!-- Rating -->
-      <div class="pd-rating">
-        <div class="stars">
-          @for (filled of stars(product.rating); track $index) {
-            <svg width="14" height="14" viewBox="0 0 24 24" [attr.fill]="filled ? '#f59e0b' : 'none'" stroke="#f59e0b" stroke-width="2">
-              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-            </svg>
-          }
+      @if (product.averageRating) {
+        <div class="pd-rating">
+          <div class="stars">
+            @for (filled of stars(product.averageRating); track $index) {
+              <svg width="14" height="14" viewBox="0 0 24 24"
+                   [attr.fill]="filled ? '#f59e0b' : 'none'"
+                   stroke="#f59e0b" stroke-width="2">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+              </svg>
+            }
+          </div>
+          <span class="pd-rating-val">{{ product.averageRating | number:'1.1-1' }}</span>
+          <span class="pd-rating-count">({{ reviews.length }} değerlendirme)</span>
         </div>
-        <span class="pd-rating-val">{{ product.rating }}</span>
-        <span class="pd-rating-count">({{ product.reviews.toLocaleString() }} değerlendirme)</span>
-      </div>
+      }
 
       <!-- Fiyat -->
       <div class="pd-price-row">
         <span class="pd-price">{{ formatPrice(product.price) }}</span>
-        @if (product.originalPrice) {
-          <span class="pd-original">{{ formatPrice(product.originalPrice) }}</span>
-          <span class="pd-discount">%{{ discount }} İndirim</span>
+        @if (originalPrice) {
+          <span class="pd-original">{{ formatPrice(originalPrice) }}</span>
+          <span class="pd-discount">{{ discountLabel }}</span>
         }
       </div>
 
+      <!-- Satıcı -->
+      @if (product.seller) {
+        <div class="pd-seller">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+            <polyline points="9 22 9 12 15 12 15 22"/>
+          </svg>
+          Satıcı: <strong>{{ product.seller.fullName }}</strong>
+        </div>
+      }
+
       <div class="pd-divider"></div>
+
+      <!-- Stok -->
+      <div class="pd-stock-row" [class.low]="stockQuantity < 10">
+        @if (stockQuantity > 0) {
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          @if (stockQuantity < 10) {
+            Son {{ stockQuantity }} ürün!
+          } @else {
+            Stokta var ({{ stockQuantity }} adet)
+          }
+        } @else {
+          Stokta yok
+        }
+      </div>
 
       <!-- Adet -->
       <div class="pd-qty-row">
@@ -58,73 +189,167 @@
         <div class="qty-ctrl">
           <button (click)="decQty()" [disabled]="qty() === 1">−</button>
           <span>{{ qty() }}</span>
-          <button (click)="incQty()">+</button>
+          <button (click)="incQty()" [disabled]="qty() >= stockQuantity">+</button>
         </div>
       </div>
 
       <!-- Butonlar -->
       <div class="pd-actions">
-        <button class="btn-cart" (click)="addToCart()" [class.btn-cart--added]="cartAdded()">
+        <button class="btn-cart" (click)="addToCart()"
+                [class.btn-cart--added]="cartAdded()"
+                [disabled]="stockQuantity === 0">
           @if (cartAdded()) {
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
             Sepete Eklendi!
           } @else {
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+            </svg>
             Sepete Ekle
           }
         </button>
-        <button class="btn-fav" (click)="toggleFav()" [class.btn-fav--active]="favSvc.isFavorited(product.id)">
-          <svg width="18" height="18" viewBox="0 0 24 24" [attr.fill]="favSvc.isFavorited(product.id) ? '#ef4444' : 'none'" stroke="#ef4444" stroke-width="2">
+        <button class="btn-fav" (click)="toggleFav()"
+                [class.btn-fav--active]="favSvc.isFavorited(product.id)">
+          <svg width="18" height="18" viewBox="0 0 24 24"
+               [attr.fill]="favSvc.isFavorited(product.id) ? '#ef4444' : 'none'"
+               stroke="#ef4444" stroke-width="2">
             <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
           </svg>
           {{ favSvc.isFavorited(product.id) ? 'Favorilerden Çıkar' : 'Favorilere Ekle' }}
         </button>
       </div>
 
-      <!-- Özellikler -->
-      <div class="pd-features">
-        <p class="pd-features-title">Ürün Özellikleri</p>
-        <ul>
-          @for (f of product.features; track f) {
-            <li>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f27a1a" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-              {{ f }}
-            </li>
-          }
-        </ul>
-      </div>
     </div>
   </div>
 
   <!-- Tabs -->
   <div class="pd-tabs">
-    <button class="pd-tab" [class.pd-tab--active]="activeTab() === 'desc'" (click)="activeTab.set('desc')">Ürün Açıklaması</button>
-    <button class="pd-tab" [class.pd-tab--active]="activeTab() === 'reviews'" (click)="activeTab.set('reviews')">Değerlendirmeler ({{ reviews.length }})</button>
+    <button class="pd-tab" [class.pd-tab--active]="activeTab() === 'desc'"
+            (click)="activeTab.set('desc')">
+      Ürün Açıklaması
+    </button>
+    <button class="pd-tab" [class.pd-tab--active]="activeTab() === 'reviews'"
+            (click)="activeTab.set('reviews')">
+      Değerlendirmeler ({{ reviews.length }})
+    </button>
   </div>
 
   @if (activeTab() === 'desc') {
-    <div class="pd-desc"><p>{{ product.description }}</p></div>
+    <div class="pd-desc">
+      <p>{{ product.description }}</p>
+    </div>
   }
+
   @if (activeTab() === 'reviews') {
     <div class="pd-reviews">
-      @for (r of reviews; track r.author) {
+      @if (reviews.length === 0) {
+        <p class="pd-no-review">Henüz değerlendirme yok.</p>
+      }
+      @for (r of reviews; track r.id) {
         <div class="review-card">
-          <div class="review-av">{{ r.av }}</div>
+          <div class="review-av">{{ getInitials(r.customer?.fullName) }}</div>
           <div class="review-body">
             <div class="review-top">
-              <span class="review-author">{{ r.author }}</span>
+              <span class="review-author">{{ r.customer?.fullName ?? 'Anonim' }}</span>
               <div class="stars">
                 @for (filled of stars(r.rating); track $index) {
-                  <svg width="12" height="12" viewBox="0 0 24 24" [attr.fill]="filled ? '#f59e0b' : 'none'" stroke="#f59e0b" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  <svg width="12" height="12" viewBox="0 0 24 24"
+                       [attr.fill]="filled ? '#f59e0b' : 'none'"
+                       stroke="#f59e0b" stroke-width="2">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                  </svg>
                 }
               </div>
-              <span class="review-date">{{ r.date }}</span>
+              <span class="review-date">{{ formatDate(r.createdAt) }}</span>
             </div>
-            <p class="review-text">{{ r.text }}</p>
+            <p class="review-text">{{ r.comment }}</p>
           </div>
         </div>
       }
     </div>
   }
+
+  </div>
+  }
+
+  @if (!loading && product && (relatedLoading || relatedProducts.length > 0)) {
+    <section class="pd-related">
+      <div class="pd-related__head">
+        <div>
+          <p class="pd-related__eyebrow">{{ product.category?.name ?? 'Benzer ürünler' }}</p>
+          <h2>Önerilen Ürünler</h2>
+        </div>
+        <a routerLink="/">Tümünü Gör</a>
+      </div>
+
+      @if (relatedLoading) {
+        <div class="pd-related__loading">Öneriler hazırlanıyor...</div>
+      } @else {
+        <div class="pd-related__grid">
+          @for (item of relatedProducts; track item.id) {
+            <article class="pd-related-card" (click)="openProduct(item.id)">
+              <div class="pd-related-card__img">
+                @if (item.discountPercentage) {
+                  <span>%{{ item.discountPercentage | number:'1.0-0' }}</span>
+                }
+                <img [src]="productImage(item)" [alt]="item.name"
+                     onerror="this.src='https://picsum.photos/seed/related/400/400'" />
+              </div>
+              <div class="pd-related-card__body">
+                <p class="pd-related-card__brand">{{ item.brand ?? 'Lorrie' }}</p>
+                <h3>{{ item.name }}</h3>
+                <div class="pd-related-card__rating">
+                  <span>★</span>
+                  {{ item.averageRating ? (item.averageRating | number:'1.1-1') : '-' }}
+                </div>
+                <div class="pd-related-card__price">
+                  <strong>{{ formatPrice(item.price) }}</strong>
+                  @if (productOriginalPrice(item); as oldPrice) {
+                    <small>{{ formatPrice(oldPrice) }}</small>
+                  }
+                </div>
+              </div>
+            </article>
+          }
+        </div>
+      }
+    </section>
+  }
+
+  <footer class="footer">
+    <div class="footer__inner">
+      <div class="footer__brand-col">
+        <div class="footer__logo">
+          <div class="brand-mark brand-mark--sm">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" fill="currentColor"/></svg>
+          </div>
+          <span>lorrie</span>
+        </div>
+        <p>Premium moda &amp; aksesuar</p>
+      </div>
+      <div class="footer__col">
+        <h5>Hakkımızda</h5>
+        <a>Blog</a><a>Ekibimiz</a><a>Kariyer</a><a>İletişim</a>
+      </div>
+      <div class="footer__col">
+        <h5>Destek</h5>
+        <a>Kargo Bilgisi</a><a>İade &amp; Değişim</a><a>SSS</a><a>Bize Ulaşın</a>
+      </div>
+      <div class="footer__col">
+        <h5>Sosyal Medya</h5>
+        <div class="footer__socials">
+          <button>𝕏</button><button>f</button><button>in</button><button>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1.5" fill="currentColor" stroke="none"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="footer__bar">
+      <span>© 2026 Lorrie. Tüm hakları saklıdır.</span>
+      <div><a>Kullanım Koşulları</a><a>Gizlilik Politikası</a><a>Çerezler</a></div>
+    </div>
+  </footer>
 </div>
-}

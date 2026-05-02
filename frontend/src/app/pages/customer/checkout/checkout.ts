@@ -28,7 +28,7 @@ export class CustomerCheckout {
   get shipping()  { return this.subtotal >= 1500 ? 0 : 49; }
   get total()     { return this.subtotal + this.shipping; }
 
-  formatPrice(n: number) { return '₺' + n.toLocaleString('tr-TR'); }
+  formatPrice(n: number) { return '$' + n.toLocaleString('en-US'); }
 
   formatCardNumber(val: string) {
     return val.replace(/\D/g, '').slice(0, 16).replace(/(.{4})/g, '$1 ').trim();

@@ -18,13 +18,14 @@ import { CustomerCart } from './pages/customer/cart/cart';
 import { CustomerFavorites } from './pages/customer/favorites/favorites';
 
 export const routes: Routes = [
-  { path: '', redirectTo: '/store', pathMatch: 'full' },
+  { path: '', component: Store },
   { path: 'login', component: Login },
   { path: 'register', component: Register },
-  { path: 'store', component: Store },
+
   { path: 'dashboard', component: Dashboard, canActivate: [authGuard] },
   { path: 'orders', component: Orders, canActivate: [authGuard] },
   { path: 'products', component: Products, canActivate: [authGuard] },
+  { path: 'product-detail/:id', component: CustomerProductDetail },
   { path: 'users', component: Users, canActivate: [roleGuard(['ADMIN'])] },
 
   {
@@ -36,7 +37,6 @@ export const routes: Routes = [
       { path: 'profile', component: CustomerProfile },
       { path: 'orders', component: CustomerOrders },
       { path: 'order-detail/:id', component: CustomerOrderDetail },
-      { path: 'product-detail/:id', component: CustomerProductDetail },
       { path: 'checkout', component: CustomerCheckout },
       { path: 'cart', component: CustomerCart },
       { path: 'favorites', component: CustomerFavorites },
@@ -44,5 +44,5 @@ export const routes: Routes = [
     ],
   },
 
-  { path: '**', redirectTo: '/store' },
+  { path: '**', redirectTo: '' },
 ];

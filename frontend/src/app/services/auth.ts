@@ -7,7 +7,7 @@ import { Observable, tap } from 'rxjs';
 })
 export class AuthService {
 
-  private apiUrl = 'http://localhost:8081/api/auth';
+  private apiUrl = 'http://localhost:8080/api/auth';
 
   constructor(private http: HttpClient) { }
 
@@ -17,6 +17,7 @@ export class AuthService {
         localStorage.setItem('token', res.token);
         localStorage.setItem('role', res.role);
         localStorage.setItem('email', res.email);
+        localStorage.setItem('id', res.id);
       })
     );
   }
@@ -27,12 +28,16 @@ export class AuthService {
         localStorage.setItem('token', res.token);
         localStorage.setItem('role', res.role);
         localStorage.setItem('email', res.email);
+        localStorage.setItem('id', res.id);
       })
     );
   }
 
   logout(): void {
-    localStorage.clear();
+    localStorage.removeItem('token');
+    localStorage.removeItem('role');
+    localStorage.removeItem('email');
+    localStorage.removeItem('id');
   }
 
   getToken(): string | null {
@@ -51,9 +56,15 @@ export class AuthService {
     return !!this.getToken();
   }
 
+  getUserId(): number | null {
+    const id = localStorage.getItem('id');
+    return id ? parseInt(id, 10) : null;
+  }
+
   mockLogin(role: 'CUSTOMER' | 'ADMIN' | 'SELLER', email: string) {
     localStorage.setItem('token', 'demo-token-' + role.toLowerCase());
     localStorage.setItem('role', role);
     localStorage.setItem('email', email);
+    localStorage.setItem('id', '1'); // Default for mock
   }
 }

@@ -29,6 +29,7 @@ export class CustomerLayout implements OnInit {
   ngOnInit() {
     this.userEmail   = this.auth.getEmail() ?? '';
     this.userInitial = this.userEmail.charAt(0).toUpperCase();
+    this.favSvc.load();
   }
 
   logout() {
@@ -38,7 +39,7 @@ export class CustomerLayout implements OnInit {
 
   search() {
     if (this.searchQuery.trim()) {
-      this.router.navigate(['/store'], { queryParams: { q: this.searchQuery } });
+      this.router.navigate(['/'], { queryParams: { q: this.searchQuery } });
     }
   }
 

@@ -56,6 +56,8 @@ export class ChatPanel implements AfterViewChecked {
 
     const role       = this.chat.mapRole(this.auth.getRole());
     const isLoggedIn = this.auth.isLoggedIn();
+    const userId     = this.auth.getUserId();
+    const storeId    = role === 'CORPORATE' ? userId : null;
 
     // 20 saniye timeout
     let timedOut = false;
@@ -70,7 +72,7 @@ export class ChatPanel implements AfterViewChecked {
       this.shouldScroll = true;
     }, 20000);
 
-    this.chat.send(text, role, isLoggedIn).subscribe({
+    this.chat.send(text, role, isLoggedIn, userId, storeId).subscribe({
       next: (res) => {
         clearTimeout(timeoutId);
         if (timedOut) return;

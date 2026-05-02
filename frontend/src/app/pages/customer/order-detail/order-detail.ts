@@ -82,5 +82,5 @@ export class CustomerOrderDetail implements OnInit {
 
   get total(): number { return this.order.subtotal + this.order.shippingCost; }
 
-  formatPrice(n: number) { return '₺' + n.toLocaleString('tr-TR'); }
+  formatPrice(n: number) { return '$' + n.toLocaleString('en-US'); }
 }

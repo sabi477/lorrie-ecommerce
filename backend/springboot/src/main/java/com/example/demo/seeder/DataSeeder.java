@@ -2,6 +2,7 @@ package com.example.demo.seeder;
 
 import com.example.demo.entity.*;
 import com.example.demo.repository.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import tools.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,14 +27,25 @@ public class DataSeeder implements CommandLineRunner {
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
     private final ReviewRepository reviewRepository;
+    private final OrderItemRepository orderItemRepository;
+    private final OrderRepository orderRepository;
+    private final ShipmentRepository shipmentRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
-    @Transactional
     public void run(String... args) {
         if (productRepository.count() > 0) {
-            log.info("Database already seeded, skipping.");
-            return;
+            if (productRepository.existsByThumbnailIsNotNull()) {
+                log.info("DummyJSON data already seeded, skipping.");
+                return;
+            }
+            log.info("Old products found (no thumbnails), clearing and re-seeding...");
+            shipmentRepository.deleteAll();
+            orderItemRepository.deleteAll();
+            orderRepository.deleteAll();
+            reviewRepository.deleteAll();
+            productRepository.deleteAll();
+            categoryRepository.deleteAll();
         }
 
         log.info("Seeding database from DummyJSON...");
@@ -53,13 +65,15 @@ public class DataSeeder implements CommandLineRunner {
 
         List<User> sellers = new ArrayList<>();
         for (String[] data : sellerData) {
-            if (userRepository.existsByEmail(data[1])) continue;
-            User seller = new User();
-            seller.setFullName(data[0]);
-            seller.setEmail(data[1]);
-            seller.setPassword(passwordEncoder.encode("seller123"));
-            seller.setRole(User.Role.SELLER);
-            sellers.add(userRepository.save(seller));
+            User seller = userRepository.findByEmail(data[1]).orElseGet(() -> {
+                User u = new User();
+                u.setFullName(data[0]);
+                u.setEmail(data[1]);
+                u.setPassword(passwordEncoder.encode("seller123"));
+                u.setRole(User.Role.SELLER);
+                return userRepository.save(u);
+            });
+            sellers.add(seller);
         }
         return sellers;
     }

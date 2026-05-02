@@ -12,7 +12,7 @@ export interface DashboardStats {
 
 @Injectable({ providedIn: 'root' })
 export class DashboardService {
-  private base = 'http://localhost:8081/api';
+  private base = 'http://localhost:8080/api';
 
   constructor(private http: HttpClient, private auth: AuthService) {}
 

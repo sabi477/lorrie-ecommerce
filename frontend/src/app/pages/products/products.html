@@ -35,10 +35,37 @@
                      onerror="this.src='https://picsum.photos/seed/default/400/400'" />
               </div>
               <div class="product-body">
-                <span class="product-category">{{ getCategoryName(product) }}</span>
+                <div class="product-meta">
+                  <span class="product-category">{{ getCategoryName(product) }}</span>
+                  @if (product.brand) {
+                    <span class="product-brand">{{ product.brand }}</span>
+                  }
+                </div>
                 <h3 class="product-name">{{ product.name }}</h3>
+
+                @if (product.averageRating) {
+                  <div class="product-rating">
+                    @for (filled of stars(product.averageRating); track $index) {
+                      <svg width="11" height="11" viewBox="0 0 24 24"
+                           [attr.fill]="filled ? '#f59e0b' : 'none'"
+                           stroke="#f59e0b" stroke-width="2">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                      </svg>
+                    }
+                    <span class="rating-val">{{ product.averageRating | number:'1.1-1' }}</span>
+                  </div>
+                }
+
                 <div class="product-footer">
-                  <span class="product-price">${{ product.price | number:'1.2-2' }}</span>
+                  <div class="price-group">
+                    @if (product.discountPercentage && getDiscountedPrice(product); as discounted) {
+                      <span class="product-price">${{ discounted | number:'1.0-0' }}</span>
+                      <span class="product-original">${{ product.price | number:'1.0-0' }}</span>
+                      <span class="product-discount-badge">%{{ product.discountPercentage | number:'1.0-0' }}</span>
+                    } @else {
+                      <span class="product-price">${{ product.price | number:'1.0-0' }}</span>
+                    }
+                  </div>
                   <span class="product-stock" [class.low-stock]="product.stockQuantity < 10">
                     Stok: {{ product.stockQuantity }}
                   </span>

@@ -6,14 +6,16 @@
     <div class="hero__info">
       <h1 class="hero__name">{{ user.name }}</h1>
       <p class="hero__email">{{ user.email }}</p>
-      <span class="hero__badge">Müşteri</span>
+      <bl-badge size="small" variant="warning">Müşteri</bl-badge>
     </div>
     <div class="hero__meta">
       <span class="hero__joined">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <bl-icon name="calendar" size="13"></bl-icon>
         {{ user.joined }}'dan beri üye
       </span>
-      <a class="hero__edit-btn" routerLink="/customer/settings">Profili Düzenle</a>
+      <bl-button kind="secondary" size="small" routerLink="/customer/settings">
+        Profili Düzenle
+      </bl-button>
     </div>
   </section>
 
@@ -21,7 +23,7 @@
   <div class="stats-row">
     @for (s of stats; track s.label; let i = $index) {
       <div class="stat-card" [style.animation-delay]="(i * 80) + 'ms'">
-        <span class="stat-icon">{{ s.icon }}</span>
+        <div class="stat-icon"><bl-icon [name]="s.icon"></bl-icon></div>
         <span class="stat-value">{{ s.value }}</span>
         <span class="stat-label">{{ s.label }}</span>
       </div>
@@ -32,7 +34,9 @@
   <section class="section">
     <div class="section__head">
       <h2 class="section__title">Son Siparişler</h2>
-      <a class="section__link" routerLink="/customer/orders">Tümünü Gör →</a>
+      <bl-button kind="text" size="small" routerLink="/customer/orders">
+        Tümünü Gör →
+      </bl-button>
     </div>
 
     <div class="orders-list">
@@ -41,7 +45,7 @@
            [style.animation-delay]="(i * 60 + 200) + 'ms'">
           <div class="order-card__left">
             <div class="order-card__icon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              <bl-icon name="order" size="18"></bl-icon>
             </div>
             <div>
               <p class="order-card__id">#{{ o.id }}</p>
@@ -49,7 +53,9 @@
             </div>
           </div>
           <div class="order-card__right">
-            <span class="status-badge status-badge--{{ o.status.toLowerCase() }}">{{ statusLabel[o.status] }}</span>
+            <bl-badge [variant]="getStatusVariant(o.status)">
+              {{ statusLabel[o.status] }}
+            </bl-badge>
             <span class="order-card__total">{{ formatPrice(o.total) }}</span>
           </div>
         </a>

@@ -14,7 +14,7 @@ def execute_sql(state):
         start = time.time()
         response = requests.post(
             f"{SPRING_BOOT_URL}/api/chat/execute",
-            json={"sql": sql},
+            json={"query": sql},
             timeout=10
         )
         elapsed = round(time.time() - start, 2)

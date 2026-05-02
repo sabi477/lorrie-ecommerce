@@ -42,7 +42,17 @@ export class Products implements OnInit {
   get canEdit(): boolean { return this.role === 'ADMIN' || this.role === 'CORPORATE'; }
 
   getImageUrl(product: Product): string {
-    return product.imageUrl ?? `https://picsum.photos/seed/${product.id}/400/400`;
+    return product.thumbnail ?? product.imageUrl ?? `https://picsum.photos/seed/${product.id}/400/400`;
+  }
+
+  getDiscountedPrice(product: Product): number | null {
+    if (!product.discountPercentage) return null;
+    return Math.round(product.price * (1 - product.discountPercentage / 100));
+  }
+
+  stars(rating: number | null): boolean[] {
+    const r = rating ?? 0;
+    return Array(5).fill(0).map((_, i) => i < Math.round(r));
   }
 
   getCategoryName(product: Product): string {

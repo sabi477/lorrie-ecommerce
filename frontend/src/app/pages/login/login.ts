@@ -22,7 +22,7 @@ export class Login {
     this.authService.login(this.email, this.password).subscribe({
       next: () => {
         const role = this.authService.getRole();
-        this.router.navigate([role === 'CUSTOMER' ? '/store' : '/dashboard']);
+        this.router.navigate([role === 'CUSTOMER' ? '/' : '/dashboard']);
       },
       error: () => this.error = 'Geçersiz email veya şifre'
     });
@@ -35,6 +35,6 @@ export class Login {
       SELLER:   'seller@lorrie.com',
     };
     this.authService.mockLogin(role, emails[role]);
-    this.router.navigate([role === 'CUSTOMER' ? '/store' : '/dashboard']);
+    this.router.navigate([role === 'CUSTOMER' ? '/' : '/dashboard']);
   }
 }

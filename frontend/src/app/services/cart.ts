@@ -3,12 +3,13 @@ import { Injectable, signal, computed } from '@angular/core';
 export interface CartItem {
   id: number;
   name: string;
-  brand: string;
+  brand?: string | null;
   price: number;
   originalPrice?: number;
-  bg: string;
-  accent: string;
-  icon: string;
+  thumbnail?: string | null;
+  bg?: string;
+  accent?: string;
+  icon?: string;
   qty: number;
 }
 
@@ -43,5 +44,5 @@ export class CartService {
 
   clear() { this._items.set([]); }
 
-  formatPrice(n: number) { return '₺' + n.toLocaleString('tr-TR'); }
+  formatPrice(n: number) { return '$' + n.toLocaleString('en-US'); }
 }

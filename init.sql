@@ -21,7 +21,19 @@ CREATE TABLE products (
     stock_quantity INT NOT NULL DEFAULT 0,
     category_id BIGINT REFERENCES categories(id),
     seller_id BIGINT REFERENCES users(id),
+    image_url VARCHAR(255),
+    thumbnail VARCHAR(255),
+    brand VARCHAR(255),
+    sku VARCHAR(255),
+    discount_percentage DECIMAL(5,2),
+    average_rating DECIMAL(3,2),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE product_tags (
+    product_id BIGINT REFERENCES products(id),
+    tag VARCHAR(255),
+    PRIMARY KEY (product_id, tag)
 );
 
 CREATE TABLE orders (

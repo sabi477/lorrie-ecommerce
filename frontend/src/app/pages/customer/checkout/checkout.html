@@ -128,7 +128,7 @@
             <span [class.free]="shipping === 0">{{ shipping === 0 ? 'Ücretsiz' : formatPrice(shipping) }}</span>
           </div>
           @if (subtotal < 1500) {
-            <p class="free-hint">₺{{ (1500 - subtotal).toLocaleString('tr-TR') }} daha ekleyin, kargo ücretsiz!</p>
+            <p class="free-hint">${{ (1500 - subtotal).toLocaleString('en-US') }} daha ekleyin, kargo ücretsiz!</p>
           }
           <div class="tot-row tot-row--total"><span>Toplam</span><span>{{ formatPrice(total) }}</span></div>
         </div>

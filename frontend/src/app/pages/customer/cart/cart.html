@@ -18,7 +18,7 @@
       </div>
       <h3>Sepetiniz boş</h3>
       <p>Beğendiğiniz ürünleri sepete ekleyin.</p>
-      <a class="btn-shop" routerLink="/store">Alışverişe Başla</a>
+      <a class="btn-shop" routerLink="/">Alışverişe Başla</a>
     </div>
 
   } @else {
@@ -37,8 +37,14 @@
 
           @for (item of cartSvc.items(); track item.id) {
             <div class="cart-item">
-              <div class="item-img" [style.background]="item.bg" [style.color]="item.accent">
-                <div class="item-icon" [innerHTML]="item.icon"></div>
+              <div class="item-img" [style.background]="item.thumbnail ? 'transparent' : (item.bg || '#f3f4f6')"
+                   [style.color]="item.accent">
+                @if (item.thumbnail) {
+                  <img [src]="item.thumbnail" [alt]="item.name"
+                       style="width:100%;height:100%;object-fit:cover;border-radius:8px" />
+                } @else if (item.icon) {
+                  <div class="item-icon" [innerHTML]="item.icon"></div>
+                }
               </div>
 
               <div class="item-info">

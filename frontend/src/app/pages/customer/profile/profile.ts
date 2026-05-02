@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 
@@ -16,6 +16,7 @@ interface RecentOrder {
   imports: [CommonModule, RouterLink],
   templateUrl: './profile.html',
   styleUrl: './profile.scss',
+  schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
 export class CustomerProfile {
   user = {
@@ -27,9 +28,9 @@ export class CustomerProfile {
   };
 
   stats = [
-    { label: 'Toplam Sipariş', value: 12,  icon: '📦' },
-    { label: 'Bekleyen',       value: 2,   icon: '⏳' },
-    { label: 'Tamamlanan',     value: 9,   icon: '✅' },
+    { label: 'Toplam Sipariş', value: 12,  icon: 'order' },
+    { label: 'Bekleyen',       value: 2,   icon: 'clock' },
+    { label: 'Tamamlanan',     value: 9,   icon: 'check' },
   ];
 
   recentOrders: RecentOrder[] = [
@@ -46,5 +47,16 @@ export class CustomerProfile {
     CANCELLED: 'İptal Edildi',
   };
 
-  formatPrice(n: number) { return '₺' + n.toLocaleString('tr-TR'); }
+  formatPrice(n: number) { return '$' + n.toLocaleString('en-US'); }
+
+  getStatusVariant(status: string): string {
+    switch (status) {
+      case 'PENDING':   return 'warning';
+      case 'CONFIRMED': return 'info';
+      case 'SHIPPED':   return 'primary';
+      case 'DELIVERED': return 'success';
+      case 'CANCELLED': return 'danger';
+      default:          return 'secondary';
+    }
+  }
 }

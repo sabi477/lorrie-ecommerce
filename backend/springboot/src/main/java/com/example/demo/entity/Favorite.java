@@ -2,27 +2,27 @@ package com.example.demo.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "reviews")
+@Table(
+        name = "favorites",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "product_id"})
+)
 @Data
-public class Review {
+public class Favorite {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "user_id")
+    private User user;
+
+    @ManyToOne(optional = false)
     @JoinColumn(name = "product_id")
     private Product product;
-
-    @ManyToOne
-    @JoinColumn(name = "customer_id")
-    private User customer;
-
-    private Integer rating;
-    @Column(columnDefinition = "TEXT")
-    private String comment;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
