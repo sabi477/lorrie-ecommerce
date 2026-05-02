@@ -104,7 +104,8 @@ button { cursor: pointer; border: none; background: none; font-family: $font; }
 
 .item-img {
   width: 52px; height: 52px; border-radius: $radius-sm;
-  border: 1px solid $border; flex-shrink: 0;
+  border: 1px solid $border; flex-shrink: 0; overflow: hidden;
+  img { width: 100%; height: 100%; object-fit: cover; display: block; }
 }
 
 .item-info { flex: 1; }

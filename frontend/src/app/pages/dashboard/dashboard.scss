@@ -214,6 +214,50 @@ bl-button::part(button) {
   &:hover { opacity: 0.75; }
 }
 
+.recent-table-wrap {
+  margin-top: 1.5rem;
+  overflow-x: auto;
+
+  .recent-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+
+    th {
+      padding: 1rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #64748b;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    td {
+      padding: 1rem;
+      font-size: 0.9rem;
+      color: #1e293b;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .order-id { font-weight: 600; color: #3b82f6; }
+    .amount { font-weight: 600; }
+    .date { color: #64748b; }
+
+    .status-tag {
+      padding: 0.25rem 0.6rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: capitalize;
+
+      &.pending   { background: #fef3c7; color: #92400e; }
+      &.confirmed { background: #dcfce7; color: #166534; }
+      &.shipped   { background: #dbeafe; color: #1e40af; }
+      &.delivered { background: #f0fdf4; color: #15803d; }
+      &.cancelled { background: #fee2e2; color: #991b1b; }
+    }
+  }
+}
+
 .empty-state {
   display: flex;
   flex-direction: column;

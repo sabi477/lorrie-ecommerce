@@ -21,8 +21,9 @@ a{text-decoration:none;color:inherit} button{cursor:pointer;border:none;backgrou
 .pd-price{font-size:1.9rem;font-weight:900;color:$text}
 .pd-original{font-size:1rem;color:#9ca3af;text-decoration:line-through}
 .pd-discount{background:#fef3c7;color:#92400e;font-size:.75rem;font-weight:800;padding:.2rem .55rem;border-radius:100px}
-.pd-seller{display:flex;align-items:center;gap:.4rem;font-size:.82rem;color:$muted;margin-top:.75rem;
-  strong{color:$text;font-weight:700}}
+.pd-seller{display:flex;align-items:center;gap:.4rem;font-size:.82rem;color:$muted;margin-top:.75rem;flex-wrap:wrap}
+.pd-seller__link{color:$text;font-weight:800;border-bottom:1px solid transparent;transition:color .15s,border-color .15s;
+  &:hover{color:$primary;border-bottom-color:$primary}}
 .pd-stock-row{display:flex;align-items:center;gap:.4rem;font-size:.82rem;font-weight:600;color:#16a34a;background:#f0fdf4;padding:.4rem .75rem;border-radius:8px;margin-bottom:.75rem;
   &.low{color:#d97706;background:#fffbeb}}
 .pd-state{text-align:center;padding:3rem;font-size:.95rem;color:$muted;

@@ -1,21 +1,16 @@
 <div class="chat-widget">
 
-  <!-- Floating button -->
+  <!-- Floating button (K harfi ile toggle) -->
   <button class="chat-fab" (click)="toggle()" [class.chat-fab--open]="isOpen" aria-label="AI Asistan">
-    @if (!isOpen) {
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-      </svg>
-    } @else {
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-      </svg>
-    }
+    <span class="chat-fab__k">K</span>
   </button>
 
   <!-- Chat panel -->
   @if (isOpen) {
-    <div class="chat-panel">
+    <div class="chat-panel" #chatPanel [style.width.px]="panelWidth" [style.height.px]="panelHeight">
+
+      <!-- Resize handle -->
+      <div class="resize-handle" (mousedown)="startResize($event)"></div>
 
       <!-- Header -->
       <div class="chat-panel__header">
@@ -24,11 +19,16 @@
           <div class="chat-panel__title">AI Asistan</div>
           <div class="chat-panel__subtitle">Çevrimiçi</div>
         </div>
+        <button class="chat-panel__close" (click)="toggle()" aria-label="Kapat">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
       </div>
 
       <!-- Messages -->
       <div class="chat-panel__messages" #messagesContainer>
-        @for (msg of messages(); track $index) {
+        @for (msg of messages(); track msg.id) {
           <div class="msg-row" [class.msg-row--user]="msg.role === 'user'" [class.msg-row--bot]="msg.role === 'bot'">
             @if (msg.role === 'bot') {
               <div class="msg-avatar">AI</div>
@@ -39,9 +39,25 @@
                   <div class="dot"></div>
                   <div class="dot"></div>
                   <div class="dot"></div>
+                  @if (msg.status && msg.status !== 'processing') {
+                    <span class="status-label" [ngClass]="getStatusClass(msg.status)">{{ getStatusLabel(msg.status) }}</span>
+                  }
                 </div>
               } @else {
-                <div class="msg-bubble">{{ msg.text }}</div>
+                <div class="msg-bubble" [class.msg-bubble--error]="msg.status === 'error'" [class.msg-bubble--timeout]="msg.status === 'timeout'">
+                  @if (msg.status && msg.status !== 'done' && msg.status !== 'sending') {
+                    <div class="msg-status" [ngClass]="getStatusClass(msg.status)">{{ getStatusLabel(msg.status) }}</div>
+                  }
+                  <div [innerHTML]="sanitize(msg.text)"></div>
+                  @if ((msg.status === 'error' || msg.status === 'timeout') && msg.retryable) {
+                    <button class="retry-btn" (click)="retry(msg.id, $event)">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/>
+                      </svg>
+                      Tekrar dene
+                    </button>
+                  }
+                </div>
               }
             </div>
           </div>

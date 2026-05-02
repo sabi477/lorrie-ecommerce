@@ -1,7 +1,9 @@
 import { Component, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth';
+import { CartService } from '../../services/cart';
+import { FavoritesService } from '../../services/favorites';
 
 const ICONS = {
   dashboard: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>`,
@@ -18,7 +20,12 @@ const ICONS = {
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
 export class Sidebar {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private cartService: CartService,
+    private favoritesService: FavoritesService,
+    private router: Router
+  ) {}
 
   get role(): string {
     return this.authService.getRole() ?? 'CUSTOMER';
@@ -52,5 +59,12 @@ export class Sidebar {
       ...base,
       { label: 'Siparişlerim', route: '/orders', icon: ICONS.orders },
     ];
+  }
+
+  logout(): void {
+    this.cartService.clear();
+    this.favoritesService.clear();
+    this.authService.logout();
+    this.router.navigate(['/login']);
   }
 }

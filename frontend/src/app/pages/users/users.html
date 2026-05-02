@@ -14,45 +14,62 @@
     </header>
 
     <main class="content">
-      <div class="table-card">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Ad Soyad</th>
-              <th>E-posta</th>
-              <th>Rol</th>
-              <th>Kayıt Tarihi</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (user of users; track user.id; let i = $index) {
-              <tr class="table-row" [style.animation-delay]="(i * 60) + 'ms'">
-                <td class="order-id">#{{ user.id }}</td>
-                <td>
-                  <div class="user-cell">
-                    <div class="user-avatar">{{ user.fullName.charAt(0) }}</div>
-                    <span class="customer-name">{{ user.fullName }}</span>
-                  </div>
-                </td>
-                <td class="date">{{ user.email }}</td>
-                <td>
-                  <select
-                    class="role-select role-select--{{ user.role.toLowerCase() }}"
-                    [value]="user.role"
-                    (change)="updateRole(user, $event)">
-                    @for (opt of roleOptions; track opt) {
-                      <option [value]="opt" [selected]="opt === user.role">
-                        {{ roleLabel[opt] }}
-                      </option>
-                    }
-                  </select>
-                </td>
-                <td class="date">{{ user.joinDate }}</td>
-              </tr>
-            }
-          </tbody>
-        </table>
+      <div class="section-card">
+        <div class="section-header">
+          <h3>Sistemdeki Kullanıcılar</h3>
+          <span class="badge">{{ users.length }} Toplam</span>
+        </div>
+
+        @if (loading) {
+          <div class="loading-state">
+            <bl-spinner></bl-spinner>
+            <p>Kullanıcılar yükleniyor...</p>
+          </div>
+        } @else if (error) {
+          <div class="error-state">
+            <p>{{ error }}</p>
+          </div>
+        } @else {
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Kullanıcı</th>
+                  <th>E-posta</th>
+                  <th>Rol</th>
+                  <th>Katılım Tarihi</th>
+                  <th>İşlem</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (user of users; track user.id) {
+                  <tr>
+                    <td>
+                      <div class="user-info">
+                        <div class="avatar-mini">{{ user.fullName.charAt(0).toUpperCase() }}</div>
+                        <span class="name">{{ user.fullName }}</span>
+                      </div>
+                    </td>
+                    <td>{{ user.email }}</td>
+                    <td>
+                      <span class="role-tag" [class.admin]="user.role === 'ADMIN'">
+                        {{ roleLabel[user.role] }}
+                      </span>
+                    </td>
+                    <td>{{ formatDate(user.createdAt) }}</td>
+                    <td>
+                      <select class="role-select" (change)="updateRole(user, $event)">
+                        @for (opt of roleOptions; track opt) {
+                          <option [value]="opt" [selected]="user.role === opt">{{ roleLabel[opt] }}</option>
+                        }
+                      </select>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
       </div>
     </main>
   </div>

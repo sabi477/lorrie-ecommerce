@@ -10,7 +10,7 @@
   <div class="od__header">
     <div>
       <h1 class="od__id">#{{ order.id }}</h1>
-      <p class="od__date">{{ order.date }}</p>
+      <p class="od__date">{{ formatDate(order.createdAt) }}</p>
     </div>
     <span class="status-badge status-badge--{{ order.status.toLowerCase() }}">
       @switch (order.status) {
@@ -44,9 +44,13 @@
     <div class="card">
       <h3 class="card__title">Ürünler</h3>
       <div class="items-list">
-        @for (item of order.items; track item.name) {
+        @for (item of order.items || []; track item.productId) {
           <div class="item-row">
-            <div class="item-img" [style.background]="item.bg"></div>
+            <div class="item-img" [style.background]="item.thumbnail ? 'transparent' : '#f3f4f6'">
+              @if (item.thumbnail) {
+                <img [src]="item.thumbnail" [alt]="item.name" />
+              }
+            </div>
             <div class="item-info">
               <p class="item-name">{{ item.name }}</p>
               <p class="item-qty">{{ item.qty }} adet</p>
@@ -64,14 +68,14 @@
       <div class="card">
         <h3 class="card__title">Teslimat Bilgileri</h3>
         <div class="ship-info">
-          <p class="ship-name">{{ order.shipping.name }}</p>
-          <p class="ship-addr">{{ order.shipping.address }}</p>
-          <p class="ship-city">{{ order.shipping.city }}, {{ order.shipping.zip }}</p>
+          <p class="ship-name">{{ order.shipping?.name || '-' }}</p>
+          <p class="ship-addr">{{ order.shipping?.address || '-' }}</p>
+          <p class="ship-city">{{ order.shipping?.city || '-' }}, {{ order.shipping?.zip || '-' }}</p>
           <div class="ship-carrier">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
-            {{ order.shipping.carrier }}
-            @if (order.shipping.trackingNo !== '-') {
-              · <strong>{{ order.shipping.trackingNo }}</strong>
+            {{ order.shipping?.carrier || '-' }}
+            @if (order.shipping?.trackingNo && order.shipping?.trackingNo !== '-') {
+              · <strong>{{ order.shipping?.trackingNo }}</strong>
             }
           </div>
         </div>
@@ -83,11 +87,11 @@
         <div class="totals">
           <div class="totals__row">
             <span>Ara Toplam</span>
-            <span>{{ formatPrice(order.subtotal) }}</span>
+            <span>{{ formatPrice(order.subtotal || 0) }}</span>
           </div>
           <div class="totals__row">
             <span>Kargo</span>
-            <span>{{ order.shippingCost === 0 ? 'Ücretsiz' : formatPrice(order.shippingCost) }}</span>
+            <span>{{ order.shippingCost === 0 ? 'Ücretsiz' : formatPrice(order.shippingCost || 0) }}</span>
           </div>
           <div class="totals__row totals__row--total">
             <span>Toplam</span>
@@ -98,7 +102,7 @@
 
       <!-- Cancel -->
       @if (isPending) {
-        <button class="cancel-btn">
+        <button class="cancel-btn" (click)="cancelOrder()">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
           Siparişi İptal Et
         </button>

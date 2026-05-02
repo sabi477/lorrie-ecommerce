@@ -16,9 +16,6 @@
           <div class="user-avatar">{{ userEmail.charAt(0).toUpperCase() }}</div>
           <span class="user-email">{{ userEmail }}</span>
         </div>
-        <bl-button variant="secondary" size="small" (bl-click)="onLogout()">
-          Çıkış Yap
-        </bl-button>
       </div>
     </header>
 
@@ -52,6 +49,35 @@
               <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
             </svg>
             <p>Siparişlerinizi görmek için Siparişlerim sayfasına gidin</p>
+          </div>
+        } @else if (recentOrders.length > 0) {
+          <div class="recent-table-wrap">
+            <table class="recent-table">
+              <thead>
+                <tr>
+                  <th>Sipariş</th>
+                  <th>Müşteri</th>
+                  <th>Tutar</th>
+                  <th>Tarih</th>
+                  <th>Durum</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (order of recentOrders; track order.id) {
+                  <tr>
+                    <td class="order-id">#{{ order.id }}</td>
+                    <td>{{ order.customer?.fullName || order.customer?.email || '—' }}</td>
+                    <td class="amount">${{ order.totalAmount }}</td>
+                    <td class="date">{{ formatDate(order.createdAt) }}</td>
+                    <td>
+                      <span class="status-tag {{ order.status.toLowerCase() }}">
+                        {{ order.status }}
+                      </span>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
           </div>
         } @else {
           <div class="empty-state">

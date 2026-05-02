@@ -95,5 +95,12 @@
         </div>
       }
     </main>
+    @if (editingProduct) {
+      <app-product-edit-dialog
+        [product]="editingProduct"
+        (saved)="onProductSaved($event)"
+        (closed)="onDialogClosed()"
+      />
+    }
   </div>
 </div>

@@ -37,8 +37,221 @@
     </div>
   </div>
 
+  <!-- ── Saved Addresses ──────────────────────────────────────── -->
+  <div class="card" style="animation-delay:60ms">
+    <h3 class="card__title">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      Kayıtlı Adresler
+    </h3>
+
+    @if (addresses.length === 0 && !showAddressForm && !addressLoading) {
+      <div class="empty-state">
+        <p>Henüz kayıtlı adresiniz yok.</p>
+      </div>
+    }
+
+    @if (addressLoading) {
+      <div class="empty-state">
+        <p>Adresler yükleniyor...</p>
+      </div>
+    }
+
+    @if (addressError) {
+      <div class="empty-state" style="color: #dc2626;">
+        <p>{{ addressError }}</p>
+      </div>
+    }
+
+    <div class="address-list">
+      @for (addr of addresses; track addr.id) {
+        <div class="address-card" [class.address-card--default]="addr.isDefault">
+          <div class="address-card__body">
+            <div class="address-card__header">
+              <span class="address-title">{{ addr.title }}</span>
+              @if (addr.isDefault) {
+                <span class="default-badge">Varsayılan</span>
+              }
+            </div>
+            <p class="address-line">{{ addr.firstName }} {{ addr.lastName }}</p>
+            <p class="address-line">{{ addr.address }}</p>
+            <p class="address-line">{{ addr.city }}, {{ addr.zip }}</p>
+          </div>
+          <div class="address-card__actions">
+            @if (!addr.isDefault) {
+              <button class="action-btn" (click)="setDefaultAddress(addr.id)">Varsayılan Yap</button>
+            }
+            <button class="action-btn action-btn--edit" (click)="openAddressForm(addr)">Düzenle</button>
+            <button class="action-btn action-btn--delete" (click)="deleteAddress(addr.id)">Sil</button>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Address form -->
+    @if (showAddressForm) {
+      <div class="inline-form">
+        <h4 class="inline-form__title">{{ editingAddress ? 'Adresi Düzenle' : 'Yeni Adres Ekle' }}</h4>
+        <div class="form-grid">
+          <div class="field field--full">
+            <label>Adres Başlığı</label>
+            <input type="text" placeholder="Ev, İş, vb." [(ngModel)]="addressForm.title" />
+          </div>
+          <div class="field">
+            <label>Ad</label>
+            <input type="text" [(ngModel)]="addressForm.firstName" />
+          </div>
+          <div class="field">
+            <label>Soyad</label>
+            <input type="text" [(ngModel)]="addressForm.lastName" />
+          </div>
+          <div class="field field--full">
+            <label>Adres</label>
+            <input type="text" placeholder="Mahalle, cadde, kapı no..." [(ngModel)]="addressForm.address" />
+          </div>
+          <div class="field">
+            <label>Şehir</label>
+            <input type="text" [(ngModel)]="addressForm.city" />
+          </div>
+          <div class="field">
+            <label>Posta Kodu</label>
+            <input type="text" [(ngModel)]="addressForm.zip" maxlength="5" />
+          </div>
+          <div class="field field--full">
+            <label class="checkbox-label">
+              <input type="checkbox" [(ngModel)]="addressForm.isDefault" />
+              Varsayılan adresim olarak kaydet
+            </label>
+          </div>
+        </div>
+        <div class="inline-form__actions">
+          <button class="cancel-btn" (click)="showAddressForm = false">Vazgeç</button>
+          <button class="save-btn" [disabled]="!addressFormValid || addressLoading" (click)="saveAddress()">
+            {{ addressLoading ? 'Kaydediliyor...' : 'Kaydet' }}
+          </button>
+        </div>
+      </div>
+    }
+
+    <div class="card__footer">
+      @if (addressSaved) {
+        <span class="save-ok">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Adres kaydedildi
+        </span>
+      }
+      @if (!showAddressForm) {
+        <button class="save-btn" (click)="openAddressForm()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Yeni Adres Ekle
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- ── Saved Payment Methods ─────────────────────────────────── -->
+  <div class="card" style="animation-delay:120ms">
+    <h3 class="card__title">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+      Kayıtlı Kartlar
+    </h3>
+    <p class="section-note">Kart numaranızın yalnızca son 4 hanesi saklanır. CVV bilgisi hiçbir zaman kaydedilmez.</p>
+
+    @if (payments.length === 0 && !showPaymentForm && !paymentLoading) {
+      <div class="empty-state">
+        <p>Henüz kayıtlı kartınız yok.</p>
+      </div>
+    }
+
+    @if (paymentLoading) {
+      <div class="empty-state">
+        <p>Kartlar yükleniyor...</p>
+      </div>
+    }
+
+    @if (paymentError) {
+      <div class="empty-state" style="color: #dc2626;">
+        <p>{{ paymentError }}</p>
+      </div>
+    }
+
+    <div class="payment-list">
+      @for (pm of payments; track pm.id) {
+        <div class="payment-card" [class.payment-card--default]="pm.isDefault">
+          <div class="payment-card__icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          </div>
+          <div class="payment-card__info">
+            <span class="payment-number">{{ maskedCard(pm.lastFour) }}</span>
+            <span class="payment-meta">{{ pm.brand }} · {{ pm.cardHolderName }} · {{ pm.expiry }}</span>
+          </div>
+          <div class="payment-card__actions">
+            @if (pm.isDefault) {
+              <span class="default-badge">Varsayılan</span>
+            } @else {
+              <button class="action-btn" (click)="setDefaultPayment(pm.id)">Varsayılan Yap</button>
+            }
+            <button class="action-btn action-btn--edit" (click)="openPaymentForm(pm)">Düzenle</button>
+            <button class="action-btn action-btn--delete" (click)="deletePayment(pm.id)">Sil</button>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Payment form -->
+    @if (showPaymentForm) {
+      <div class="inline-form">
+        <h4 class="inline-form__title">{{ editingPayment ? 'Kartı Düzenle' : 'Yeni Kart Ekle' }}</h4>
+        <div class="form-col">
+          <div class="field">
+            <label>Kart Üzerindeki İsim</label>
+            <input type="text" placeholder="AD SOYAD" [(ngModel)]="paymentForm.cardHolderName" />
+          </div>
+          <div class="field">
+            <label>Kart Numarası</label>
+            <input type="text" placeholder="0000 0000 0000 0000"
+              [value]="paymentForm.cardNumber" (input)="onPaymentCardInput($event)" maxlength="19" />
+          </div>
+          <div class="form-grid">
+            <div class="field">
+              <label>Son Kullanım</label>
+              <input type="text" placeholder="AA/YY"
+                [value]="paymentForm.expiry" (input)="onPaymentExpiryInput($event)" maxlength="5" />
+            </div>
+            <div class="field">
+              <label class="checkbox-label" style="margin-top:1.6rem">
+                <input type="checkbox" [(ngModel)]="paymentForm.isDefault" />
+                Varsayılan kart
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="inline-form__actions">
+          <button class="cancel-btn" (click)="showPaymentForm = false">Vazgeç</button>
+          <button class="save-btn" [disabled]="!paymentFormValid || paymentLoading" (click)="savePayment()">
+            {{ paymentLoading ? 'Kaydediliyor...' : 'Kartı Kaydet' }}
+          </button>
+        </div>
+      </div>
+    }
+
+    <div class="card__footer">
+      @if (paymentSaved) {
+        <span class="save-ok">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Kart kaydedildi
+        </span>
+      }
+      @if (!showPaymentForm) {
+        <button class="save-btn" (click)="openPaymentForm()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Yeni Kart Ekle
+        </button>
+      }
+    </div>
+  </div>
+
   <!-- ── Password ──────────────────────────────────────────────── -->
-  <div class="card" style="animation-delay:80ms">
+  <div class="card" style="animation-delay:180ms">
     <h3 class="card__title">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
       Şifre Değiştir
@@ -74,7 +287,7 @@
   </div>
 
   <!-- ── Notifications ──────────────────────────────────────────── -->
-  <div class="card" style="animation-delay:160ms">
+  <div class="card" style="animation-delay:240ms">
     <h3 class="card__title">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
       Bildirim Tercihleri
@@ -121,10 +334,19 @@
         </button>
       </div>
     </div>
+    <div class="card__footer">
+      @if (notifSaved) {
+        <span class="save-ok">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Kaydedildi
+        </span>
+      }
+      <button class="save-btn" (click)="saveNotifications()">Kaydet</button>
+    </div>
   </div>
 
   <!-- ── Danger zone ────────────────────────────────────────────── -->
-  <div class="card card--danger" style="animation-delay:240ms">
+  <div class="card card--danger" style="animation-delay:320ms">
     <h3 class="card__title card__title--danger">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
       Tehlikeli Alan

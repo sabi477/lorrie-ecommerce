@@ -25,13 +25,13 @@
           <div class="ocard__top">
             <div>
               <p class="ocard__id">#{{ o.id }}</p>
-              <p class="ocard__date">{{ o.date }}</p>
+              <p class="ocard__date">{{ formatDate(o.createdAt) }}</p>
             </div>
             <span class="status-badge status-badge--{{ o.status.toLowerCase() }}">{{ statusLabel[o.status] }}</span>
           </div>
-          <p class="ocard__items">{{ o.items }}</p>
+          <p class="ocard__items">Sipariş detayı</p>
           <div class="ocard__bottom">
-            <span class="ocard__total">{{ formatPrice(o.total) }}</span>
+            <span class="ocard__total">{{ formatPrice(o.totalAmount) }}</span>
             <span class="ocard__arrow">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
             </span>

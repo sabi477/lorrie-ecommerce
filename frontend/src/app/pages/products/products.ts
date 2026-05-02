@@ -1,6 +1,7 @@
 import { Component, CUSTOM_ELEMENTS_SCHEMA, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Sidebar } from '../../shared/sidebar/sidebar';
+import { ProductEditDialog } from '../../shared/product-edit-dialog/product-edit-dialog';
 import { AuthService } from '../../services/auth';
 import { ProductService, Product } from '../../services/product';
 
@@ -8,7 +9,7 @@ type AppRole = 'CUSTOMER' | 'CORPORATE' | 'ADMIN';
 
 @Component({
   selector: 'app-products',
-  imports: [CommonModule, Sidebar],
+  imports: [CommonModule, Sidebar, ProductEditDialog],
   templateUrl: './products.html',
   styleUrl: './products.scss',
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
@@ -18,13 +19,19 @@ export class Products implements OnInit {
   products: Product[] = [];
   loading = true;
   error = '';
+  editingProduct: Product | null = null;
 
   constructor(private authService: AuthService, private productService: ProductService) {
     this.role = (authService.getRole() as AppRole) ?? 'CUSTOMER';
   }
 
   ngOnInit(): void {
-    this.productService.getAll().subscribe({
+    const userId = this.authService.getUserId();
+    const request = this.role === 'CORPORATE' && userId
+      ? this.productService.getBySeller(userId)
+      : this.productService.getAll();
+
+    request.subscribe({
       next: (data) => {
         this.products = data;
         this.loading = false;
@@ -66,6 +73,16 @@ export class Products implements OnInit {
   }
 
   editProduct(product: Product): void {
-    console.log('Edit:', product);
+    this.editingProduct = product;
+  }
+
+  onProductSaved(updated: Product): void {
+    const idx = this.products.findIndex(p => p.id === updated.id);
+    if (idx !== -1) this.products[idx] = updated;
+    this.editingProduct = null;
+  }
+
+  onDialogClosed(): void {
+    this.editingProduct = null;
   }
 }

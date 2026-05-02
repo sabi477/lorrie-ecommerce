@@ -22,6 +22,7 @@ class AgentState(TypedDict):
     lang: str  # "TR" | "EN" — browser Accept-Language'dan gelir
     guardrail_event: Optional[dict]   # structured security event info
     execution_meta: Optional[dict]    # row_count, elapsed_time
+    history: Optional[list[dict]]     # [{"role": "user"|"assistant", "content": str}, ...]
 
 def route_after_guardrails(state: AgentState):
     if state["is_in_scope"]:
@@ -32,22 +33,31 @@ def route_after_sql(state: AgentState):
     # error_agent max retry'da final_answer set eder; direkt END'e git
     if state.get("final_answer"):
         return END
-    if state.get("error") and state["iteration_count"] < 3:
-        return "error_agent"
+    if state.get("error"):
+        if state["iteration_count"] < 3:
+            return "error_agent"
+        # max retry aşıldı, hata mesajı set et ve bitir
+        lang = state.get("lang", "EN")
+        state["final_answer"] = (
+            "İsteğiniz birden fazla denemeden sonra işlenemedi. Lütfen sorunuzu farklı bir şekilde sormayı deneyin."
+            if lang == "TR" else
+            "I was unable to process your request after multiple attempts. Please try rephrasing your question."
+        )
+        return END
     return "analysis_agent"
 
 graph = StateGraph(AgentState)
-graph.add_node("guardrails",   guardrails_agent)
-graph.add_node("sql_agent",    sql_agent)
-graph.add_node("execute_sql",  execute_sql)
-graph.add_node("error_agent",  error_agent)
+graph.add_node("guardrails",     guardrails_agent)
+graph.add_node("sql_agent",      sql_agent)
+graph.add_node("execute_sql",    execute_sql)
+graph.add_node("error_agent",    error_agent)
 graph.add_node("analysis_agent", analysis_agent)
 
 graph.set_entry_point("guardrails")
 graph.add_conditional_edges("guardrails", route_after_guardrails)
-graph.add_edge("sql_agent",    "execute_sql")
+graph.add_edge("sql_agent",      "execute_sql")
 graph.add_conditional_edges("execute_sql", route_after_sql)
-graph.add_edge("error_agent",  "execute_sql")
+graph.add_edge("error_agent",    "execute_sql")
 graph.add_edge("analysis_agent", END)
 
 app = graph.compile()

@@ -1,3 +1,5 @@
+@use "sass:color";
+
 $primary:#f27a1a; $primary-lt:#fff3e6; $text:#111827; $muted:#6b7280; $border:#e5e7eb; $bg:#f3f4f6; $surface:#fff; $radius:10px; $radius-sm:6px; $font:'Inter',-apple-system,sans-serif;
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 a { text-decoration: none; color: inherit; cursor: pointer; }
@@ -71,7 +73,7 @@ button { cursor: pointer; border: none; background: none; font-family: $font; }
   &:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 24px rgba(0,0,0,.09);
-    border-color: darken($border, 8%);
+    border-color: color.adjust($border, $lightness: -8%);
   }
 
   &__status-bar {

@@ -3,6 +3,7 @@ CREATE TABLE users (
     email VARCHAR(255) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
     full_name VARCHAR(255) NOT NULL,
+    phone VARCHAR(50),
     role VARCHAR(50) NOT NULL DEFAULT 'CUSTOMER',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -68,4 +69,36 @@ CREATE TABLE reviews (
     rating INT CHECK (rating BETWEEN 1 AND 5),
     comment TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE saved_addresses (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT REFERENCES users(id),
+    title VARCHAR(255) NOT NULL,
+    first_name VARCHAR(255) NOT NULL,
+    last_name VARCHAR(255) NOT NULL,
+    address TEXT NOT NULL,
+    city VARCHAR(255) NOT NULL,
+    zip VARCHAR(255) NOT NULL,
+    is_default BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE saved_payment_methods (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT REFERENCES users(id),
+    card_holder_name VARCHAR(255) NOT NULL,
+    last_four VARCHAR(4) NOT NULL,
+    brand VARCHAR(50) NOT NULL,
+    expiry VARCHAR(5) NOT NULL,
+    is_default BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE notification_preferences (
+    user_id BIGINT PRIMARY KEY REFERENCES users(id),
+    order_updates BOOLEAN DEFAULT TRUE,
+    promotions BOOLEAN DEFAULT FALSE,
+    new_arrivals BOOLEAN DEFAULT TRUE,
+    email_digest BOOLEAN DEFAULT FALSE
 );

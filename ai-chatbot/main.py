@@ -15,6 +15,7 @@ import threading
 import re
 import time
 import os
+import concurrent.futures
 
 load_dotenv()
 
@@ -25,6 +26,36 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S",
 )
 logger = logging.getLogger("chatbot")
+
+# ── Observability (in-memory metrics) ───────────────────────────────────────
+_metrics = {
+    "requests_total":       0,
+    "requests_success":     0,
+    "requests_error":       0,
+    "guardrails_triggered": 0,
+    "rate_limited":         0,
+    "latency_sum":          0.0,
+    "latency_count":        0,
+}
+_metrics_lock = threading.Lock()
+
+def record_metric(key: str, value: float = 1):
+    with _metrics_lock:
+        if key in ("latency_sum",):
+            _metrics[key] += value
+        elif key in ("latency_count",):
+            _metrics[key] += 1
+        else:
+            _metrics[key] = _metrics.get(key, 0) + value
+
+def get_metrics() -> dict:
+    with _metrics_lock:
+        m = dict(_metrics)
+    avg_latency = m["latency_sum"] / m["latency_count"] if m["latency_count"] else 0
+    return {
+        **m,
+        "latency_avg": round(avg_latency, 3),
+    }
 
 # ── Rate limiting (rol bazlı) ─────────────────────────────────────────────────
 ROLE_RATE_LIMITS = {"ADMIN": 30, "CORPORATE": 20, "INDIVIDUAL": 10}  # istek/dakika
@@ -103,6 +134,7 @@ class ChatRequest(BaseModel):
     is_logged_in: bool = False
     user_id: Optional[int] = None
     store_id: Optional[int] = None
+    history: Optional[list[dict]] = None  # [{"role": "user"|"assistant", "content": str}, ...]
 
 class ChatResponse(BaseModel):
     answer: str
@@ -120,6 +152,9 @@ async def chat(request: Request, body: ChatRequest):
 
     logger.info("REQUEST | ip=%s role=%s lang=%s question=%.80r",
                 ip, role, lang, body.question)
+
+    record_metric("requests_total")
+    error_occurred = False
 
     # boş soru kontrolü
     if not body.question or not body.question.strip():
@@ -141,6 +176,7 @@ async def chat(request: Request, body: ChatRequest):
     # rol bazlı rate limit kontrolü
     if not check_rate_limit(ip, role):
         logger.warning("RATE_LIMIT | ip=%s role=%s", ip, role)
+        record_metric("rate_limited")
         raise HTTPException(status_code=429,
                             detail="Too many requests. Please wait a moment." if lang == "EN"
                                    else "Çok fazla istek gönderildi. Lütfen bekleyin.")
@@ -158,25 +194,57 @@ async def chat(request: Request, body: ChatRequest):
         )
         return ChatResponse(answer=answer, visualization_code=None)
 
-    result = graph_app.invoke({
-        "question": normalized_question,
-        "user_role": role,
-        "is_logged_in": body.is_logged_in,
-        "user_id": body.user_id,
-        "store_id": body.store_id,
-        "sql_query": None,
-        "query_result": None,
-        "error": None,
-        "final_answer": None,
-        "visualization_code": None,
-        "is_in_scope": None,
-        "iteration_count": 0,
-        "lang": lang,
-        "guardrail_event": None,
-        "execution_meta": None,
-    })
+    GRAPH_TIMEOUT = int(os.getenv("GRAPH_TIMEOUT_SECONDS", "90"))
+
+    def _invoke():
+        return graph_app.invoke({
+            "question": normalized_question,
+            "user_role": role,
+            "is_logged_in": body.is_logged_in,
+            "user_id": body.user_id,
+            "store_id": body.store_id,
+            "sql_query": None,
+            "query_result": None,
+            "error": None,
+            "final_answer": None,
+            "visualization_code": None,
+            "is_in_scope": None,
+            "iteration_count": 0,
+            "lang": lang,
+            "guardrail_event": None,
+            "execution_meta": None,
+            "history": body.history[-10:] if body.history else None,
+        })
+
+    try:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+            future = executor.submit(_invoke)
+            try:
+                result = future.result(timeout=GRAPH_TIMEOUT)
+            except concurrent.futures.TimeoutError:
+                error_occurred = True
+                record_metric("requests_error")
+                timeout_msg = (
+                    "İsteğiniz zaman aşımına uğradı. Lütfen daha kısa bir soru sormayı deneyin."
+                    if lang == "TR" else
+                    "Your request timed out. Please try asking a shorter or simpler question."
+                )
+                raise HTTPException(status_code=504, detail=timeout_msg)
+    except HTTPException:
+        raise
+    except Exception:
+        error_occurred = True
+        record_metric("requests_error")
+        raise
 
     elapsed = time.time() - start_time
+    record_metric("latency_sum", elapsed)
+    record_metric("latency_count")
+    if result.get("guardrail_event"):
+        record_metric("guardrails_triggered")
+    if not error_occurred:
+        record_metric("requests_success")
+
     add_response_delay(start_time)
     logger.info("RESPONSE | ip=%s role=%s in_scope=%s elapsed=%.2fs",
                 ip, role, result.get("is_in_scope"), elapsed)
@@ -189,6 +257,7 @@ async def chat(request: Request, body: ChatRequest):
         execution_meta=result.get("execution_meta"),
     )
 
+
 @app.get("/")
 async def root():
     return FileResponse(os.path.join(_static_dir, "index.html"))
@@ -196,3 +265,7 @@ async def root():
 @app.get("/health")
 async def health():
     return {"status": "ok"}
+
+@app.get("/metrics")
+async def metrics():
+    return get_metrics()

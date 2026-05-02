@@ -33,6 +33,8 @@ export class CustomerLayout implements OnInit {
   }
 
   logout() {
+    this.cartSvc.clear();
+    this.favSvc.clear();
     this.auth.logout();
     this.router.navigate(['/login']);
   }

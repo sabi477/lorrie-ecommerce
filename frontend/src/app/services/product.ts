@@ -43,10 +43,30 @@ export class ProductService {
     return this.http.get<Product[]>(this.api, options);
   }
 
+  getBySeller(sellerId: number): Observable<Product[]> {
+    const token = this.auth.getToken();
+    const options: { headers?: HttpHeaders; params: HttpParams } = {
+      params: new HttpParams().set('sellerId', sellerId.toString()),
+    };
+    if (token) options.headers = this.headers();
+    return this.http.get<Product[]>(this.api, options);
+  }
+
   getById(id: number): Observable<Product> {
     const token = this.auth.getToken();
     const options = token ? { headers: this.headers() } : {};
     return this.http.get<Product>(`${this.api}/${id}`, options);
+  }
+
+  search(query: string, limit?: number): Observable<Product[]> {
+    const token = this.auth.getToken();
+    const options: { headers?: HttpHeaders; params?: HttpParams } = token ? { headers: this.headers() } : {};
+
+    let params = new HttpParams().set('search', query);
+    if (limit) params = params.set('limit', limit.toString());
+
+    options.params = params;
+    return this.http.get<Product[]>(this.api, options);
   }
 
   create(product: Partial<Product>): Observable<Product> {
@@ -59,5 +79,11 @@ export class ProductService {
 
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.api}/${id}`, { headers: this.headers() });
+  }
+
+  visualSearch(file: File): Observable<Product[]> {
+    const formData = new FormData();
+    formData.append('image', file);
+    return this.http.post<Product[]>(`${this.api}/visual-search`, formData);
   }
 }

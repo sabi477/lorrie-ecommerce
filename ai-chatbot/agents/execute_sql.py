@@ -15,7 +15,7 @@ def execute_sql(state):
         response = requests.post(
             f"{SPRING_BOOT_URL}/api/chat/execute",
             json={"query": sql},
-            timeout=10
+            timeout=20
         )
         elapsed = round(time.time() - start, 2)
 
@@ -29,10 +29,15 @@ def execute_sql(state):
                 "execution_meta": {"row_count": row_count, "elapsed_time": elapsed},
             }
         else:
+            try:
+                err_data = response.json()
+                err_msg = err_data.get("error", response.text)
+            except Exception:
+                err_msg = response.text
             return {
                 **state,
                 "query_result": None,
-                "error": f"SQL execution failed: {response.text}",
+                "error": f"SQL execution failed: {err_msg}",
             }
 
     except Exception as e:

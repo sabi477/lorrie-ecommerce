@@ -10,6 +10,15 @@ export interface DashboardStats {
   totalRevenue: number;
 }
 
+export interface SellerDashboardStats {
+  totalOrders: number;
+  totalRevenue: number;
+  totalProducts: number;
+  pendingOrders: number;
+  completedOrders: number;
+  orderStatusCounts: Record<string, number>;
+}
+
 @Injectable({ providedIn: 'root' })
 export class DashboardService {
   private base = 'http://localhost:8080/api';
@@ -25,13 +34,28 @@ export class DashboardService {
     return forkJoin({
       orders:   this.http.get<any[]>(`${this.base}/orders`, opts),
       products: this.http.get<any[]>(`${this.base}/products`, opts),
+      users:    this.http.get<any[]>(`${this.base}/admin/users`, opts),
     }).pipe(
-      map(({ orders, products }) => ({
+      map(({ orders, products, users }) => ({
         totalOrders:   orders.length,
         totalProducts: products.length,
-        totalUsers:    0,
+        totalUsers:    users.length,
         totalRevenue:  orders.reduce((sum: number, o: any) => sum + (o.totalAmount ?? 0), 0),
       }))
+    );
+  }
+
+  getSellerStats(sellerId: number): Observable<SellerDashboardStats> {
+    return this.http.get<SellerDashboardStats>(
+      `${this.base}/seller/dashboard/stats?sellerId=${sellerId}`,
+      { headers: this.headers() }
+    );
+  }
+
+  getSellerOrders(sellerId: number): Observable<any[]> {
+    return this.http.get<any[]>(
+      `${this.base}/orders/seller/${sellerId}`,
+      { headers: this.headers() }
     );
   }
 }

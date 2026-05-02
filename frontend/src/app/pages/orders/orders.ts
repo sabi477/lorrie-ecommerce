@@ -30,7 +30,12 @@ export class Orders implements OnInit {
   }
 
   ngOnInit(): void {
-    this.orderService.getAll().subscribe({
+    const userId = this.authService.getUserId();
+    const request = this.role === 'CORPORATE' && userId
+      ? this.orderService.getBySeller(userId)
+      : this.orderService.getAll();
+
+    request.subscribe({
       next: (data) => {
         this.orders = data;
         this.loading = false;

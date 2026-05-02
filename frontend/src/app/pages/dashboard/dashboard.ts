@@ -2,10 +2,11 @@ import { Component, CUSTOM_ELEMENTS_SCHEMA, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth';
-import { DashboardService } from '../../services/dashboard';
+import { DashboardService, SellerDashboardStats } from '../../services/dashboard';
+import { OrderService, Order } from '../../services/order';
 import { Sidebar } from '../../shared/sidebar/sidebar';
 
-type AppRole = 'CUSTOMER' | 'CORPORATE' | 'ADMIN';
+type AppRole = 'CUSTOMER' | 'CORPORATE' | 'ADMIN' | 'SELLER';
 
 interface Stat { label: string; raw: number; icon: string; currency?: boolean; }
 
@@ -21,6 +22,7 @@ export class Dashboard implements OnInit {
   userRole: AppRole = 'CUSTOMER';
   displayValues: string[] = [];
   statsLoaded = false;
+  recentOrders: Order[] = [];
 
   private stats: Stat[] = [];
 
@@ -31,11 +33,12 @@ export class Dashboard implements OnInit {
       ADMIN:     'Hoş geldiniz, istatistiklerinize göz atın',
       CORPORATE: 'Mağazanızı yönetin',
       CUSTOMER:  'Alışverişlerinizi takip edin',
+      SELLER:    'Mağazanızı yönetin',
     }[this.userRole];
   }
 
   get roleLabel(): string {
-    return { ADMIN: 'Admin', CORPORATE: 'Kurumsal', CUSTOMER: 'Müşteri' }[this.userRole];
+    return { ADMIN: 'Admin', CORPORATE: 'Kurumsal', CUSTOMER: 'Müşteri', SELLER: 'Satıcı' }[this.userRole];
   }
 
   get roleBadgeClass(): string { return `role-badge--${this.userRole.toLowerCase()}`; }
@@ -44,6 +47,7 @@ export class Dashboard implements OnInit {
   constructor(
     private authService: AuthService,
     private dashboardService: DashboardService,
+    private orderService: OrderService,
     private router: Router
   ) {
     this.userEmail = this.authService.getEmail() ?? '';
@@ -51,6 +55,53 @@ export class Dashboard implements OnInit {
   }
 
   ngOnInit(): void {
+    if (this.userRole === 'CUSTOMER') {
+      this.router.navigate(['/']);
+      return;
+    }
+
+    const sellerId = this.authService.getUserId();
+
+    if (this.userRole === 'SELLER' && sellerId) {
+      this.loadSellerDashboard(sellerId);
+    } else {
+      this.loadAdminDashboard();
+    }
+  }
+
+  private loadSellerDashboard(sellerId: number): void {
+    this.dashboardService.getSellerStats(sellerId).subscribe({
+      next: (stats: SellerDashboardStats) => {
+        this.stats = [
+          { label: 'Toplam Sipariş',   raw: stats.totalOrders,    icon: '📦' },
+          { label: 'Toplam Gelir',     raw: stats.totalRevenue,   icon: '💰', currency: true },
+          { label: 'Aktif Ürünler',    raw: stats.totalProducts,  icon: '🛍️' },
+          { label: 'Bekleyen Sipariş', raw: stats.pendingOrders,  icon: '⏳' },
+        ];
+        this.statsLoaded = true;
+        this.displayValues = this.stats.map(() => '0');
+        this.stats.forEach((stat, i) =>
+          setTimeout(() => this.countUp(i, stat.raw, !!stat.currency), i * 150)
+        );
+      },
+      error: () => {
+        this.stats = [
+          { label: 'Toplam Sipariş',   raw: 0, icon: '📦' },
+          { label: 'Toplam Gelir',     raw: 0, icon: '💰', currency: true },
+          { label: 'Aktif Ürünler',    raw: 0, icon: '🛍️' },
+          { label: 'Bekleyen Sipariş', raw: 0, icon: '⏳' },
+        ];
+        this.statsLoaded = true;
+        this.displayValues = this.stats.map(() => '0');
+      }
+    });
+
+    this.dashboardService.getSellerOrders(sellerId).subscribe(orders => {
+      this.recentOrders = orders.slice(0, 5);
+    });
+  }
+
+  private loadAdminDashboard(): void {
     this.dashboardService.getStats().subscribe({
       next: (s) => {
         this.stats = [
@@ -66,7 +117,6 @@ export class Dashboard implements OnInit {
         );
       },
       error: () => {
-        // fallback — göster ama 0 ile
         this.stats = [
           { label: 'Toplam Sipariş',   raw: 0, icon: '📦' },
           { label: 'Aktif Ürünler',    raw: 0, icon: '🛍️' },
@@ -76,6 +126,10 @@ export class Dashboard implements OnInit {
         this.statsLoaded = true;
         this.displayValues = this.stats.map(() => '0');
       }
+    });
+
+    this.orderService.getAll().subscribe(orders => {
+      this.recentOrders = orders.sort((a, b) => b.id - a.id).slice(0, 5);
     });
   }
 
@@ -93,8 +147,7 @@ export class Dashboard implements OnInit {
     }, interval);
   }
 
-  onLogout(): void {
-    this.authService.logout();
-    this.router.navigate(['/login']);
+  formatDate(dateStr: string): string {
+    return new Date(dateStr).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' });
   }
 }

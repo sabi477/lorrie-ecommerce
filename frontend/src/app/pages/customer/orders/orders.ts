@@ -1,16 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-
-export type OrderStatus = 'PENDING' | 'CONFIRMED' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
-
-export interface Order {
-  id: string;
-  date: string;
-  items: string;
-  total: number;
-  status: OrderStatus;
-}
+import { OrderService, Order, OrderStatus } from '../../../services/order';
+import { AuthService } from '../../../services/auth';
 
 @Component({
   selector: 'app-customer-orders',
@@ -19,20 +11,41 @@ export interface Order {
   templateUrl: './orders.html',
   styleUrl: './orders.scss',
 })
-export class CustomerOrders {
+export class CustomerOrders implements OnInit {
   activeFilter: string = 'Tümü';
   filters = ['Tümü', 'Bekleyen', 'Tamamlanan', 'İptal'];
+  allOrders: Order[] = [];
+  loading = true;
 
-  allOrders: Order[] = [
-    { id: 'ORR-00891', date: '28 Nis 2026', items: 'Floransa Deri Çanta, İpek Fular',     total: 1679, status: 'DELIVERED' },
-    { id: 'ORR-00876', date: '22 Nis 2026', items: 'Roma Deri Cüzdan',                     total: 450,  status: 'SHIPPED'   },
-    { id: 'ORR-00854', date: '15 Nis 2026', items: 'Nero Sneaker Pro, Atina Blazer +1',    total: 3540, status: 'PENDING'   },
-    { id: 'ORR-00841', date: '10 Nis 2026', items: 'Capri Yazlık Elbise',                  total: 649,  status: 'CONFIRMED' },
-    { id: 'ORR-00820', date: '2 Nis 2026',  items: 'Milano Minimal Saat',                  total: 2450, status: 'DELIVERED' },
-    { id: 'ORR-00798', date: '24 Mar 2026', items: 'Paris Bileklik Set, Tokyo Çanta +1',   total: 1165, status: 'CANCELLED' },
-    { id: 'ORR-00775', date: '17 Mar 2026', items: 'Osaka Oversize Hoodie',                total: 780,  status: 'PENDING'   },
-    { id: 'ORR-00751', date: '8 Mar 2026',  items: 'Venezia Oxford Ayakkabı',              total: 2100, status: 'DELIVERED' },
-  ];
+  constructor(
+    private orderService: OrderService,
+    private auth: AuthService,
+    private cdr: ChangeDetectorRef
+  ) {}
+
+  ngOnInit() {
+    const userId = this.auth.getUserId();
+    console.log('[Orders] ngOnInit - userId:', userId);
+    if (userId) {
+      console.log('[Orders] Calling API with userId:', userId);
+      this.orderService.getByCustomer(userId).subscribe({
+        next: (data) => {
+          console.log('[Orders] API response:', data);
+          this.allOrders = data;
+          this.loading = false;
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          console.error('[Orders] API error:', err);
+          this.loading = false;
+          this.cdr.detectChanges();
+        }
+      });
+    } else {
+      console.log('[Orders] No userId - not calling API');
+      this.loading = false;
+    }
+  }
 
   get filteredOrders(): Order[] {
     if (this.activeFilter === 'Tümü')       return this.allOrders;
@@ -51,4 +64,8 @@ export class CustomerOrders {
   };
 
   formatPrice(n: number) { return '$' + n.toLocaleString('en-US'); }
+
+  formatDate(dateStr: string): string {
+    return new Date(dateStr).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
 }

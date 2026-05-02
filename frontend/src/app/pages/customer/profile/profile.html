@@ -49,14 +49,14 @@
             </div>
             <div>
               <p class="order-card__id">#{{ o.id }}</p>
-              <p class="order-card__date">{{ o.date }} · {{ o.itemCount }} ürün</p>
+              <p class="order-card__date">{{ formatDate(o.createdAt) }}</p>
             </div>
           </div>
           <div class="order-card__right">
             <bl-badge [variant]="getStatusVariant(o.status)">
               {{ statusLabel[o.status] }}
             </bl-badge>
-            <span class="order-card__total">{{ formatPrice(o.total) }}</span>
+            <span class="order-card__total">{{ formatPrice(o.totalAmount) }}</span>
           </div>
         </a>
       }

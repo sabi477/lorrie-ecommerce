@@ -11,7 +11,7 @@
           </svg>
         </div>
         <h2>Siparişiniz Alındı!</h2>
-        <p>Sipariş numaranız: <strong>#ORR-00900</strong></p>
+        <p>Sipariş numaranız: <strong>#{{ orderId }}</strong></p>
         <p class="confirm-sub">Sipariş durumunuzu "Siparişlerim" sayfasından takip edebilirsiniz.</p>
         <a class="confirm-btn" routerLink="/customer/orders">Siparişlerimi Gör</a>
       </div>
@@ -25,80 +25,175 @@
     <!-- ── Left: Address + Payment ───────────────────────────── -->
     <div class="checkout__left">
 
-      <!-- Address -->
+      <!-- ── Address Section ──────────────────────────────────── -->
       <div class="card">
         <h3 class="card__title">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
           Teslimat Adresi
         </h3>
-        <div class="form-grid">
-          <div class="field">
-            <label>Ad</label>
-            <input type="text" placeholder="Ayşe" [(ngModel)]="form.firstName" />
+
+        <!-- Saved addresses -->
+        @if (savedAddresses.length > 0) {
+          <div class="saved-list">
+            @for (addr of savedAddresses; track addr.id) {
+              <button class="saved-item" [class.saved-item--selected]="!useNewAddress && selectedAddressId === addr.id"
+                (click)="selectAddress(addr.id)">
+                <div class="saved-item__radio">
+                  <span class="radio-dot" [class.radio-dot--on]="!useNewAddress && selectedAddressId === addr.id"></span>
+                </div>
+                <div class="saved-item__info">
+                  <span class="saved-item__label">
+                    {{ addr.title }}
+                    @if (addr.isDefault) { <span class="mini-badge">Varsayılan</span> }
+                  </span>
+                  <span class="saved-item__sub">{{ addr.firstName }} {{ addr.lastName }} · {{ addr.address }}, {{ addr.city }}</span>
+                </div>
+              </button>
+            }
+            <button class="saved-item" [class.saved-item--selected]="useNewAddress" (click)="useNewAddress = true; selectedAddressId = null">
+              <div class="saved-item__radio">
+                <span class="radio-dot" [class.radio-dot--on]="useNewAddress"></span>
+              </div>
+              <div class="saved-item__info">
+                <span class="saved-item__label">Yeni adres gir</span>
+              </div>
+            </button>
           </div>
-          <div class="field">
-            <label>Soyad</label>
-            <input type="text" placeholder="Yılmaz" [(ngModel)]="form.lastName" />
+        }
+
+        <!-- New address form -->
+        @if (useNewAddress) {
+          <div class="form-grid" [class.form-grid--mt]="savedAddresses.length > 0">
+            <div class="field">
+              <label>Ad</label>
+              <input type="text" placeholder="Ayşe" [(ngModel)]="form.firstName" />
+            </div>
+            <div class="field">
+              <label>Soyad</label>
+              <input type="text" placeholder="Yılmaz" [(ngModel)]="form.lastName" />
+            </div>
+            <div class="field field--full">
+              <label>Adres</label>
+              <input type="text" placeholder="Mahalle, cadde, kapı no..." [(ngModel)]="form.address" />
+            </div>
+            <div class="field">
+              <label>Şehir</label>
+              <input type="text" placeholder="İstanbul" [(ngModel)]="form.city" />
+            </div>
+            <div class="field">
+              <label>Posta Kodu</label>
+              <input type="text" placeholder="34000" [(ngModel)]="form.zip" maxlength="5" />
+            </div>
+            <div class="field field--full">
+              <label class="checkbox-label">
+                <input type="checkbox" [(ngModel)]="saveNewAddress" />
+                Bu adresi kaydet
+              </label>
+            </div>
           </div>
-          <div class="field field--full">
-            <label>Adres</label>
-            <input type="text" placeholder="Mahalle, cadde, kapı no..." [(ngModel)]="form.address" />
-          </div>
-          <div class="field">
-            <label>Şehir</label>
-            <input type="text" placeholder="İstanbul" [(ngModel)]="form.city" />
-          </div>
-          <div class="field">
-            <label>Posta Kodu</label>
-            <input type="text" placeholder="34000" [(ngModel)]="form.zip" maxlength="5" />
-          </div>
-        </div>
+        }
       </div>
 
-      <!-- Payment -->
+      <!-- ── Payment Section ──────────────────────────────────── -->
       <div class="card">
         <h3 class="card__title">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
           Ödeme Bilgileri
         </h3>
 
+        <!-- Saved payment methods -->
+        @if (savedPayments.length > 0) {
+          <div class="saved-list">
+            @for (pm of savedPayments; track pm.id) {
+              <button class="saved-item" [class.saved-item--selected]="!useNewPayment && selectedPaymentId === pm.id"
+                (click)="selectPayment(pm.id)">
+                <div class="saved-item__radio">
+                  <span class="radio-dot" [class.radio-dot--on]="!useNewPayment && selectedPaymentId === pm.id"></span>
+                </div>
+                <div class="saved-item__info">
+                  <span class="saved-item__label">
+                    {{ maskedCard(pm.lastFour) }}
+                    @if (pm.isDefault) { <span class="mini-badge">Varsayılan</span> }
+                  </span>
+                  <span class="saved-item__sub">{{ pm.brand }} · {{ pm.cardHolderName }} · {{ pm.expiry }}</span>
+                </div>
+              </button>
+            }
+            <button class="saved-item" [class.saved-item--selected]="useNewPayment" (click)="useNewPayment = true; selectedPaymentId = null">
+              <div class="saved-item__radio">
+                <span class="radio-dot" [class.radio-dot--on]="useNewPayment"></span>
+              </div>
+              <div class="saved-item__info">
+                <span class="saved-item__label">Yeni kart gir</span>
+              </div>
+            </button>
+          </div>
+        }
+
         <!-- Card visual -->
-        <div class="credit-card">
+        <div class="credit-card" [class.credit-card--mt]="savedPayments.length > 0 && !useNewPayment">
           <div class="credit-card__chip">
             <div class="chip-inner"></div>
           </div>
           <p class="credit-card__number">
-            {{ card.number || '•••• •••• •••• ••••' }}
+            @if (!useNewPayment && activePayment) {
+              {{ maskedCard(activePayment.lastFour) }}
+            } @else {
+              {{ card.number || '•••• •••• •••• ••••' }}
+            }
           </p>
           <div class="credit-card__bottom">
             <div>
               <p class="credit-card__label">Kart Sahibi</p>
-              <p class="credit-card__val">{{ (form.firstName + ' ' + form.lastName).trim() || 'AD SOYAD' }}</p>
+              <p class="credit-card__val">{{ cardOwnerName || 'AD SOYAD' }}</p>
             </div>
             <div>
               <p class="credit-card__label">Son Kullanım</p>
-              <p class="credit-card__val">{{ card.expiry || 'AA/YY' }}</p>
+              <p class="credit-card__val">
+                @if (!useNewPayment && activePayment) { {{ activePayment.expiry }} }
+                @else { {{ card.expiry || 'AA/YY' }} }
+              </p>
             </div>
-            <div class="credit-card__logo">VISA</div>
+            <div class="credit-card__logo">
+              @if (!useNewPayment && activePayment) { {{ activePayment.brand }} }
+              @else { VISA }
+            </div>
           </div>
         </div>
 
-        <div class="form-grid">
-          <div class="field field--full">
-            <label>Kart Numarası</label>
-            <input type="text" placeholder="0000 0000 0000 0000"
-              [value]="card.number" (input)="onCardInput($event)" maxlength="19" />
+        <!-- New card fields (only when entering new) -->
+        @if (useNewPayment) {
+          <div class="form-grid">
+            <div class="field field--full">
+              <label>Kart Numarası</label>
+              <input type="text" placeholder="0000 0000 0000 0000"
+                [value]="card.number" (input)="onCardInput($event)" maxlength="19" />
+            </div>
+            <div class="field">
+              <label>Son Kullanım</label>
+              <input type="text" placeholder="AA/YY"
+                [value]="card.expiry" (input)="onExpiryInput($event)" maxlength="5" />
+            </div>
+            <div class="field">
+              <label>CVV</label>
+              <input type="password" placeholder="•••" [(ngModel)]="card.cvv" maxlength="4" />
+            </div>
+            <div class="field field--full">
+              <label class="checkbox-label">
+                <input type="checkbox" [(ngModel)]="saveNewPayment" />
+                Bu kartı kaydet
+              </label>
+            </div>
           </div>
-          <div class="field">
-            <label>Son Kullanım</label>
-            <input type="text" placeholder="AA/YY"
-              [value]="card.expiry" (input)="onExpiryInput($event)" maxlength="5" />
+        } @else if (selectedPaymentId) {
+          <!-- CVV always required even for saved cards -->
+          <div class="cvv-only">
+            <div class="field">
+              <label>CVV <span class="cvv-hint">(güvenlik için her seferinde girilmesi gerekmektedir)</span></label>
+              <input type="password" placeholder="•••" [(ngModel)]="card.cvv" maxlength="4" style="max-width:120px" />
+            </div>
           </div>
-          <div class="field">
-            <label>CVV</label>
-            <input type="password" placeholder="•••" [(ngModel)]="card.cvv" maxlength="4" />
-          </div>
-        </div>
+        }
       </div>
 
     </div>
@@ -109,9 +204,13 @@
         <h3 class="card__title">Sipariş Özeti</h3>
 
         <div class="summary-items">
-          @for (item of items; track item.name) {
+          @for (item of cartSvc.items(); track item.id) {
             <div class="summary-item">
-              <div class="summary-item__img" [style.background]="item.bg"></div>
+              <div class="summary-item__img" [style.background]="item.thumbnail ? 'transparent' : (item.bg || '#f3f4f6')">
+                @if (item.thumbnail) {
+                  <img [src]="item.thumbnail" [alt]="item.name" />
+                }
+              </div>
               <div class="summary-item__info">
                 <p class="summary-item__name">{{ item.name }}</p>
                 <p class="summary-item__qty">{{ item.qty }} adet</p>
@@ -141,6 +240,10 @@
             Siparişi Tamamla
           }
         </button>
+
+        @if (errorMessage) {
+          <p class="checkout-error">{{ errorMessage }}</p>
+        }
 
         <p class="secure-note">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>

@@ -11,7 +11,8 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { Subject, debounceTime, distinctUntilChanged, switchMap, of } from 'rxjs';
 import { AuthService } from '../../services/auth';
 import { CartService } from '../../services/cart';
 import { FavoritesService } from '../../services/favorites';
@@ -111,12 +112,19 @@ export class Store implements OnInit, AfterViewInit, OnDestroy {
   toastMsg = '';
   loading = true;
   loadingMore = false;
+  loadingSearch = false;
+  loadingVisualSearch = false;
+  visualSearchPreview = '';
+  visualSearchResults: StoreProduct[] = [];
   currentPage = 0;
   readonly pageSize = 42;
   hasMore = true;
+  sellerId: number | null = null;
+  sellerName = '';
   private loadMoreObserver?: IntersectionObserver;
   private loadMoreTrigger?: ElementRef<HTMLElement>;
   private readonly onWindowScroll = () => this.onScroll();
+  private readonly searchSubject = new Subject<string>();
 
   @ViewChild('loadMoreTrigger')
   set loadMoreTriggerElement(element: ElementRef<HTMLElement> | undefined) {
@@ -126,29 +134,28 @@ export class Store implements OnInit, AfterViewInit, OnDestroy {
 
   tabs: string[] = ['Tümü'];
 
-  campaigns = [
-    { label: 'Bugün Fiyatı\nDüşenler', icon: '🏷️', color: '#fff3e0' },
-    { label: 'Yeni\nGelenler', icon: '✨', color: '#e8f5e9' },
-    { label: 'Çok\nSatanlar', icon: '🔥', color: '#fce4ec' },
-    { label: 'Kampanya\nDetayları', icon: '🎁', color: '#e3f2fd' },
-    { label: 'İndirim\nKuponları', icon: '🎫', color: '#f3e5f5' },
-    { label: 'Flash\nSatış', icon: '⚡', color: '#fffde7' },
-  ];
-
   allProducts: StoreProduct[] = [];
+  searchResults: StoreProduct[] = [];
 
   get filteredProducts(): StoreProduct[] {
+    if (this.visualSearchResults.length > 0) {
+      return this.visualSearchResults;
+    }
+
+    const q = this.searchQuery.trim().toLowerCase();
+    if (q) {
+      if (this.searchResults.length > 0) {
+        return this.searchResults;
+      }
+      return [];
+    }
+
     let list = this.activeTab === 'Tümü' || this.activeTab === 'İndirim'
       ? [...this.allProducts]
       : this.allProducts.filter(p => p.category === this.activeTab);
 
     if (this.activeTab === 'İndirim') list = list.filter(p => p.originalPrice);
 
-    const q = this.searchQuery.trim().toLowerCase();
-    if (q) list = list.filter(p =>
-      p.name.toLowerCase().includes(q) ||
-      p.category.toLowerCase().includes(q)
-    );
     return list;
   }
 
@@ -160,11 +167,39 @@ export class Store implements OnInit, AfterViewInit, OnDestroy {
     private authService: AuthService,
     private productService: ProductService,
     private cdr: ChangeDetectorRef,
+    private route: ActivatedRoute,
     public router: Router,
     public cartSvc: CartService,
     public favSvc: FavoritesService,
     private ngZone: NgZone,
-  ) { }
+  ) {
+    this.searchSubject.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap(query => {
+        if (query.trim().length === 0) {
+          this.searchResults = [];
+          return of(null);
+        }
+        this.loadingSearch = true;
+        this.cdr.detectChanges();
+        return this.productService.search(query);
+      })
+    ).subscribe({
+      next: (products) => {
+        this.loadingSearch = false;
+        if (products) {
+          this.searchResults = products.map((p, i) => mapProduct(p, i));
+        }
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.loadingSearch = false;
+        this.searchResults = [];
+        this.cdr.detectChanges();
+      }
+    });
+  }
 
   ngOnInit(): void {
     this.isLoggedIn = this.authService.isLoggedIn();
@@ -173,7 +208,14 @@ export class Store implements OnInit, AfterViewInit, OnDestroy {
     this.userRole = this.authService.getRole() ?? '';
 
     this.favSvc.load();
-    this.loadProducts();
+    this.route.paramMap.subscribe(params => {
+      const sellerId = Number(params.get('sellerId'));
+      this.sellerId = Number.isFinite(sellerId) && sellerId > 0 ? sellerId : null;
+      this.sellerName = '';
+      this.activeTab = 'Tümü';
+      this.searchQuery = '';
+      this.loadProducts();
+    });
     if (typeof IntersectionObserver === 'undefined') {
       window.addEventListener('scroll', this.onWindowScroll, { passive: true });
     }
@@ -200,23 +242,34 @@ export class Store implements OnInit, AfterViewInit, OnDestroy {
   loadProducts(): void {
     this.loading = true;
     this.currentPage = 0;
-    this.hasMore = true;
-    this.productService.getAll(this.pageSize, 0).subscribe({
+    this.hasMore = this.sellerId === null;
+    const request = this.sellerId === null
+      ? this.productService.getAll(this.pageSize, 0)
+      : this.productService.getBySeller(this.sellerId);
+
+    request.subscribe({
       next: (products) => {
         this.allProducts = products.map((p, i) => mapProduct(p, i));
+        this.sellerName = this.sellerId === null
+          ? ''
+          : products[0]?.seller?.fullName ?? 'Satıcı Mağazası';
         this.updateTabs();
         this.loading = false;
-        this.hasMore = products.length === this.pageSize;
+        this.hasMore = this.sellerId === null && products.length === this.pageSize;
         this.cdr.detectChanges();
       },
       error: () => {
+        this.allProducts = [];
+        this.sellerName = this.sellerId === null ? '' : 'Satıcı Mağazası';
         this.loading = false;
+        this.hasMore = false;
         this.cdr.detectChanges();
       }
     });
   }
 
   loadMore(): void {
+    if (this.sellerId !== null) return;
     if (this.loadingMore || !this.hasMore) return;
     this.loadingMore = true;
     const nextPage = this.currentPage + 1;
@@ -258,6 +311,8 @@ export class Store implements OnInit, AfterViewInit, OnDestroy {
   }
 
   logout() {
+    this.cartSvc.clear();
+    this.favSvc.clear();
     this.authService.logout();
     this.isLoggedIn = false;
     this.userEmail = '';
@@ -302,4 +357,41 @@ export class Store implements OnInit, AfterViewInit, OnDestroy {
 
   goLogin(): void { this.router.navigate(['/login']); }
   goBack(): void { this.router.navigate(['/dashboard']); }
+
+onSearchInput(query: string): void {
+    this.searchQuery = query;
+    if (query.trim().length === 0) {
+      this.searchResults = [];
+    }
+    this.searchSubject.next(query);
+  }
+
+  onImageSearch(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+
+    this.visualSearchPreview = URL.createObjectURL(file);
+    this.loadingVisualSearch = true;
+    this.searchQuery = '';
+    this.searchResults = [];
+    this.visualSearchResults = [];
+
+    this.productService.visualSearch(file).subscribe({
+      next: (products) => {
+        this.visualSearchResults = products.map((p, i) => mapProduct(p, i));
+        this.loadingVisualSearch = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.loadingVisualSearch = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  clearVisualSearch(): void {
+    this.visualSearchPreview = '';
+    this.visualSearchResults = [];
+    this.loadingVisualSearch = false;
+  }
 }

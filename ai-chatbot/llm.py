@@ -11,5 +11,7 @@ llm = ChatOpenAI(
     default_headers={
         "HTTP-Referer": "http://localhost:8080",
         "X-Title": "ECommerce Chatbot"
-    }
+    },
+    streaming=False,
+    request_timeout=30,
 )

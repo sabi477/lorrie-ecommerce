@@ -31,11 +31,64 @@
           class="navbar__search-input"
           type="text"
           placeholder="Ürün, kategori veya marka ara"
-          [(ngModel)]="searchQuery" />
+          [ngModel]="searchQuery"
+          (ngModelChange)="onSearchInput($event)" />
         <button class="navbar__search-btn">Ara</button>
       </div>
 
+      @if (searchQuery.trim().length > 0) {
+        <div class="search-dropdown search-dropdown--inline">
+          @if (loadingSearch) {
+            <div class="search-dropdown__loading">
+              <div class="loading-spinner loading-spinner--sm"></div>
+              <span>Aranıyor...</span>
+            </div>
+          } @else if (searchResults.length > 0) {
+            @for (p of searchResults.slice(0, 8); track p.id) {
+              <a class="search-dropdown__item" (click)="router.navigate(['/product-detail', p.id]); searchQuery=''; searchResults=[]">
+                <img [src]="p.imageUrl" [alt]="p.name" />
+                <div class="search-dropdown__item-info">
+                  <span class="search-dropdown__item-name">{{ p.name }}</span>
+                  <span class="search-dropdown__item-price">{{ formatPrice(p.price) }}</span>
+                </div>
+              </a>
+            }
+          } @else {
+            <div class="search-dropdown__empty">Ürün bulunamadı</div>
+          }
+        </div>
+      }
+
+      @if (visualSearchPreview) {
+        <div class="visual-search-preview">
+          <img [src]="visualSearchPreview" alt="Arama görseli" />
+          <button class="visual-search-preview__clear" (click)="clearVisualSearch()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      }
+
+      @if (loadingVisualSearch) {
+        <div class="search-dropdown">
+          <div class="search-dropdown__loading">
+            <div class="loading-spinner loading-spinner--sm"></div>
+            <span>Görsel aranıyor...</span>
+          </div>
+        </div>
+      }
+
+
+      @if (visualSearchResults.length > 0) {
+        <div class="visual-search-results">
+          <div class="visual-search-results__header">
+            <span>Görsel Arama Sonuçları</span>
+            <button (click)="clearVisualSearch()">Temizle</button>
+          </div>
+        </div>
+      }
+
       <!-- Right actions -->
+
       <div class="navbar__actions">
         
         <a class="navbar__fav" routerLink="/customer/favorites">
@@ -76,10 +129,6 @@
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
                   Siparişlerim
                 </a>
-                <a routerLink="/customer/cart">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-                  Sepetim
-                </a>
                 <a routerLink="/customer/settings">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
                   Ayarlar
@@ -111,6 +160,22 @@
     </div>
   </header>
 
+  @if (sellerId !== null) {
+    <section class="seller-hero">
+      <div class="seller-hero__inner">
+        <a class="seller-hero__back" routerLink="/">Mağazaya dön</a>
+        <div class="seller-hero__main">
+          <div class="seller-hero__mark">{{ (sellerName || 'S').charAt(0).toUpperCase() }}</div>
+          <div>
+            <p class="seller-hero__eyebrow">Satıcı Mağazası</p>
+            <h1>{{ sellerName || 'Satıcı Mağazası' }}</h1>
+            <p>{{ allProducts.length }} ürün listeleniyor</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  }
+
   <!-- ══════════ CATEGORY TABS ══════════════════════════════════ -->
   <nav class="cattabs">
     <div class="cattabs__inner">
@@ -127,18 +192,6 @@
     </div>
   </nav>
 
-  <!-- ══════════ CAMPAIGNS ══════════════════════════════════════ -->
-  <section class="campaigns">
-    <div class="campaigns__inner">
-      @for (c of campaigns; track c.label) {
-        <button class="campaign-item" [style.background]="c.color">
-          <span class="campaign-icon">{{ c.icon }}</span>
-          <span class="campaign-label">{{ c.label }}</span>
-        </button>
-      }
-    </div>
-  </section>
-
   <!-- ══════════ LOADING ══════════════════════════════════════════ -->
   @if (loading) {
     <div class="loading-state">
@@ -149,6 +202,7 @@
 
   <!-- ══════════ POPULAR SECTION ════════════════════════════════ -->
   @if (!loading) {
+  @if (sellerId === null) {
   <section class="section">
     <div class="section__head">
       <h2 class="section__title">Popüler Ürünler</h2>
@@ -197,12 +251,13 @@
       }
     </div>
   </section>
+  }
 
   <!-- ══════════ ALL / FILTERED PRODUCTS ═══════════════════════ -->
   <section class="section">
     <div class="section__head">
       <h2 class="section__title">
-        {{ activeTab === 'Tümü' ? 'Tüm Ürünler' : activeTab }}
+        {{ visualSearchResults.length > 0 ? 'Görsel Arama Sonuçları' : (sellerId === null ? (activeTab === 'Tümü' ? 'Tüm Ürünler' : activeTab) : (activeTab === 'Tümü' ? 'Mağazadaki Ürünler' : activeTab)) }}
         <span class="section__count">{{ filteredProducts.length }} ürün</span>
       </h2>
     </div>
@@ -266,6 +321,7 @@
   } <!-- end @if (!loading) -->
 
   <!-- ══════════ CTA BANNER ════════════════════════════════════ -->
+  @if (sellerId === null) {
   <section class="cta-banner">
     <div class="cta-banner__left">
       <h2>Yeni Sezonu<br>Keşfet</h2>
@@ -284,6 +340,7 @@
       <p class="cta-note">Haftalık kampanyalar ve yeni ürün bildirimleri için abone ol.</p>
     </div>
   </section>
+  }
 
   <!-- ══════════ FOOTER ════════════════════════════════════════ -->
   <footer class="footer">
@@ -299,11 +356,11 @@
       </div>
       <div class="footer__col">
         <h5>Hakkımızda</h5>
-        <a>Blog</a><a>Ekibimiz</a><a>Kariyer</a><a>İletişim</a>
+        <a routerLink="/blog">Blog</a><a routerLink="/team">Ekibimiz</a><a routerLink="/careers">Kariyer</a><a routerLink="/contact-form">İletişim</a>
       </div>
       <div class="footer__col">
         <h5>Destek</h5>
-        <a>Kargo Bilgisi</a><a>İade &amp; Değişim</a><a>SSS</a><a>Bize Ulaşın</a>
+        <a routerLink="/shipping">Kargo Bilgisi</a><a routerLink="/returns">İade & Değişim</a><a routerLink="/faq">SSS</a><a routerLink="/contact">Bize Ulaşın</a>
       </div>
       <div class="footer__col">
         <h5>Sosyal Medya</h5>

@@ -1,6 +1,7 @@
 package com.example.demo.service;
 
 import com.example.demo.dto.AuthResponse;
+import com.example.demo.dto.ChangePasswordRequest;
 import com.example.demo.dto.LoginRequest;
 import com.example.demo.dto.RegisterRequest;
 import com.example.demo.entity.User;
@@ -29,10 +30,11 @@ public class AuthService {
         user.setFullName(request.getFullName());
         user.setRole(User.Role.CUSTOMER);
 
+        user.setPhone(request.getPhone());
         userRepository.save(user);
 
         String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name());
-        return new AuthResponse(token, user.getRole().name(), user.getEmail(), user.getId());
+        return new AuthResponse(token, user.getRole().name(), user.getEmail(), user.getFullName(), user.getId(), user.getPhone());
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -44,6 +46,18 @@ public class AuthService {
         }
 
         String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name());
-        return new AuthResponse(token, user.getRole().name(), user.getEmail(), user.getId());
+        return new AuthResponse(token, user.getRole().name(), user.getEmail(), user.getFullName(), user.getId(), user.getPhone());
+    }
+
+    public void changePassword(String userEmail, ChangePasswordRequest request) {
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            throw new RuntimeException("Current password is incorrect");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
     }
 }

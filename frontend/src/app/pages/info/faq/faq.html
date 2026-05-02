@@ -1,0 +1,39 @@
+<div class="info-page">
+  <header class="info-hero">
+    <div class="info-hero__inner">
+      <a class="back-link" routerLink="/">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        Mağazaya Dön
+      </a>
+      <h1>Sıkça Sorulan Sorular</h1>
+      <p>Aradığınız cevabı bulamadınız mı? Bize ulaşın</p>
+    </div>
+  </header>
+
+  <div class="info-content">
+    <div class="faq-list">
+      @for (faq of faqs; track faq; let i = $index) {
+        <div class="faq-item" [class.faq-item--open]="expandedIndex === i" (click)="toggle(i)">
+          <div class="faq-item__header">
+            <h3>{{ faq.question }}</h3>
+            <svg class="faq-item__arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          @if (expandedIndex === i) {
+            <div class="faq-item__body">
+              <p>{{ faq.answer }}</p>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <section class="still-have-questions">
+      <h2>Aradığınız Cevabı Bulamadınız mı?</h2>
+      <p>Sorularınız için 7/24 bize ulaşabilirsiniz.</p>
+      <div class="cta-buttons">
+        <bl-button variant="primary" routerLink="/contact">Bize Ulaşın</bl-button>
+        <bl-button variant="secondary">Canlı Destek</bl-button>
+      </div>
+    </section>
+  </div>
+</div>

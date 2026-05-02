@@ -37,6 +37,7 @@ a { text-decoration: none; color: inherit; cursor: pointer; }
   height: 62px;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 1.25rem;
   padding: 0 1.5rem;
 }
@@ -70,7 +71,6 @@ a { text-decoration: none; color: inherit; cursor: pointer; }
 .cl-nav__search {
   flex: 1;
   max-width: 560px;
-  margin: 0 auto;
   display: flex;
   align-items: center;
   background: $bg;

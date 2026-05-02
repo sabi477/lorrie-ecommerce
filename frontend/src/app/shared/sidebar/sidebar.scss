@@ -97,6 +97,28 @@
 .sidebar-footer {
   padding: 0.875rem 1.25rem;
   border-top: 1px solid #e8ecf0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.logout-btn {
+  background: none;
+  border: 1px solid #e8ecf0;
+  border-radius: var(--bl-border-radius-m, 6px);
+  padding: 0.35rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--bl-color-neutral-dark, #6e7787);
+  cursor: pointer;
+  transition: all 0.18s ease;
+
+  &:hover {
+    background: #fef2f2;
+    color: #b91c1c;
+    border-color: #fecaca;
+  }
 }
 
 .role-badge {

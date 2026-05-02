@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth';
+import { CartService } from '../../services/cart';
 
 @Component({
   selector: 'app-register',
@@ -17,11 +18,15 @@ export class Register {
   password = '';
   error = '';
 
-  constructor(private authService: AuthService, private router: Router) { }
+  constructor(private authService: AuthService, private cartSvc: CartService, private router: Router) { }
 
   onRegister() {
     this.authService.register(this.email, this.password, this.fullName).subscribe({
-      next: () => this.router.navigate(['/dashboard']),
+      next: () => {
+        this.cartSvc.loadFromServer();
+        const role = this.authService.getRole();
+        this.router.navigate([role === 'CUSTOMER' ? '/' : '/dashboard']);
+      },
       error: () => this.error = 'Kayıt işlemi başarısız'
     });
   }

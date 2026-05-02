@@ -17,7 +17,9 @@ export class AuthService {
         localStorage.setItem('token', res.token);
         localStorage.setItem('role', res.role);
         localStorage.setItem('email', res.email);
+        localStorage.setItem('fullName', res.fullName);
         localStorage.setItem('id', res.id);
+        localStorage.setItem('phone', res.phone || '');
       })
     );
   }
@@ -28,7 +30,9 @@ export class AuthService {
         localStorage.setItem('token', res.token);
         localStorage.setItem('role', res.role);
         localStorage.setItem('email', res.email);
+        localStorage.setItem('fullName', res.fullName);
         localStorage.setItem('id', res.id);
+        localStorage.setItem('phone', res.phone || '');
       })
     );
   }
@@ -37,7 +41,9 @@ export class AuthService {
     localStorage.removeItem('token');
     localStorage.removeItem('role');
     localStorage.removeItem('email');
+    localStorage.removeItem('fullName');
     localStorage.removeItem('id');
+    localStorage.removeItem('phone');
   }
 
   getToken(): string | null {
@@ -61,10 +67,14 @@ export class AuthService {
     return id ? parseInt(id, 10) : null;
   }
 
-  mockLogin(role: 'CUSTOMER' | 'ADMIN' | 'SELLER', email: string) {
-    localStorage.setItem('token', 'demo-token-' + role.toLowerCase());
-    localStorage.setItem('role', role);
-    localStorage.setItem('email', email);
-    localStorage.setItem('id', '1'); // Default for mock
+  getPhone(): string | null {
+    return localStorage.getItem('phone');
   }
+
+  changePassword(currentPassword: string, newPassword: string): Observable<any> {
+    return this.http.put(`${this.apiUrl}/password`, { currentPassword, newPassword }, {
+      headers: { Authorization: `Bearer ${this.getToken()}` }
+    });
+  }
+
 }

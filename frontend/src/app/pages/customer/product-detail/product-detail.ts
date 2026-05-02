@@ -220,6 +220,8 @@ export class CustomerProductDetail implements OnInit {
   }
 
   logout(): void {
+    this.cartSvc.clear();
+    this.favSvc.clear();
     this.authService.logout();
     this.isLoggedIn = false;
     this.userEmail = '';

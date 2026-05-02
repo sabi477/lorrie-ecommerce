@@ -1,0 +1,79 @@
+<div class="info-page">
+  <header class="info-hero">
+    <div class="info-hero__inner">
+      <a class="back-link" routerLink="/">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        Mağazaya Dön
+      </a>
+      <h1>Kargo Bilgisi</h1>
+      <p>Siparişinizi en hızlı şekilde kapınıza getiriyoruz</p>
+    </div>
+  </header>
+
+  <div class="info-content">
+    <section class="info-section">
+      <h2>Kargo Seçenekleri</h2>
+      <div class="shipping-options">
+        <div class="shipping-card">
+          <div class="shipping-card__header">
+            <h3>Standart Kargo</h3>
+            <span class="shipping-card__price">29.90 ₺</span>
+          </div>
+          <p>2-5 iş günü içinde teslimat</p>
+          <bl-progress-bar [value]="80" color="primary"></bl-progress-bar>
+          <span class="shipping-card__eta">Tahmini: 3-4 iş günü</span>
+        </div>
+
+        <div class="shipping-card shipping-card--featured">
+          <div class="shipping-card__badge">Önerilen</div>
+          <div class="shipping-card__header">
+            <h3>Hızlı Kargo</h3>
+            <span class="shipping-card__price">49.90 ₺</span>
+          </div>
+          <p>1-2 iş günü içinde teslimat</p>
+          <bl-progress-bar [value]="50" color="success"></bl-progress-bar>
+          <span class="shipping-card__eta">Tahmini: 1-2 iş günü</span>
+        </div>
+
+        <div class="shipping-card">
+          <div class="shipping-card__header">
+            <h3>Aynı Gün Teslimat</h3>
+            <span class="shipping-card__price">99.90 ₺</span>
+          </div>
+          <p>İstanbul içinde aynı gün teslimat (13:00'e kadar)</p>
+          <bl-progress-bar [value]="20" color="warning"></bl-progress-bar>
+          <span class="shipping-card__eta">Tahmini: 4-6 saat</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="info-section">
+      <h2>Sıkça Sorulan Sorular</h2>
+
+      <div class="faq-item">
+        <h3>Siparişim ne zaman kargoya verilir?</h3>
+        <p>Ödeme onaylandıktan sonra 24 saat içinde siparişiniz kargoya hazır hale getirilir.</p>
+      </div>
+
+      <div class="faq-item">
+        <h3>Kargo takibi nasıl yapılır?</h3>
+        <p>Siparişiniz kargoya teslim edildiğinde SMS ve e-posta ile takip numarası gönderilir. Ayrıca "Siparişlerim" sayfasından da takip edebilirsiniz.</p>
+      </div>
+
+      <div class="faq-item">
+        <h3>Hangi kargo firmalarıyla çalışıyorsunuz?</h3>
+        <p>Yurtiçi Kargo, Aras Kargo ve PTT Kargo ile çalışıyoruz. Siparişiniz için en uygun firma otomatik olarak seçilir.</p>
+      </div>
+
+      <div class="faq-item">
+        <h3>Kapıda ödeme ile alışveriş yapabilir miyim?</h3>
+        <p>Evet, sepetinizde 500₺'ye kadar olan siparişlerde kapıda nakit veya kredi kartı ile ödeme yapabilirsiniz.</p>
+      </div>
+
+      <div class="faq-item">
+        <h3>Ücretsiz kargo nedir ve nasıl kullanılır?</h3>
+        <p>Aynı satıcıdan 300₺ üzeri siparişlerde ücretsiz kargo uygulanır. Ayrıca kampanya dönemlerinde farklı eşik değerleri geçerli olabilir.</p>
+      </div>
+    </section>
+  </div>
+</div>

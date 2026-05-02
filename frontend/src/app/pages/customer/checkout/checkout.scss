@@ -120,7 +120,10 @@ input{
   display:flex;align-items:center;gap:.75rem;
   padding-bottom:.75rem;border-bottom:1px solid $bg;
   &:last-child{border-bottom:none;padding-bottom:0;}
-  &__img{width:44px;height:44px;border-radius:$radius-sm;border:1px solid $border;flex-shrink:0;}
+  &__img{
+    width:44px;height:44px;border-radius:$radius-sm;border:1px solid $border;flex-shrink:0;overflow:hidden;
+    img{width:100%;height:100%;object-fit:cover;display:block;}
+  }
   &__info{flex:1;}
   &__name{font-size:.82rem;font-weight:600;color:$text;}
   &__qty{font-size:.72rem;color:$muted;margin-top:.1rem;}
@@ -151,8 +154,53 @@ input{
   animation:spin .7s linear infinite;
 }
 
+.checkout-error{
+  margin-top:.75rem;padding:.65rem .75rem;border-radius:$radius-sm;
+  background:#fef2f2;color:#b91c1c;font-size:.8rem;font-weight:700;
+}
+
 .secure-note{
   display:flex;align-items:center;justify-content:center;gap:.35rem;
   font-size:.72rem;color:$muted;margin-top:.6rem;
   svg{flex-shrink:0;color:#22c55e;}
+}
+
+// ── Saved address / payment selector ──────────────────────────────
+.saved-list{
+  display:flex;flex-direction:column;gap:.4rem;margin-bottom:.85rem;
+}
+.saved-item{
+  width:100%;display:flex;align-items:center;gap:.75rem;
+  padding:.7rem .85rem;border:1.5px solid $border;border-radius:$radius-sm;
+  background:$surface;text-align:left;cursor:pointer;
+  transition:border-color .15s,background .15s;
+  &:hover{border-color:darken($border,8%);background:$bg;}
+  &--selected{border-color:$primary;background:$primary-lt;}
+  &__info{flex:1;display:flex;flex-direction:column;gap:.1rem;}
+  &__label{font-size:.85rem;font-weight:700;color:$text;display:flex;align-items:center;gap:.4rem;}
+  &__sub{font-size:.75rem;color:$muted;}
+}
+
+.radio-dot{
+  width:16px;height:16px;border-radius:50%;border:2px solid $border;
+  flex-shrink:0;position:relative;transition:border-color .15s;
+  &--on{border-color:$primary;
+    &::after{content:'';position:absolute;inset:3px;border-radius:50%;background:$primary;}}
+}
+
+.mini-badge{
+  padding:.1rem .4rem;background:$primary;color:#fff;
+  border-radius:100px;font-size:.6rem;font-weight:700;
+}
+
+.form-grid--mt{margin-top:.5rem;}
+.credit-card--mt{margin-top:.5rem;}
+
+.cvv-only{margin-top:.85rem;}
+.cvv-hint{font-size:.65rem;font-weight:400;color:$muted;text-transform:none;letter-spacing:0;}
+
+.checkbox-label{
+  display:flex;align-items:center;gap:.5rem;
+  font-size:.82rem;font-weight:600;color:$text;cursor:pointer;
+  input[type=checkbox]{width:15px;height:15px;accent-color:$primary;cursor:pointer;}
 }

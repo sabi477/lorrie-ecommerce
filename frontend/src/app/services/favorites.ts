@@ -75,6 +75,10 @@ export class FavoritesService {
     });
   }
 
+  clear(): void {
+    this._items.set([]);
+  }
+
   private headers(): HttpHeaders {
     return new HttpHeaders({ Authorization: `Bearer ${this.auth.getToken()}` });
   }
