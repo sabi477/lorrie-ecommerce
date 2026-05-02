@@ -33,25 +33,19 @@ public class DataSeeder implements CommandLineRunner {
     private final PasswordEncoder passwordEncoder;
 
     @Override
+    @Transactional
     public void run(String... args) {
-        if (productRepository.count() > 0) {
-            if (productRepository.existsByThumbnailIsNotNull()) {
-                log.info("DummyJSON data already seeded, skipping.");
-                return;
-            }
-            log.info("Old products found (no thumbnails), clearing and re-seeding...");
-            shipmentRepository.deleteAll();
-            orderItemRepository.deleteAll();
-            orderRepository.deleteAll();
-            reviewRepository.deleteAll();
-            productRepository.deleteAll();
-            categoryRepository.deleteAll();
-        }
-
-        log.info("Seeding database from DummyJSON...");
-        List<User> sellers = createSellers();
-        seedProducts(sellers);
-        log.info("Seeding complete.");
+        log.info("Mock data removal requested. Clearing database...");
+        
+        shipmentRepository.deleteAll();
+        orderItemRepository.deleteAll();
+        orderRepository.deleteAll();
+        reviewRepository.deleteAll();
+        productRepository.deleteAll();
+        categoryRepository.deleteAll();
+        userRepository.deleteAll(); // Remove all users including mock sellers/customers
+        
+        log.info("Database cleared. Automatic seeding is now DISABLED.");
     }
 
     private List<User> createSellers() {
