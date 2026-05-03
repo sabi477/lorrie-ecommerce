@@ -61,6 +61,19 @@ public class SellerController {
         return orderRepository.findBySellerIdOrderByIdDesc(sellerId);
     }
 
+    @GetMapping("/top-sellers")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<TopSeller>> getTopSellers(@RequestParam(defaultValue = "5") int limit) {
+        List<Object[]> results = orderItemRepository.findTopSellersByRevenue(limit);
+        List<TopSeller> topSellers = results.stream().map(row -> new TopSeller(
+                (Long) row[0],
+                (String) row[1],
+                (BigDecimal) row[2],
+                ((Number) row[3]).longValue()
+        )).toList();
+        return ResponseEntity.ok(topSellers);
+    }
+
     public record SellerDashboardStats(
             long totalOrders,
             BigDecimal totalRevenue,
@@ -68,5 +81,12 @@ public class SellerController {
             long pendingOrders,
             long completedOrders,
             Map<String, Long> orderStatusCounts
+    ) {}
+
+    public record TopSeller(
+            Long sellerId,
+            String sellerName,
+            BigDecimal totalRevenue,
+            long totalOrders
     ) {}
 }

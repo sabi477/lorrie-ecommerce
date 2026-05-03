@@ -19,6 +19,13 @@ export interface SellerDashboardStats {
   orderStatusCounts: Record<string, number>;
 }
 
+export interface TopSeller {
+  sellerId: number;
+  sellerName: string;
+  totalRevenue: number;
+  totalOrders: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class DashboardService {
   private base = 'http://localhost:8080/api';
@@ -55,6 +62,13 @@ export class DashboardService {
   getSellerOrders(sellerId: number): Observable<any[]> {
     return this.http.get<any[]>(
       `${this.base}/orders/seller/${sellerId}`,
+      { headers: this.headers() }
+    );
+  }
+
+  getTopSellers(limit: number = 5): Observable<TopSeller[]> {
+    return this.http.get<TopSeller[]>(
+      `${this.base}/seller/top-sellers?limit=${limit}`,
       { headers: this.headers() }
     );
   }

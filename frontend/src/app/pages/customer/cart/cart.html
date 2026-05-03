@@ -1,7 +1,7 @@
 <div class="cart-page">
 
   <h1 class="page-title">
-    Sepetim
+    {{ 'cart.myCart' | translate }}
     @if (cartSvc.count() > 0) {
       <span class="count-badge">{{ cartSvc.count() }}</span>
     }
@@ -16,9 +16,9 @@
           <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
         </svg>
       </div>
-      <h3>Sepetiniz boş</h3>
-      <p>Beğendiğiniz ürünleri sepete ekleyin.</p>
-      <a class="btn-shop" routerLink="/">Alışverişe Başla</a>
+      <h3>{{ 'cart.cartEmpty' | translate }}</h3>
+      <p>{{ 'cart.addProductsToCart' | translate }}</p>
+      <a class="btn-shop" routerLink="/">{{ 'cart.startShopping' | translate }}</a>
     </div>
 
   } @else {
@@ -30,9 +30,9 @@
         <div class="seller-group">
           <div class="seller-header">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-            <span>Lorrie Resmi Mağazası</span>
+            <span>{{ 'cart.lorrieOfficialStore' | translate }}</span>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-            <span class="verified">Onaylı Satıcı</span>
+            <span class="verified">{{ 'cart.verifiedSeller' | translate }}</span>
           </div>
 
           @for (item of cartSvc.items(); track item.id) {
@@ -74,43 +74,43 @@
       <!-- ── Sağ: Özet ────────────────────────────────────── -->
       <aside class="cart-summary">
         <div class="summary-card">
-          <h3 class="summary-title">Sipariş Özeti</h3>
+          <h3 class="summary-title">{{ 'cart.orderSummary' | translate }}</h3>
 
           <!-- Ücretsiz kargo progress -->
           @if (freeShippingLeft > 0) {
             <div class="shipping-hint">
-              <p>Ücretsiz kargo için <strong>{{ cartSvc.formatPrice(freeShippingLeft) }}</strong> daha ekle</p>
+              <p>{{ 'cart.freeShippingFor' | translate }} <strong>{{ cartSvc.formatPrice(freeShippingLeft) }}</strong> {{ 'common.loading' | translate }}</p>
               <div class="progress-bar"><div class="progress-fill" [style.width]="freeShippingPct + '%'"></div></div>
             </div>
           } @else {
             <div class="shipping-free">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-              Ücretsiz kargo kazandınız!
+              {{ 'store.freeShipping' | translate }}
             </div>
           }
 
           <div class="summary-divider"></div>
 
-          <div class="summary-row"><span>Ara Toplam</span><span>{{ cartSvc.formatPrice(cartSvc.subtotal()) }}</span></div>
+          <div class="summary-row"><span>{{ 'cart.subtotal' | translate }}</span><span>{{ cartSvc.formatPrice(cartSvc.subtotal()) }}</span></div>
           <div class="summary-row">
-            <span>Kargo</span>
-            <span [class.free-text]="cartSvc.shipping() === 0">{{ cartSvc.shipping() === 0 ? 'Ücretsiz' : cartSvc.formatPrice(cartSvc.shipping()) }}</span>
+            <span>{{ 'cart.shipping' | translate }}</span>
+            <span [class.free-text]="cartSvc.shipping() === 0">{{ cartSvc.shipping() === 0 ? ('cart.free' | translate) : cartSvc.formatPrice(cartSvc.shipping()) }}</span>
           </div>
 
           <div class="summary-divider"></div>
           <div class="summary-row summary-row--total">
-            <span>Toplam</span>
+            <span>{{ 'cart.total' | translate }}</span>
             <span>{{ cartSvc.formatPrice(cartSvc.total()) }}</span>
           </div>
 
           <button class="btn-proceed" (click)="proceed()">
-            Siparişi Onayla
+            {{ 'cart.confirmOrder' | translate }}
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
           </button>
 
           <p class="secure-note">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            256-bit SSL ile güvenli ödeme
+            {{ 'cart.securePaymentInfo' | translate }}
           </p>
         </div>
       </aside>

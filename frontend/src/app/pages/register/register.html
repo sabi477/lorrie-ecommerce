@@ -16,7 +16,7 @@
 
     <!-- Heading -->
     <div class="card-header">
-      <h1>Hesap Oluştur</h1>
+      <h1>{{ 'auth.registerTitle' | translate }}</h1>
       <p>Lorrie'ye ücretsiz katılın</p>
     </div>
 
@@ -44,7 +44,7 @@
       </div>
 
       <div class="field">
-        <label class="input-label" for="register-email">E-posta</label>
+        <label class="input-label" for="register-email">{{ 'auth.email' | translate }}</label>
         <input
           id="register-email"
           class="input"
@@ -57,7 +57,7 @@
       </div>
 
       <div class="field">
-        <label class="input-label" for="register-password">Şifre</label>
+        <label class="input-label" for="register-password">{{ 'auth.password' | translate }}</label>
         <input
           id="register-password"
           class="input"
@@ -69,13 +69,13 @@
           required />
       </div>
 
-      <button type="submit" class="cta-btn">Kayıt Ol</button>
+      <button type="submit" class="cta-btn">{{ 'common.register' | translate }}</button>
     </form>
 
     <!-- Footer -->
     <p class="login-prompt">
-      Zaten hesabın var mı?
-      <a routerLink="/login" class="login-link">Giriş Yap</a>
+      {{ 'auth.alreadyHaveAccount' | translate }}
+      <a routerLink="/login" class="login-link">{{ 'common.login' | translate }}</a>
     </p>
 
   </div>

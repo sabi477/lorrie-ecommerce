@@ -19,6 +19,7 @@ export interface Product {
   tags: string[] | null;
   category: { id: number; name: string } | null;
   seller: { id: number; fullName: string; email: string } | null;
+  sellerName?: string | null;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -86,5 +87,13 @@ export class ProductService {
     const formData = new FormData();
     formData.append('image', file);
     return this.http.post<Product[]>(`${this.api}/visual-search`, formData);
+  }
+
+  bulkUpdate(ids: number[], fields: Partial<Product>): Observable<Product[]> {
+    return this.http.patch<Product[]>(`${this.api}/bulk`, { ids, ...fields }, { headers: this.headers() });
+  }
+
+  bulkDelete(ids: number[]): Observable<void> {
+    return this.http.delete<void>(`${this.api}/bulk`, { headers: this.headers(), body: { ids } });
   }
 }

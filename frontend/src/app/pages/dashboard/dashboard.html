@@ -41,7 +41,16 @@
           <div class="chart-card chart-card--wide">
             <div class="chart-header">
               <h3>Aylık Gelir Trendi</h3>
-              <span class="chart-subtitle">Son 6 ay</span>
+              <div class="time-range-selector">
+                @for (opt of timeRangeOptions; track opt.value) {
+                  <button
+                    class="time-range-btn"
+                    [class.active]="timeRange === opt.value"
+                    (click)="setTimeRange(opt.value)">
+                    {{ opt.label }}
+                  </button>
+                }
+              </div>
             </div>
             <div class="chart-body">
               <canvas #revenueChartCanvas></canvas>
@@ -55,6 +64,27 @@
             <div class="chart-body">
               <canvas #orderStatusChartCanvas></canvas>
             </div>
+          </div>
+        </div>
+      }
+
+      <!-- Top Sellers -->
+      @if (userRole === 'ADMIN' && topSellers.length > 0) {
+        <div class="section-card">
+          <div class="section-header">
+            <h3>En Çok Satış Yapan Satıcılar</h3>
+          </div>
+          <div class="top-sellers-grid">
+            @for (seller of topSellers; track seller.sellerId; let i = $index) {
+              <div class="top-seller-card" [class]="getRankClass(i)">
+                <div class="top-seller-rank">{{ i + 1 }}</div>
+                <div class="top-seller-info">
+                  <span class="top-seller-name">{{ seller.sellerName }}</span>
+                  <span class="top-seller-orders">{{ seller.totalOrders }} sipariş</span>
+                </div>
+                <div class="top-seller-revenue">{{ formatCurrency(seller.totalRevenue) }}</div>
+              </div>
+            }
           </div>
         </div>
       }

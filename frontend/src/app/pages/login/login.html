@@ -6,6 +6,13 @@
 
   <div class="login-card">
 
+    <!-- Back Button -->
+    <a routerLink="/" class="back-btn" aria-label="Geri dön">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </a>
+
     <!-- Brand -->
     <div class="brand">
       <div class="brand-icon">
@@ -16,8 +23,8 @@
 
     <!-- Heading -->
     <div class="card-header">
-      <h1>Hoş Geldiniz</h1>
-      <p>Hesabınıza giriş yapın</p>
+      <h1>{{ 'auth.welcome' | translate }}</h1>
+      <p>{{ 'auth.loginTitle' | translate }}</p>
     </div>
 
     <!-- Error -->
@@ -31,7 +38,7 @@
     <!-- Form -->
     <form class="login-form" (ngSubmit)="onLogin()">
       <div class="field">
-        <label class="input-label" for="login-email">E-posta</label>
+        <label class="input-label" for="login-email">{{ 'auth.email' | translate }}</label>
         <input
           id="login-email"
           class="input"
@@ -44,7 +51,7 @@
       </div>
 
       <div class="field">
-        <label class="input-label" for="login-password">Şifre</label>
+        <label class="input-label" for="login-password">{{ 'auth.password' | translate }}</label>
         <input
           id="login-password"
           class="input"
@@ -56,15 +63,15 @@
           required />
       </div>
 
-      <button type="submit" class="cta-btn">Giriş Yap</button>
+      <button type="submit" class="cta-btn">{{ 'common.login' | translate }}</button>
     </form>
 
 
 
     <!-- Footer -->
     <p class="signup-prompt">
-      Hesabın yok mu?
-      <a routerLink="/register" class="signup-link">Kayıt Ol</a>
+      {{ 'auth.dontHaveAccount' | translate }}
+      <a routerLink="/register" class="signup-link">{{ 'common.register' | translate }}</a>
     </p>
 
   </div>

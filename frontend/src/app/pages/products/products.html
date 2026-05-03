@@ -21,6 +21,30 @@
       </div>
     </header>
 
+    @if (canEdit && selectedCount > 0) {
+      <div class="bulk-actions-bar">
+        <label class="select-all-label">
+          <input type="checkbox" [checked]="selectedCount === products.length" (change)="toggleSelectAll($event)" />
+          <span>{{ selectedCount }} ürün seçili</span>
+        </label>
+        <div class="bulk-actions">
+          <button class="bulk-btn bulk-btn--edit" (click)="openBulkEdit()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+            Toplu Düzenle
+          </button>
+          <button class="bulk-btn bulk-btn--delete" (click)="bulkDelete()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+            </svg>
+            Toplu Sil
+          </button>
+        </div>
+      </div>
+    }
+
     <main class="content">
       @if (loading) {
         <div class="state-msg">Ürünler yükleniyor...</div>
@@ -29,7 +53,12 @@
       } @else {
         <div class="products-grid">
           @for (product of products; track product.id; let i = $index) {
-            <div class="product-card" [style.animation-delay]="(i * 40) + 'ms'">
+            <div class="product-card" [style.animation-delay]="(i * 40) + 'ms'" [class.product-card--selected]="isSelected(product.id)">
+              @if (canEdit) {
+                <div class="product-checkbox" (click)="toggleSelect(product.id, $event)">
+                  <input type="checkbox" [checked]="isSelected(product.id)" />
+                </div>
+              }
               <div class="product-image">
                 <img [src]="getImageUrl(product)" [alt]="product.name" loading="lazy"
                      onerror="this.src='https://picsum.photos/seed/default/400/400'" />
@@ -100,6 +129,13 @@
         [product]="editingProduct"
         (saved)="onProductSaved($event)"
         (closed)="onDialogClosed()"
+      />
+    }
+    @if (showBulkEdit) {
+      <app-product-bulk-edit-dialog
+        [products]="selectedProducts"
+        (saved)="onBulkEditSaved($event)"
+        (closed)="onBulkEditClosed()"
       />
     }
   </div>
