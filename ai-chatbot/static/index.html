@@ -855,16 +855,6 @@
       } catch (_) {}
     }
 
-    // SQL block
-    if (data.sql_query) {
-      const sqlBlock = document.createElement('div');
-      sqlBlock.className = 'sql-block';
-      const pre = document.createElement('pre');
-      pre.textContent = data.sql_query;
-      sqlBlock.appendChild(pre);
-      card.appendChild(sqlBlock);
-    }
-
     // Execution meta
     if (data.execution_meta) {
       const meta = document.createElement('div');

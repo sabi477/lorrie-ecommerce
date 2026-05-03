@@ -6,6 +6,18 @@ import logging
 logger = logging.getLogger("chatbot")
 
 
+def _numeric_metric_count(row: object) -> int:
+    if not isinstance(row, dict):
+        return 0
+    n = 0
+    for v in row.values():
+        if isinstance(v, bool):
+            continue
+        if isinstance(v, (int, float)):
+            n += 1
+    return n
+
+
 def analysis_agent(state):
     question     = state["question"]
     query_result = state["query_result"]
@@ -24,19 +36,26 @@ def analysis_agent(state):
             "visualization_code": None,
         }
 
-    needs_chart = isinstance(query_result, list) and len(query_result) >= 2
+    rows = query_result if isinstance(query_result, list) else []
+    multi_row = len(rows) >= 2
+    single_row_multi_metric = (
+        len(rows) == 1
+        and isinstance(rows[0], dict)
+        and _numeric_metric_count(rows[0]) >= 2
+    )
+    # Sıralama / kategori / "en çok" soruları çoğunlukla çok satır; tek satırda 2+ sayı (ör. toplam ürün+satıcı) için de grafik
+    needs_chart = multi_row or single_row_multi_metric
 
     chart_instruction = (
-        """
-Task 2 (CHART): The data has multiple rows — decide if a Plotly chart would help.
-- If YES: include a valid Plotly JSON with "data" and "layout" keys as the "chart" value.
-- If NO: set "chart" to null.
-Chart is useful for comparisons, trends, rankings. Not needed for single values or text.
-All chart labels/titles must be in {lang_name}."""
+        f"""
+Task 2 (CHART): REQUIRED for this result set.
+- Include a valid Plotly JSON object with "data" and "layout" as the "chart" value — "chart" MUST NOT be null.
+- Use horizontal bar if category/product names are long; vertical bar for short labels; grouped bar if several metrics.
+- Put axis titles and trace names in {lang_name}; keep layout compact (height ~320–400)."""
         if needs_chart else
         """
-Task 2 (CHART): Only 1 row of data — set "chart" to null."""
-    ).format(lang_name=lang_name)
+Task 2 (CHART): Only a single number or one non-plottable row — set "chart" to null."""
+    )
 
     messages = [
         SystemMessage(content=f"""You are a helpful e-commerce data analyst.
@@ -45,6 +64,7 @@ Task 1 (ANALYSIS): Analyze the SQL query results in 3-5 sentences.
 - Highlight key numbers and insights.
 - Be friendly and professional.
 - Respond ONLY in {lang_name}.
+- NEVER include SQL, code blocks, backticks, or the raw query in "answer" — only plain language (and allowed HTML links as above).
 - IMPORTANT: When responding about orders, products, or any data that has a direct URL link, you MUST include clickable HTML links.
   - For orders: use URL pattern /customer/order-detail/{{{{id}}}} → <a href="/customer/order-detail/{{{{id}}}}">Sipariş #{{{{id}}}}</a>
   - For products: use URL pattern /product-detail/{{{{id}}}} → <a href="/product-detail/{{{{id}}}}">{{{{name}}}}</a>
@@ -59,7 +79,7 @@ Format:
 {{"answer": "<your analysis with HTML links where relevant>", "chart": <plotly_json_or_null>}}"""),
         HumanMessage(content=f"""Question: {question}
 
-SQL used:
+Internal query (do not repeat or quote in your reply):
 {sql}
 
 Results:

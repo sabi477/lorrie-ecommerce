@@ -44,7 +44,30 @@ export class ChatPanel implements AfterViewChecked {
 
   get messages() { return this.chat.messages; }
 
+  /** Rol bazlı; satıcıya mağaza odaklı, admin’e platform odaklı öneriler. */
   get suggestedQuestions(): string[] {
+    const role = this.auth.getRole()?.toUpperCase() ?? '';
+
+    if (role === 'SELLER' || role === 'CORPORATE') {
+      return [
+        'Mağazamdaki en çok satan 5 ürün hangileri?',
+        'Stoğu 10’un altında olan ürünlerimi listele',
+        'Mağazamdaki ürünlerin ortalama fiyatı ve toplam stok adedi nedir?',
+        'Son siparişlerimde en çok satılan kategori hangisi?',
+        'Mağazamdaki en yüksek puanlı 5 ürün hangileri?',
+      ];
+    }
+
+    if (role === 'ADMIN') {
+      return [
+        'Platformda toplam kaç ürün ve kaç farklı satıcı var?',
+        'En çok sipariş alan 5 ürün hangileri?',
+        'Kategori bazında ürün sayılarını göster',
+        'Son 7 günde oluşturulan sipariş sayısı kaç?',
+        'Tüm mağazaların ortalama ürün fiyatını kategorilere göre özetle',
+      ];
+    }
+
     return [
       'En yüksek puanlı 5 ürün hangileri?',
       'Fiyatı en düşük 5 ürün hangileri?',

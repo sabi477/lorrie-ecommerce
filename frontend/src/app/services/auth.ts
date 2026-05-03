@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
+import { ChatService } from './chat';
 
 @Injectable({
   providedIn: 'root'
@@ -10,7 +11,10 @@ export class AuthService {
   private apiUrl = 'http://localhost:8080/api/auth';
   private onLoginCallbacks: (() => void)[] = [];
 
-  constructor(private http: HttpClient) { }
+  constructor(
+    private http: HttpClient,
+    private chat: ChatService,
+  ) { }
 
   onLogin(callback: () => void): void {
     this.onLoginCallbacks.push(callback);
@@ -31,8 +35,9 @@ export class AuthService {
         localStorage.setItem('fullName', res.fullName);
         localStorage.setItem('id', res.id);
         localStorage.setItem('phone', res.phone || '');
-        console.log('[AuthService] login success, token:', res.token ? 'present' : 'null');
+console.log('[AuthService] login success, token:', res.token ? 'present' : 'null');
         this.onLoginCallbacks.forEach(cb => cb());
+        this.chat.onAuthContextChanged();
       })
     );
   }
@@ -46,7 +51,8 @@ export class AuthService {
         localStorage.setItem('fullName', res.fullName);
         localStorage.setItem('id', res.id);
         localStorage.setItem('phone', res.phone || '');
-        this.onLoginCallbacks.forEach(cb => cb());
+this.onLoginCallbacks.forEach(cb => cb());
+        this.chat.onAuthContextChanged();
       })
     );
   }
@@ -58,6 +64,7 @@ export class AuthService {
     localStorage.removeItem('fullName');
     localStorage.removeItem('id');
     localStorage.removeItem('phone');
+    this.chat.onAuthContextChanged();
   }
 
   getToken(): string | null {

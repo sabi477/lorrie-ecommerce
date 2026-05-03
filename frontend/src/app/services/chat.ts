@@ -41,8 +41,14 @@ export interface ChatResponse {
   execution_meta?: ExecutionMeta | null;
 }
 
-const SESSION_KEY = 'chat_messages';
+/** Oturum başına sohbet; kullanıcı değişince anahtar değişir (localStorage `id`). */
+const LEGACY_SESSION_KEY = 'chat_messages';
 const MAX_HISTORY = 5;
+
+function messagesStorageKey(): string {
+  const id = typeof localStorage !== 'undefined' ? localStorage.getItem('id') : null;
+  return `chat_messages_${id ?? 'anon'}`;
+}
 
 /** Angular HttpClient hatasından kullanıcıya gösterilecek metin (CORS, bağlantı, FastAPI detail). */
 export function formatChatHttpError(err: unknown, fallback: string): string {
@@ -87,7 +93,18 @@ export class ChatService {
 
   private loadFromStorage(): Message[] {
     try {
-      const stored = sessionStorage.getItem(SESSION_KEY);
+      const key = messagesStorageKey();
+      let stored = sessionStorage.getItem(key);
+      // Eski tek anahtar (`chat_messages`) yalnızca girişsiz (anon) bucket'a taşınır.
+      // Girişli kullanıcı anahtarı boşken legacy kopyalanırsa başka hesabın sohbeti görünür (bug).
+      if (!stored && key === 'chat_messages_anon' && typeof sessionStorage !== 'undefined') {
+        const legacy = sessionStorage.getItem(LEGACY_SESSION_KEY);
+        if (legacy) {
+          stored = legacy;
+          sessionStorage.setItem(key, legacy);
+          sessionStorage.removeItem(LEGACY_SESSION_KEY);
+        }
+      }
       if (!stored) return this.defaultMessages();
       const parsed = JSON.parse(stored) as unknown[];
       if (Array.isArray(parsed) && parsed.every(m => typeof m === 'object' && m !== null && ('role' in m) && ('text' in m))) {
@@ -115,7 +132,7 @@ export class ChatService {
         guardrail_event: m.guardrail_event,
         execution_meta: m.execution_meta,
       }));
-      sessionStorage.setItem(SESSION_KEY, JSON.stringify(toSave));
+      sessionStorage.setItem(messagesStorageKey(), JSON.stringify(toSave));
     } catch {}
   }
 
@@ -227,6 +244,18 @@ export class ChatService {
     const defaultMsg = this.defaultMessages();
     this._messages.set(defaultMsg);
     this.saveToStorage(defaultMsg);
+  }
+
+  /** Çıkış / giriş / farklı hesap: doğru sessionStorage anahtarından yükle, eski bağlam anahtarlarını sil. */
+  onAuthContextChanged(): void {
+    try {
+      sessionStorage.removeItem('chat_role');
+      sessionStorage.removeItem('chat_isLoggedIn');
+      sessionStorage.removeItem('chat_userId');
+      sessionStorage.removeItem('chat_storeId');
+    } catch {}
+    this.removeTyping();
+    this._messages.set(this.loadFromStorage());
   }
 
   send(
