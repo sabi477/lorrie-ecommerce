@@ -650,7 +650,6 @@ a { text-decoration: none; color: inherit; cursor: pointer; }
   animation: cardUp 0.38s cubic-bezier(0.16,1,0.3,1) var(--delay, 0ms) forwards;
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
   box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-  min-height: 420px;
 
   &:hover {
     transform: translateY(-4px);
@@ -742,12 +741,10 @@ a { text-decoration: none; color: inherit; cursor: pointer; }
 
 // Card body
 .pcard__body {
-  padding: 0.65rem 0.75rem 0.4rem;
+  padding: 0.65rem 0.75rem 0.35rem;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  flex: 1;
-  min-height: 120px;
+  gap: 0.2rem;
 }
 
 .pcard__brand {

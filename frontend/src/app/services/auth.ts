@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
+import { ChatService } from './chat';
 
 @Injectable({
   providedIn: 'root'
@@ -9,7 +10,10 @@ export class AuthService {
 
   private apiUrl = 'http://localhost:8080/api/auth';
 
-  constructor(private http: HttpClient) { }
+  constructor(
+    private http: HttpClient,
+    private chat: ChatService,
+  ) { }
 
   login(email: string, password: string): Observable<any> {
     return this.http.post(`${this.apiUrl}/login`, { email, password }).pipe(
@@ -20,6 +24,7 @@ export class AuthService {
         localStorage.setItem('fullName', res.fullName);
         localStorage.setItem('id', res.id);
         localStorage.setItem('phone', res.phone || '');
+        this.chat.onAuthContextChanged();
       })
     );
   }
@@ -33,6 +38,7 @@ export class AuthService {
         localStorage.setItem('fullName', res.fullName);
         localStorage.setItem('id', res.id);
         localStorage.setItem('phone', res.phone || '');
+        this.chat.onAuthContextChanged();
       })
     );
   }
@@ -44,6 +50,7 @@ export class AuthService {
     localStorage.removeItem('fullName');
     localStorage.removeItem('id');
     localStorage.removeItem('phone');
+    this.chat.onAuthContextChanged();
   }
 
   getToken(): string | null {

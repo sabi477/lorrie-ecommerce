@@ -141,9 +141,6 @@
                          [attr.data-viz-code]="msg.visualization_code">
                     </div>
                   }
-                  @if (msg.sql_query) {
-                    <pre class="sql-block">{{ msg.sql_query }}</pre>
-                  }
                   @if ((msg.status === 'error' || msg.status === 'timeout') && msg.retryable) {
                     <button class="retry-btn" (click)="retry(msg.id, $event)">
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">

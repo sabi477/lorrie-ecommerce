@@ -423,7 +423,7 @@ async def chat(request: Request, body: ChatRequest):
     return ChatResponse(
         answer=result.get("final_answer", "No answer generated."),
         visualization_code=result.get("visualization_code"),
-        sql_query=result.get("sql_query") if role in {"ADMIN", "CORPORATE"} else None,
+        sql_query=None,
         guardrail_event=result.get("guardrail_event"),
         execution_meta=result.get("execution_meta"),
     )
