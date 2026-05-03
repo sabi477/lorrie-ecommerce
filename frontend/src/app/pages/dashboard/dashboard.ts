@@ -320,7 +320,7 @@ export class Dashboard implements OnInit, AfterViewInit, OnDestroy {
     if (this.timeRange === '1W') {
       Object.keys(buckets).forEach(k => {
         const d = new Date(k);
-        labels.push(d.toLocaleDateString('tr-TR', { weekday: 'short' }));
+        labels.push(d.toLocaleDateString('tr-TR', { month: 'short', day: 'numeric' }));
         data.push(buckets[k]);
       });
     } else if (this.timeRange === '1M') {
@@ -329,16 +329,18 @@ export class Dashboard implements OnInit, AfterViewInit, OnDestroy {
         labels.push(d.toLocaleDateString('tr-TR', { month: 'short', day: 'numeric' }));
         data.push(buckets[k]);
       });
+    } else if (this.timeRange === '3M') {
+      Object.keys(buckets).forEach(k => {
+        const d = new Date(k);
+        labels.push(d.toLocaleDateString('tr-TR', { month: 'short', day: 'numeric' }));
+        data.push(buckets[k]);
+      });
     } else {
-      const groupSize = Math.ceil(days / 6);
-      const groupKeys = Object.keys(buckets).sort();
-      for (let i = 0; i < groupKeys.length; i += groupSize) {
-        const chunk = groupKeys.slice(i, i + groupSize);
-        const sum = chunk.reduce((s, k) => s + buckets[k], 0);
-        const midDate = new Date(chunk[Math.floor(chunk.length / 2)]);
-        labels.push(midDate.toLocaleDateString('tr-TR', { month: 'short', day: 'numeric' }));
-        data.push(sum);
-      }
+      Object.keys(buckets).forEach(k => {
+        const d = new Date(k);
+        labels.push(d.toLocaleDateString('tr-TR', { month: 'short', day: 'numeric' }));
+        data.push(buckets[k]);
+      });
     }
 
     this.revenueChartLabels = labels;
