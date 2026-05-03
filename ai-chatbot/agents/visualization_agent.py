@@ -15,7 +15,7 @@ def visualization_agent(state):
         }
 
     messages = [
-        SystemMessage(content="""You are a data visualization expert.
+        SystemMessage(content=f"""You are a data visualization expert.
 Decide if the data needs a chart.
 
 If YES, return a valid Plotly JSON object with "data" and "layout" keys ONLY.
@@ -29,9 +29,14 @@ A chart is NOT needed for: single numbers, yes/no answers, simple text results.
 IMPORTANT:
 - All chart titles, axis labels, and legend text must be in {lang_name}.
 - Do NOT mix languages in the chart.
+- For horizontal bar charts, always set "orientation": "h" inside the trace AND put category labels in "y", numeric values in "x".
+- Keep category labels short (max 20 chars). If a label is longer, abbreviate it.
 
-Example output format:
-{"data": [{"type": "bar", "x": ["A", "B", "C"], "y": [10, 25, 15], "marker": {"color": "#f27a1a"}}], "layout": {"title": "Satış Özeti", "xaxis": {"title": "Ürün"}, "yaxis": {"title": "Adet"}}}"""),
+Vertical bar chart example:
+{{"data": [{{"type": "bar", "x": ["A", "B", "C"], "y": [10, 25, 15], "marker": {{"color": "#f27a1a"}}}}], "layout": {{"title": "Satış Özeti", "xaxis": {{"title": "Ürün"}}, "yaxis": {{"title": "Adet"}}}}}}
+
+Horizontal bar chart example:
+{{"data": [{{"type": "bar", "orientation": "h", "y": ["Fiyat ($)", "Stok", "Puan"], "x": [29.99, 98, 4.58], "marker": {{"color": "#6366f1"}}}}], "layout": {{"title": "Ürün Özeti", "xaxis": {{"title": "Değer"}}, "yaxis": {{"title": ""}}}}}}"""),
         HumanMessage(content=f"""Question: {question}
 
 Data:

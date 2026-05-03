@@ -51,7 +51,7 @@ export class CustomerOrderDetail implements OnInit {
 
   get total(): number { return this.order?.totalAmount ?? 0; }
 
-  formatPrice(n: number) { return '$' + n.toLocaleString('en-US'); }
+  formatPrice(n: number) { return n.toLocaleString('tr-TR') + ' ₺'; }
 
   formatDate(dateStr: string): string {
     return new Date(dateStr).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' });

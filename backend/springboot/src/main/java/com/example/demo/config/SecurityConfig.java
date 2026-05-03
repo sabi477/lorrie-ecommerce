@@ -51,6 +51,7 @@ public class SecurityConfig {
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/reviews", "/api/reviews/**").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/reviews").authenticated()
                         .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/chat/execute").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/chat/mutate").permitAll()
                         .requestMatchers("/api/admin/**").hasAuthority("ROLE_ADMIN")
                         .requestMatchers("/api/seller/**").hasAuthority("ROLE_SELLER")
                         .anyRequest().authenticated())

@@ -35,8 +35,8 @@
             <tr [class.inactive]="!c.isActive">
               <td><span class="code-badge">{{ c.code }}</span></td>
               <td>{{ c.discountType === 'PERCENTAGE' ? 'Yüzde' : 'Sabit Tutar' }}</td>
-              <td>{{ c.discountType === 'PERCENTAGE' ? c.discountValue + '%' : '$' + c.discountValue }}</td>
-              <td>{{ c.minOrderAmount > 0 ? '$' + c.minOrderAmount : '-' }}</td>
+              <td>{{ c.discountType === 'PERCENTAGE' ? c.discountValue + '%' : c.discountValue + ' ₺' }}</td>
+              <td>{{ c.minOrderAmount > 0 ? c.minOrderAmount + ' ₺' : '-' }}</td>
               <td>{{ c.currentUses }}{{ c.maxUses ? ' / ' + c.maxUses : ' / ∞' }}</td>
               <td>{{ formatDate(c.startsAt) }}</td>
               <td>{{ formatDate(c.expiresAt) }}</td>

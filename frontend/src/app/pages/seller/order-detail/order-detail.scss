@@ -1,3 +1,4 @@
+@use 'sass:color';
 @use '../../../shared/sidebar/page-layout';
 
 $primary:#f27a1a; $primary-lt:#fff3e6; $text:#111827; $muted:#6b7280; $border:#e5e7eb; $bg:#f3f4f6; $surface:#fff; $radius:10px; $radius-sm:6px; $font:'Inter',-apple-system,sans-serif;
@@ -187,7 +188,7 @@ button { cursor: pointer; border: none; background: none; font-family: $font; }
   font-size: .78rem;
   font-weight: 700;
   transition: background .15s;
-  &:hover { background: darken($primary, 8%); }
+  &:hover { background: color.adjust($primary, $lightness: -8%); }
 }
 
 .state-msg {

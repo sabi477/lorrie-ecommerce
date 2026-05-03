@@ -146,7 +146,7 @@ export class CustomerLayout implements OnInit {
   }
 
   formatPrice(n: number): string {
-    return '$' + Number(n).toLocaleString('en-US');
+    return Number(n).toLocaleString('tr-TR') + ' ₺';
   }
 
   selectProduct(p: StoreProduct) {

@@ -5,6 +5,9 @@ from agents.sql_agent import sql_agent
 from agents.execute_sql import execute_sql
 from agents.error_agent import error_agent
 from agents.analysis_agent import analysis_agent
+from agents.intent_agent import intent_agent
+from agents.mutation_agent import mutation_agent
+
 
 class AgentState(TypedDict):
     question: str
@@ -19,24 +22,31 @@ class AgentState(TypedDict):
     visualization_code: Optional[str]
     is_in_scope: Optional[bool]
     iteration_count: int
-    lang: str  # "TR" | "EN" — browser Accept-Language'dan gelir
-    guardrail_event: Optional[dict]   # structured security event info
-    execution_meta: Optional[dict]    # row_count, elapsed_time
-    history: Optional[list[dict]]     # [{"role": "user"|"assistant", "content": str}, ...]
+    lang: str                          # "TR" | "EN"
+    guardrail_event: Optional[dict]
+    execution_meta: Optional[dict]
+    history: Optional[list[dict]]
+    operation_type: Optional[str]      # "READ" | "WRITE_INTENT" | "WRITE_CONFIRM"
+    pending_mutation: Optional[dict]   # extracted mutation payload
+
 
 def route_after_guardrails(state: AgentState):
-    if state["is_in_scope"]:
+    op = state.get("operation_type", "READ")
+    if op == "WRITE_INTENT":
+        return "intent_agent"
+    if op == "WRITE_CONFIRM":
+        return "mutation_agent"
+    if state.get("is_in_scope"):
         return "sql_agent"
     return END
 
+
 def route_after_sql(state: AgentState):
-    # error_agent max retry'da final_answer set eder; direkt END'e git
     if state.get("final_answer"):
         return END
     if state.get("error"):
         if state["iteration_count"] < 3:
             return "error_agent"
-        # max retry aşıldı, hata mesajı set et ve bitir
         lang = state.get("lang", "EN")
         state["final_answer"] = (
             "İsteğiniz birden fazla denemeden sonra işlenemedi. Lütfen sorunuzu farklı bir şekilde sormayı deneyin."
@@ -46,12 +56,15 @@ def route_after_sql(state: AgentState):
         return END
     return "analysis_agent"
 
+
 graph = StateGraph(AgentState)
 graph.add_node("guardrails",     guardrails_agent)
 graph.add_node("sql_agent",      sql_agent)
 graph.add_node("execute_sql",    execute_sql)
 graph.add_node("error_agent",    error_agent)
 graph.add_node("analysis_agent", analysis_agent)
+graph.add_node("intent_agent",   intent_agent)
+graph.add_node("mutation_agent", mutation_agent)
 
 graph.set_entry_point("guardrails")
 graph.add_conditional_edges("guardrails", route_after_guardrails)
@@ -59,5 +72,7 @@ graph.add_edge("sql_agent",      "execute_sql")
 graph.add_conditional_edges("execute_sql", route_after_sql)
 graph.add_edge("error_agent",    "execute_sql")
 graph.add_edge("analysis_agent", END)
+graph.add_edge("intent_agent",   END)
+graph.add_edge("mutation_agent", END)
 
 app = graph.compile()

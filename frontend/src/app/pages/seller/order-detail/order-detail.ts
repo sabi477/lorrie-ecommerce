@@ -4,11 +4,12 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { OrderService, Order, OrderStatus } from '../../../services/order';
 import { AuthService } from '../../../services/auth';
 import { Sidebar } from '../../../shared/sidebar/sidebar';
+import { TranslatePipe } from '../../../../i18n/translate.pipe';
 
 @Component({
   selector: 'app-seller-order-detail',
   standalone: true,
-  imports: [CommonModule, Sidebar],
+  imports: [CommonModule, Sidebar, TranslatePipe],
   templateUrl: './order-detail.html',
   styleUrl: './order-detail.scss',
 })
@@ -67,7 +68,7 @@ export class SellerOrderDetail implements OnInit {
     return this.order?.items || [];
   }
 
-  formatPrice(n: number) { return '$' + n.toLocaleString('en-US'); }
+  formatPrice(n: number) { return n.toLocaleString('tr-TR') + ' ₺'; }
 
   formatDate(dateStr: string): string {
     return new Date(dateStr).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' });

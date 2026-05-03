@@ -78,7 +78,7 @@
                 </svg>
               </div>
             }
-            <div class="msg-bubble-wrap">
+            <div class="msg-bubble-wrap" [class.msg-bubble-wrap--has-chart]="msg.visualization_code">
               @if (msg.typing) {
                 <div class="typing-bubble">
                   <div class="dot"></div>
@@ -173,11 +173,18 @@
         </div>
       </div>
 
+      @if (pendingMutation()) {
+        <div class="chat-panel__pending-bar">
+          <span class="chat-panel__pending-icon">⏳</span>
+          <span class="chat-panel__pending-text">Onay bekleniyor — <strong>onayla</strong> veya <strong>iptal</strong> yazın</span>
+        </div>
+      }
+
       <div class="chat-panel__footer">
         <input
           class="chat-panel__input"
           type="text"
-          placeholder="Mesajınızı yazın..."
+          [placeholder]="pendingMutation() ? 'onayla / iptal...' : 'Mesajınızı yazın...'"
           [(ngModel)]="input"
           [disabled]="loading"
           (keydown)="onEnter($event)" />

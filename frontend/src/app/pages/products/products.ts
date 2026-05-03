@@ -1,6 +1,7 @@
 import { Component, CUSTOM_ELEMENTS_SCHEMA, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Sidebar } from '../../shared/sidebar/sidebar';
+import { TranslatePipe } from '../../../i18n/translate.pipe';
 import { ProductEditDialog } from '../../shared/product-edit-dialog/product-edit-dialog';
 import { ProductBulkEditDialog } from '../../shared/product-bulk-edit-dialog/product-bulk-edit-dialog';
 import { AuthService } from '../../services/auth';
@@ -10,7 +11,7 @@ type AppRole = 'CUSTOMER' | 'CORPORATE' | 'ADMIN' | 'SELLER';
 
 @Component({
   selector: 'app-products',
-  imports: [CommonModule, Sidebar, ProductEditDialog, ProductBulkEditDialog],
+  imports: [CommonModule, Sidebar, ProductEditDialog, ProductBulkEditDialog, TranslatePipe],
   templateUrl: './products.html',
   styleUrl: './products.scss',
   schemas: [CUSTOM_ELEMENTS_SCHEMA]

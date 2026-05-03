@@ -286,6 +286,11 @@
   display: flex;
   flex-direction: column;
   max-width: min(520px, calc(100vw - 120px));
+
+  &--has-chart {
+    max-width: min(800px, calc(100% - 44px));
+    width: calc(100% - 44px);
+  }
 }
 
 .msg-bubble {
@@ -514,6 +519,30 @@
 }
 
 // ─── Footer / Input ───────────────────────────────────────────────
+.chat-panel__pending-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #fffbeb;
+  border-top: 1px solid #fde68a;
+  font-size: 12px;
+  color: #92400e;
+  flex-shrink: 0;
+}
+
+.chat-panel__pending-icon {
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.chat-panel__pending-text {
+  strong {
+    font-weight: 700;
+    color: #78350f;
+  }
+}
+
 .chat-panel__footer {
   display: flex;
   gap: 8px;
@@ -566,7 +595,6 @@
 .chart-container {
   margin-top: 0.75rem;
   width: 100%;
-  min-height: 260px;
+  min-height: 300px;
   border-radius: 8px;
-  overflow: hidden;
 }

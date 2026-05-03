@@ -260,12 +260,12 @@
   @if (sellerId !== null) {
     <section class="seller-hero">
       <div class="seller-hero__inner">
-        <a class="seller-hero__back" routerLink="/">Mağazaya dön</a>
+        <a class="seller-hero__back" routerLink="/">{{ 'store.backToStore' | translate }}</a>
         <div class="seller-hero__main">
           <div class="seller-hero__mark">{{ (sellerName || 'S').charAt(0).toUpperCase() }}</div>
           <div>
-            <p class="seller-hero__eyebrow">Satıcı Mağazası</p>
-            <h1>{{ sellerName || 'Satıcı Mağazası' }}</h1>
+            <p class="seller-hero__eyebrow">{{ 'store.sellerStore' | translate }}</p>
+            <h1>{{ sellerName || ('store.sellerStore' | translate) }}</h1>
             <p>{{ allProducts.length }} ürün listeleniyor</p>
           </div>
         </div>
@@ -276,7 +276,7 @@
   @if (categoryId !== null) {
     <section class="seller-hero">
       <div class="seller-hero__inner">
-        <a class="seller-hero__back" routerLink="/">Mağazaya dön</a>
+        <a class="seller-hero__back" routerLink="/">{{ 'store.backToStore' | translate }}</a>
         <div class="seller-hero__main">
           <div class="seller-hero__mark">{{ (categoryName || 'K').charAt(0).toUpperCase() }}</div>
           <div>
@@ -358,8 +358,8 @@
             }
           </div>
           <div class="pcard__btns">
-            <button class="btn-add" (click)="addToCart(p, $event)">Sepete Ekle</button>
-            <button class="btn-buy" (click)="buyNow(p, $event)">Hemen Al</button>
+<button class="btn-add" (click)="addToCart(p, $event)">{{ 'store.addToCart' | translate }}</button>
+                <button class="btn-buy" (click)="buyNow(p, $event)">{{ 'store.buyNow' | translate }}</button>
           </div>
         </article>
       }
@@ -409,8 +409,8 @@
             </div>
           </div>
           <div class="pcard__btns">
-            <button class="btn-add" (click)="addToCart(p, $event)">Sepete Ekle</button>
-            <button class="btn-buy" (click)="buyNow(p, $event)">Hemen Al</button>
+<button class="btn-add" (click)="addToCart(p, $event)">{{ 'store.addToCart' | translate }}</button>
+                <button class="btn-buy" (click)="buyNow(p, $event)">{{ 'store.buyNow' | translate }}</button>
           </div>
         </article>
       }
@@ -418,7 +418,7 @@
       @if (filteredProducts.length === 0) {
         <div class="empty-state">
           <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <p>Ürün bulunamadı</p>
+          <p>{{ 'store.noProductsFound' | translate }}</p>
           <button (click)="searchQuery=''; activeTab='Tümü'">Filtreleri Temizle</button>
         </div>
       }

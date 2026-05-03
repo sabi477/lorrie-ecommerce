@@ -456,7 +456,7 @@ export class Store implements OnInit, AfterViewInit, OnDestroy {
   }
 
   formatPrice(n: number): string {
-    return '$' + Number(n).toLocaleString('en-US');
+    return Number(n).toLocaleString('tr-TR') + ' ₺';
   }
 
   discount(p: StoreProduct): number {

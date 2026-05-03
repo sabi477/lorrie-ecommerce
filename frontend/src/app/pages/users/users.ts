@@ -2,12 +2,13 @@ import { Component, CUSTOM_ELEMENTS_SCHEMA, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Sidebar } from '../../shared/sidebar/sidebar';
+import { TranslatePipe } from '../../../i18n/translate.pipe';
 import { AuthService } from '../../services/auth';
 import { UserService, User, UserRole } from '../../services/user';
 
 @Component({
   selector: 'app-users',
-  imports: [CommonModule, FormsModule, Sidebar],
+  imports: [CommonModule, FormsModule, Sidebar, TranslatePipe],
   templateUrl: './users.html',
   styleUrl: './users.scss',
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
@@ -72,5 +73,10 @@ export class Users implements OnInit {
   formatDate(dateStr: string): string {
     if (!dateStr) return '—';
     return new Date(dateStr).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+
+  formatDateTime(dateStr: string): string {
+    if (!dateStr) return '—';
+    return new Date(dateStr).toLocaleString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
   }
 }

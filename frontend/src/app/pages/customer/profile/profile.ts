@@ -58,7 +58,7 @@ export class CustomerProfile implements OnInit {
     CANCELLED: 'İptal Edildi',
   };
 
-  formatPrice(n: number) { return '$' + n.toLocaleString('en-US'); }
+  formatPrice(n: number) { return n.toLocaleString('tr-TR') + ' ₺'; }
 
   formatDate(dateStr: string): string {
     return new Date(dateStr).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' });

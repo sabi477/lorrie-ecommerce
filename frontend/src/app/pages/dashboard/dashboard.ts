@@ -5,6 +5,7 @@ import { AuthService } from '../../services/auth';
 import { DashboardService, SellerDashboardStats, TopSeller } from '../../services/dashboard';
 import { OrderService, Order } from '../../services/order';
 import { Sidebar } from '../../shared/sidebar/sidebar';
+import { TranslatePipe } from '../../../i18n/translate.pipe';
 import { Chart, registerables } from 'chart.js';
 
 Chart.register(...registerables);
@@ -16,7 +17,7 @@ interface Stat { label: string; raw: number; icon: string; currency?: boolean; }
 
 @Component({
   selector: 'app-dashboard',
-  imports: [CommonModule, RouterLink, Sidebar],
+  imports: [CommonModule, RouterLink, Sidebar, TranslatePipe],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
@@ -159,7 +160,7 @@ export class Dashboard implements OnInit, AfterViewInit, OnDestroy {
         },
         scales: {
           x: { grid: { display: false }, ticks: { color: '#6e7787', font: { size: 11 } } },
-          y: { grid: { color: '#f1f2f7' }, ticks: { color: '#6e7787', font: { size: 11 }, callback: (v: string | number) => '$' + Number(v).toLocaleString() } },
+          y: { grid: { color: '#f1f2f7' }, ticks: { color: '#6e7787', font: { size: 11 }, callback: (v: string | number) => Number(v).toLocaleString('tr-TR') + ' ₺' } },
         },
         interaction: { intersect: false, mode: 'index' },
       }
@@ -357,7 +358,7 @@ export class Dashboard implements OnInit, AfterViewInit, OnDestroy {
       if (current >= target) { current = target; clearInterval(timer); }
       const r = Math.floor(current);
       this.displayValues[index] = isCurrency
-        ? '$' + r.toLocaleString('en-US')
+        ? r.toLocaleString('tr-TR') + ' ₺'
         : r.toLocaleString('tr-TR');
     }, interval);
   }
@@ -367,7 +368,7 @@ export class Dashboard implements OnInit, AfterViewInit, OnDestroy {
   }
 
   formatCurrency(value: number): string {
-    return '$' + value.toLocaleString('en-US');
+    return value.toLocaleString('tr-TR') + ' ₺';
   }
 
   getRankClass(index: number): string {

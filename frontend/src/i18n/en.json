@@ -29,6 +29,15 @@
     "default": "Default",
     "makeDefault": "Make Default",
     "stock": "Stock",
+    "dashboard": "Dashboard",
+    "admin": "Admin",
+    "cart": "Cart",
+    "favorites": "Favorites",
+    "profile": "Profile",
+    "settings": "Settings",
+    "orders": "Orders",
+    "products": "Products",
+    "users": "Users",
     "sold": "sold",
     "processing": "Processing...",
     "error": "Error",
@@ -124,7 +133,26 @@
     "amazingPrice": "Amazing Price",
     "allProductsInStore": "Products in Store",
     "loadMoreProducts": "Load More Products",
-    "items": "items"
+    "items": "items",
+    "products": "Products",
+    "price": "Price",
+    "rating": "Rating",
+    "reviews": "Reviews",
+    "inStock": "In Stock",
+    "outOfStock": "Out of Stock",
+    "brand": "Brand",
+    "seller": "Seller",
+    "filter": "Filter",
+    "sort": "Sort",
+    "loading": "Loading...",
+    "noResults": "No results found",
+    "seeAll": "See All",
+    "viewAll": "View All",
+    "itemsFound": "items found",
+    "loadMore": "Load More",
+    "loginToFav": "Please login to add to favorites",
+    "loginToCart": "Please login to add to cart",
+    "newProducts": "New Products"
   },
   "cart": {
     "myCart": "My Cart",
@@ -171,7 +199,9 @@
     "orderDetails": "Order Details",
     "recentOrders": "Recent Orders",
     "orderId": "Order ID",
-    "seller": "Seller"
+    "seller": "Seller",
+    "chartSubtitle": "General distribution",
+    "viewAllOrders": "View All Orders"
   },
   "orders": {
     "orders": "Orders",
@@ -211,7 +241,14 @@
     "delete": "Delete",
     "productsLoadError": "Products could not be loaded.",
     "confirmDelete": "Are you sure you want to delete products?",
-    "itemsCount": "items"
+    "itemsCount": "items",
+    "inStock": "In Stock",
+    "outOfStock": "Out of Stock",
+    "price": "Price",
+    "category": "Category",
+    "brand": "Brand",
+    "rating": "Rating",
+    "reviews": "Reviews"
   },
   "users": {
     "users": "Users",
@@ -223,8 +260,10 @@
     "email": "Email",
     "role": "Role",
     "joinDate": "Join Date",
+    "lastLogin": "Last Login",
     "action": "Action",
     "userCount": "Users",
+    "all": "All",
     "usersLoadError": "Users could not be loaded."
   },
   "customer": {

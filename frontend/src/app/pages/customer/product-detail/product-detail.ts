@@ -329,7 +329,7 @@ export class CustomerProductDetail implements OnInit {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  formatPrice(n: number) { return '$' + Number(n).toLocaleString('en-US'); }
+  formatPrice(n: number) { return Number(n).toLocaleString('tr-TR') + ' ₺'; }
 
   stars(n: number | null): boolean[] {
     const r = n ?? 0;

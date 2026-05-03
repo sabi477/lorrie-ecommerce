@@ -87,6 +87,11 @@ def guardrails_agent(state):
     tr = lang == "TR"
     q_lower = question.lower()
 
+    # ── WRITE flow: skip read-path guardrails entirely ────────────────────────
+    op_type = state.get("operation_type", "READ")
+    if op_type in ("WRITE_INTENT", "WRITE_CONFIRM"):
+        return {**state, "is_in_scope": True}
+
     # ── Step 1: Keyword-based detection ──────────────────────────────────────
     violation_type, matched_kw = _detect_keyword_type(question)
 

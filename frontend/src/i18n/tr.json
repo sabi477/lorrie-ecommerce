@@ -30,6 +30,15 @@
     "makeDefault": "Varsayılan Yap",
     "stock": "Stok",
     "sold": "satıldı",
+    "dashboard": "Pano",
+    "admin": "Yönetici",
+    "cart": "Sepet",
+    "favorites": "Favorilerim",
+    "profile": "Profil",
+    "settings": "Ayarlar",
+    "orders": "Siparişler",
+    "products": "Ürünler",
+    "users": "Kullanıcılar",
     "processing": "İşleniyor...",
     "error": "Hata",
     "success": "Başarılı",
@@ -58,7 +67,7 @@
     "users": "Kullanıcılar",
     "myOrders": "Siparişlerim",
     "myProducts": "Ürünlerim",
-    "dashboard": "Dashboard",
+    "dashboard": "Pano",
     "cart": "Sepet",
     "favorites": "Favorilerim",
     "profile": "Profil",
@@ -67,7 +76,7 @@
     "backToStore": "Mağazaya Dön"
   },
   "roles": {
-    "ADMIN": "Admin",
+    "ADMIN": "Yönetici",
     "SELLER": "Satıcı",
     "CUSTOMER": "Müşteri",
     "CORPORATE": "Kurumsal"
@@ -124,7 +133,26 @@
     "amazingPrice": "Çarpıcı Fiyat",
     "allProductsInStore": "Mağazadaki Ürünler",
     "loadMoreProducts": "Daha Fazla Ürün Yükle",
-    "items": "ürün"
+    "items": "ürün",
+    "products": "Ürünler",
+    "price": "Fiyat",
+    "rating": "Puan",
+    "reviews": "Yorumlar",
+    "inStock": "Stokta var",
+    "outOfStock": "Stokta yok",
+    "brand": "Marka",
+    "seller": "Satıcı",
+    "filter": "Filtre",
+    "sort": "Sırala",
+    "loading": "Yükleniyor...",
+    "noResults": "Sonuç bulunamadı",
+    "seeAll": "Tümünü Gör",
+    "viewAll": "Tümünü Gör",
+    "itemsFound": "ürün bulundu",
+    "loadMore": "Daha Fazla Yükle",
+    "loginToFav": "Favorilere eklemek için giriş yapın",
+    "loginToCart": "Sepete eklemek için giriş yapın",
+    "newProducts": "Yeni Ürünler"
   },
   "cart": {
     "myCart": "Sepetim",
@@ -143,7 +171,7 @@
     "securePaymentInfo": "256-bit SSL ile güvenli ödeme"
   },
   "dashboard": {
-    "dashboard": "Dashboard",
+    "dashboard": "Pano",
     "monthlyIncomeTrend": "Aylık Gelir Trendi",
     "orderStatuses": "Sipariş Durumları",
     "order": "Sipariş",
@@ -166,12 +194,14 @@
     "period1Month": "1 Ay",
     "period3Months": "3 Ay",
     "period6Months": "6 Ay",
-    "bestSellingSellers": "En Çok Satış Yapan Satıcılar",
+    "topSellingSellers": "En Çok Satış Yapan Satıcılar",
     "ordersWithSeller": "sipariş",
     "orderDetails": "Sipariş Detayı",
     "recentOrders": "Son Siparişler",
     "orderId": "Sipariş ID",
-    "seller": "Satıcı"
+    "seller": "Satıcı",
+    "chartSubtitle": "Genel dağılım",
+    "viewAllOrders": "Tüm Siparişleri Gör"
   },
   "orders": {
     "orders": "Siparişler",
@@ -211,7 +241,14 @@
     "delete": "Sil",
     "productsLoadError": "Ürünler yüklenemedi.",
     "confirmDelete": "Ürünleri silmek istediğinize emin misiniz?",
-    "itemsCount": "ürün"
+    "itemsCount": "ürün",
+    "inStock": "Stokta var",
+    "outOfStock": "Stokta yok",
+    "price": "Fiyat",
+    "category": "Kategori",
+    "brand": "Marka",
+    "rating": "Puan",
+    "reviews": "Yorumlar"
   },
   "users": {
     "users": "Kullanıcılar",
@@ -223,8 +260,10 @@
     "email": "E-posta",
     "role": "Rol",
     "joinDate": "Katılım Tarihi",
+    "lastLogin": "Son Oturum",
     "action": "İşlem",
     "userCount": "Kullanıcı",
+    "all": "Tümü",
     "usersLoadError": "Kullanıcılar yüklenemedi."
   },
   "customer": {
@@ -399,7 +438,7 @@
     "sellers": "Satıcı",
     "customerSatisfaction": "Müşteri Memnuniyeti",
     "team": "Ekibimiz",
-    "teamTitle": "Lorrie'yi birlikte building ediyoruz",
+    "teamTitle": "Lorrie'yi birlikte inşa ediyoruz",
     "founderCEO": "Kurucu & CEO",
     "founderDesc": "E-ticaret ve teknoloji deneyimi ile Lorrie'nin vizyonunu şekillendiriyor.",
     "cto": "CTO",

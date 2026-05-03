@@ -39,6 +39,7 @@ export interface ChatResponse {
   sql_query: string | null;
   guardrail_event?: GuardrailEvent | null;
   execution_meta?: ExecutionMeta | null;
+  pending_mutation?: Record<string, unknown> | null;
 }
 
 /** Oturum başına sohbet; kullanıcı değişince anahtar değişir (localStorage `id`). */
@@ -82,10 +83,16 @@ export class ChatService {
   private readonly url = 'http://localhost:8000/chat';
 
   private readonly _messages = signal<Message[]>(this.loadFromStorage());
+  private readonly _pendingMutation = signal<Record<string, unknown> | null>(null);
 
   readonly messages = this._messages.asReadonly();
+  readonly pendingMutation = this._pendingMutation.asReadonly();
 
   constructor(private http: HttpClient) {}
+
+  setPendingMutation(pm: Record<string, unknown> | null): void {
+    this._pendingMutation.set(pm);
+  }
 
   private generateId(): string {
     return Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
@@ -208,6 +215,7 @@ export class ChatService {
       user_id: userId,
       store_id: storeId,
       history,
+      pending_mutation: this._pendingMutation(),
     }).pipe(
       catchError(err => {
         clearTimeout(timeoutId);
@@ -219,6 +227,7 @@ export class ChatService {
     ).subscribe({
       next: (res) => {
         clearTimeout(timeoutId);
+        this._pendingMutation.set(res.pending_mutation ?? null);
         this._messages.update(msgs => msgs.filter(m => m.id !== botMsgId));
         this.addMessage({
           role: 'bot',
@@ -244,6 +253,7 @@ export class ChatService {
     const defaultMsg = this.defaultMessages();
     this._messages.set(defaultMsg);
     this.saveToStorage(defaultMsg);
+    this._pendingMutation.set(null);
   }
 
   /** Çıkış / giriş / farklı hesap: doğru sessionStorage anahtarından yükle, eski bağlam anahtarlarını sil. */
@@ -255,6 +265,7 @@ export class ChatService {
       sessionStorage.removeItem('chat_storeId');
     } catch {}
     this.removeTyping();
+    this._pendingMutation.set(null);
     this._messages.set(this.loadFromStorage());
   }
 
@@ -279,6 +290,7 @@ export class ChatService {
       user_id: userId,
       store_id: storeId,
       history,
+      pending_mutation: this._pendingMutation(),
     });
   }
 

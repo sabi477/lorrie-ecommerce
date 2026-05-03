@@ -113,7 +113,7 @@ export class CustomerCheckout implements OnInit {
     });
   }
 
-  formatPrice(n: number) { return '$' + n.toLocaleString('en-US'); }
+  formatPrice(n: number) { return n.toLocaleString('tr-TR') + ' ₺'; }
   maskedCard(lastFour: string) { return `•••• •••• •••• ${lastFour}`; }
 
   formatCardNumber(val: string) {

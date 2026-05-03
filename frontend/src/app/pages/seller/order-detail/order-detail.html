@@ -6,7 +6,7 @@
 
       <button class="back-link" (click)="goBack()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-        Siparişlere Dön
+        {{ 'orders.orders' | translate }}
       </button>
 
       <div class="od__header">
@@ -16,11 +16,11 @@
         </div>
         <span class="status-badge status-badge--{{ order.status.toLowerCase() }}">
           @switch (order.status) {
-            @case ('PENDING')   { Beklemede }
-            @case ('CONFIRMED') { Onaylandı }
-            @case ('SHIPPED')   { Kargoda }
-            @case ('DELIVERED') { Teslim Edildi }
-            @case ('CANCELLED') { İptal Edildi }
+            @case ('PENDING')   { {{ 'status.PENDING' | translate }} }
+            @case ('CONFIRMED') { {{ 'status.CONFIRMED' | translate }} }
+            @case ('SHIPPED')   { {{ 'status.SHIPPED' | translate }} }
+            @case ('DELIVERED') { {{ 'status.DELIVERED' | translate }} }
+            @case ('CANCELLED') { {{ 'status.CANCELLED' | translate }} }
           }
         </span>
       </div>
@@ -42,7 +42,7 @@
       <div class="od__grid">
 
         <div class="card">
-          <h3 class="card__title">Ürünleriniz</h3>
+          <h3 class="card__title">{{ 'customer.products' | translate }}</h3>
           @if (sellerItems.length === 0) {
             <p class="empty-msg">Bu siparişte sizin ürününüz bulunmamaktadır.</p>
           } @else {
@@ -126,7 +126,7 @@
           @if (isConfirmed) {
             <button class="ship-btn" (click)="markAsShipped()">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
-              Kargoya Ver
+              {{ 'orders.shipToCarrier' | translate }}
             </button>
           }
 

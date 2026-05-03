@@ -88,7 +88,7 @@ export class CartService {
     }
   }
 
-  formatPrice(n: number) { return '$' + n.toLocaleString('en-US'); }
+  formatPrice(n: number) { return n.toLocaleString('tr-TR') + ' ₺'; }
 
   private headers(): HttpHeaders {
     return new HttpHeaders({ Authorization: `Bearer ${this.auth.getToken()}` });

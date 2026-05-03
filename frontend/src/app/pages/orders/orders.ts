@@ -2,6 +2,7 @@ import { Component, CUSTOM_ELEMENTS_SCHEMA, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Sidebar } from '../../shared/sidebar/sidebar';
+import { TranslatePipe } from '../../../i18n/translate.pipe';
 import { AuthService } from '../../services/auth';
 import { OrderService, Order, OrderStatus } from '../../services/order';
 
@@ -9,7 +10,7 @@ type AppRole = 'CUSTOMER' | 'CORPORATE' | 'ADMIN' | 'SELLER';
 
 @Component({
   selector: 'app-orders',
-  imports: [CommonModule, Sidebar],
+  imports: [CommonModule, Sidebar, TranslatePipe],
   templateUrl: './orders.html',
   styleUrl: './orders.scss',
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
@@ -68,7 +69,7 @@ export class Orders implements OnInit {
   }
 
   formatAmount(amount: number): string {
-    return '$' + Number(amount).toFixed(2);
+    return Number(amount).toFixed(2) + ' ₺';
   }
 
   formatDate(dateStr: string): string {

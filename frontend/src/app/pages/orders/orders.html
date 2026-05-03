@@ -27,11 +27,11 @@
           <table class="data-table">
             <thead>
               <tr>
-                <th>Sipariş ID</th>
-                <th>Müşteri</th>
-                <th>Tutar</th>
-                <th>Durum</th>
-                <th>Tarih</th>
+                <th>{{ 'orders.orderId' | translate }}</th>
+                <th>{{ 'orders.customer' | translate }}</th>
+                <th>{{ 'orders.amount' | translate }}</th>
+                <th>{{ 'orders.status' | translate }}</th>
+                <th>{{ 'orders.date' | translate }}</th>
               </tr>
             </thead>
             <tbody>
@@ -62,7 +62,7 @@
                       </select>
                     } @else if (canSellerUpdate(order)) {
                       <button class="ship-btn" (click)="markAsShipped(order)">
-                        Kargoya Ver
+                        {{ 'orders.shipToCarrier' | translate }}
                       </button>
                     } @else {
                       <span class="status-badge status-badge--{{ order.status.toLowerCase() }}">

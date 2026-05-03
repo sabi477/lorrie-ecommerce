@@ -13,6 +13,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -55,8 +60,8 @@ public class AuthService {
             throw new RuntimeException("Invalid password");
         }
 
-        String ip = request.getIp() != null ? request.getIp() : "unknown";
-        String city = request.getCity() != null ? request.getCity() : "unknown";
+        String ip = (request.getIp() != null && !request.getIp().isBlank()) ? request.getIp() : "unknown";
+        String city = resolveCity(ip);
 
         boolean isNewIp = true;
         boolean isRisky = false;
@@ -89,6 +94,27 @@ public class AuthService {
 
         String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name());
         return new AuthResponse(token, user.getRole().name(), user.getEmail(), user.getFullName(), user.getId(), user.getPhone());
+    }
+
+    private String resolveCity(String ip) {
+        if (ip == null || ip.equals("unknown") || ip.equals("127.0.0.1") || ip.startsWith("192.168.") || ip.startsWith("10.")) {
+            return "Localhost";
+        }
+        try {
+            HttpClient client = HttpClient.newHttpClient();
+            HttpRequest req = HttpRequest.newBuilder()
+                    .uri(URI.create("http://ip-api.com/json/" + ip + "?fields=city"))
+                    .build();
+            HttpResponse<String> res = client.send(req, HttpResponse.BodyHandlers.ofString());
+            String body = res.body();
+            int start = body.indexOf("\"city\":\"");
+            if (start >= 0) {
+                start += 8;
+                int end = body.indexOf("\"", start);
+                if (end > start) return body.substring(start, end);
+            }
+        } catch (IOException | InterruptedException ignored) {}
+        return "Bilinmiyor";
     }
 
     public void changePassword(String userEmail, ChangePasswordRequest request) {

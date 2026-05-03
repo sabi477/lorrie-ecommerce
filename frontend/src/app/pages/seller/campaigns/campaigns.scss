@@ -1,3 +1,4 @@
+@use "sass:color";
 $primary: #f27a1a;
 $primary-lt: #fff3e6;
 $text: #111827;
@@ -44,7 +45,7 @@ $font: 'Inter', -apple-system, sans-serif;
   border-radius: $radius-sm;
   font-size: 0.875rem;
   font-weight: 700;
-  &:hover { background: darken($bg, 5%); }
+  &:hover { background: color.adjust($bg, $lightness: -5%); }
 }
 
 .btn-sm {
@@ -54,7 +55,7 @@ $font: 'Inter', -apple-system, sans-serif;
   border-radius: $radius-sm;
   font-size: 0.75rem;
   font-weight: 600;
-  &:hover { background: darken($bg, 5%); }
+  &:hover { background: color.adjust($bg, $lightness: -5%); }
   &.btn-danger { color: #b91c1c; }
 }
 

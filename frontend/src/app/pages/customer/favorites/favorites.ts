@@ -40,7 +40,7 @@ export class CustomerFavorites {
     setTimeout(() => this.addedId.set(null), 1800);
   }
 
-  formatPrice(n: number) { return '$' + n.toLocaleString('en-US'); }
+  formatPrice(n: number) { return n.toLocaleString('tr-TR') + ' ₺'; }
   discount(p: any) { return p.originalPrice ? Math.round((1 - p.price / p.originalPrice) * 100) : 0; }
   stars(r: number | null | undefined) {
     return Array(5).fill(0).map((_, i) => i < Math.floor(r ?? 0));

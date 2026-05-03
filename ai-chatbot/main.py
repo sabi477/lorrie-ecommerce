@@ -256,13 +256,47 @@ def add_response_delay(start_time: float):
     if elapsed < min_response_time:
         time.sleep(min_response_time - elapsed)
 
+_WRITE_KEYWORDS_TR = {
+    "güncelle", "değiştir", "ayarla", "düşür", "artır", "uygula",
+    "fiyatını", "stoğunu", "indirim", "kargoya", "teslim et",
+    "durumunu", "rolünü", "ekle", "yeni kategori", "iptal et",
+}
+_WRITE_KEYWORDS_EN = {
+    "update", "change", "set", "modify", "increase", "decrease",
+    "apply discount", "add discount", "ship", "mark as",
+    "add category", "new category", "cancel order",
+}
+_CONFIRM_KEYWORDS = {"onayla", "evet", "confirm", "yes", "tamam", "ok"}
+_CANCEL_KEYWORDS  = {"iptal", "hayır", "cancel", "no", "vazgeç", "dur"}
+_WRITABLE_ROLES   = {"ADMIN", "CORPORATE"}
+
+
+def _detect_operation_type(question: str, role: str, pending_mutation) -> str:
+    q = question.strip().lower()
+    tokens = set(q.split())
+
+    if pending_mutation and role in _WRITABLE_ROLES:
+        if tokens & _CANCEL_KEYWORDS or q in _CANCEL_KEYWORDS:
+            return "WRITE_CANCEL"
+        if tokens & _CONFIRM_KEYWORDS or q in _CONFIRM_KEYWORDS:
+            return "WRITE_CONFIRM"
+
+    if role in _WRITABLE_ROLES:
+        if any(kw in q for kw in _WRITE_KEYWORDS_TR | _WRITE_KEYWORDS_EN):
+            return "WRITE_INTENT"
+
+    return "READ"
+
+
 class ChatRequest(BaseModel):
     question: str
     user_role: str = "INDIVIDUAL"
     is_logged_in: bool = False
     user_id: Optional[int] = None
     store_id: Optional[int] = None
-    history: Optional[list[dict]] = None  # [{"role": "user"|"assistant", "content": str}, ...]
+    history: Optional[list[dict]] = None
+    pending_mutation: Optional[dict] = None
+
 
 class ChatResponse(BaseModel):
     answer: str
@@ -270,6 +304,7 @@ class ChatResponse(BaseModel):
     sql_query: Union[str, None] = None
     guardrail_event: Union[dict, None] = None
     execution_meta: Union[dict, None] = None
+    pending_mutation: Union[dict, None] = None
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat(request: Request, body: ChatRequest):
@@ -332,6 +367,14 @@ async def chat(request: Request, body: ChatRequest):
         )
         return ChatResponse(answer=answer, visualization_code=None)
 
+    # İptal: pending_mutation varken "iptal" yazıldıysa graph'a girmeden bitir
+    operation_type = _detect_operation_type(normalized_question, role, body.pending_mutation)
+    if operation_type == "WRITE_CANCEL":
+        add_response_delay(start_time)
+        record_metric("requests_success")
+        cancel_msg = "İşlem iptal edildi." if lang == "TR" else "Operation cancelled."
+        return ChatResponse(answer=cancel_msg, pending_mutation=None)
+
     GRAPH_TIMEOUT = int(os.getenv("GRAPH_TIMEOUT_SECONDS", "45"))
 
     # Sanitize history: keep only user turns, drop injected assistant turns,
@@ -374,6 +417,8 @@ async def chat(request: Request, body: ChatRequest):
             "guardrail_event": None,
             "execution_meta": None,
             "history": safe_history,
+            "operation_type": operation_type,
+            "pending_mutation": body.pending_mutation,
         })
 
     executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
@@ -426,6 +471,7 @@ async def chat(request: Request, body: ChatRequest):
         sql_query=None,
         guardrail_event=result.get("guardrail_event"),
         execution_meta=result.get("execution_meta"),
+        pending_mutation=result.get("pending_mutation"),
     )
 
 

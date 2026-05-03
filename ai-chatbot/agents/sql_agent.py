@@ -253,7 +253,7 @@ GROUP BY s.status
 ORDER BY shipment_count DESC;
 """.strip()
 
-    if ("1 yıldız" in q or "bir yıldız" in q or "rating 1" in q) and "ürün" in q:
+    if "1 yıldız" in q or "bir yıldız" in q or "rating 1" in q:
         return f"""
 SELECT p.id, p.name, COUNT(r.id) AS one_star_reviews
 FROM products p
@@ -362,6 +362,24 @@ ORDER BY average_rating DESC NULLS LAST, stock_quantity DESC, name ASC
 LIMIT 8;
 """.strip()
 
+    _MY_REVIEW_INDICATORS = [
+        "kendi", "benim", "bana",
+        "yorumlarım", "yorumum", "değerlendirmelerim",
+    ]
+
+    if "yorum" in q and any(p in q for p in _MY_REVIEW_INDICATORS):
+        if user_id is None:
+            return None
+        uid = int(user_id)
+        return f"""
+SELECT r.id, p.id AS product_id, p.name AS product_name, r.rating, r.comment, r.created_at
+FROM reviews r
+JOIN products p ON p.id = r.product_id
+WHERE r.customer_id = {uid}
+ORDER BY r.created_at DESC, r.id DESC
+LIMIT 10;
+""".strip()
+
     if "değerlendirme" in q or "yorum" in q:
         terms = _extract_review_product_terms(question)
         where_clause = ""
@@ -422,16 +440,6 @@ JOIN order_items oi ON oi.order_id = o.id
 JOIN products p ON p.id = oi.product_id
 WHERE o.customer_id = {uid}
 ORDER BY o.created_at DESC, o.id DESC
-LIMIT 10;
-""".strip()
-
-    if "yorum" in q:
-        return f"""
-SELECT r.id, p.id AS product_id, p.name AS product_name, r.rating, r.comment, r.created_at
-FROM reviews r
-JOIN products p ON p.id = r.product_id
-WHERE r.customer_id = {uid}
-ORDER BY r.created_at DESC, r.id DESC
 LIMIT 10;
 """.strip()
 

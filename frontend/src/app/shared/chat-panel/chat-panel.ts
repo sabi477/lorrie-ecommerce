@@ -43,6 +43,7 @@ export class ChatPanel implements AfterViewChecked {
   private sanitizer = inject(DomSanitizer);
 
   get messages() { return this.chat.messages; }
+  get pendingMutation() { return this.chat.pendingMutation; }
 
   /** Rol bazlı; satıcıya mağaza odaklı, admin’e platform odaklı öneriler. */
   get suggestedQuestions(): string[] {
@@ -94,13 +95,16 @@ export class ChatPanel implements AfterViewChecked {
       if (!msgId || !vizCode || this.renderedCharts.has(msgId)) return;
       try {
         const spec = JSON.parse(vizCode);
+        const isHorizontal = spec.data?.some((d: any) => d.orientation === 'h');
         const layout = {
           ...spec.layout,
-          margin: { t: 40, r: 20, b: 60, l: 50 },
-          height: 260,
+          margin: { t: 40, r: 20, b: isHorizontal ? 70 : 60, l: isHorizontal ? 140 : 60 },
+          height: 300,
           paper_bgcolor: 'transparent',
           plot_bgcolor: 'transparent',
           font: { family: 'Inter, sans-serif', size: 12 },
+          yaxis: { ...spec.layout?.yaxis, automargin: true, ...(isHorizontal ? { title: '' } : {}) },
+          xaxis: { ...spec.layout?.xaxis, automargin: true },
         };
         Plotly.newPlot(el, spec.data, layout, { responsive: true, displayModeBar: false });
         this.renderedCharts.add(msgId);
@@ -209,6 +213,7 @@ export class ChatPanel implements AfterViewChecked {
       next: (res) => {
         clearTimeout(timeoutId);
         if (!this.loading) return;
+        this.chat.setPendingMutation(res.pending_mutation ?? null);
         this.chat.removeTyping();
         this.chat.addMessage({
           role: 'bot',
