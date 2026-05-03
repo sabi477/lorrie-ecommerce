@@ -27,6 +27,13 @@ export class ReviewService {
     return this.http.get<Review[]>(`${this.api}/product/${productId}`, options);
   }
 
+  canReview(productId: number): Observable<{ canReview: boolean; reason: string }> {
+    return this.http.get<{ canReview: boolean; reason: string }>(
+      `${this.api}/can-review/${productId}`,
+      { headers: this.headers() }
+    );
+  }
+
   create(review: { productId: number; rating: number; comment: string }): Observable<Review> {
     return this.http.post<Review>(this.api, review, { headers: this.headers() });
   }

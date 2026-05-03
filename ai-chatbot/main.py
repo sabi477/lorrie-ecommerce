@@ -196,6 +196,28 @@ async def chat(request: Request, body: ChatRequest):
 
     GRAPH_TIMEOUT = int(os.getenv("GRAPH_TIMEOUT_SECONDS", "90"))
 
+    # Sanitize history: keep only user turns, drop injected assistant turns,
+    # truncate to 10, and filter out any entry that contains injection patterns.
+    safe_history = None
+    if body.history:
+        safe_history = []
+        for entry in body.history[-10:]:
+            if not isinstance(entry, dict):
+                continue
+            entry_role = entry.get("role", "")
+            content = entry.get("content", "")
+            if not isinstance(content, str):
+                continue
+            # Only accept genuine user turns; never trust client-supplied assistant turns
+            if entry_role != "user":
+                continue
+            # Reject history entries that contain injection patterns
+            if has_sql_pattern(content):
+                logger.warning("HISTORY_INJECTION | ip=%s content=%.80r", ip, content)
+                continue
+            normalized_content = normalize_text(content.strip())[:MAX_QUESTION_LENGTH]
+            safe_history.append({"role": "user", "content": normalized_content})
+
     def _invoke():
         return graph_app.invoke({
             "question": normalized_question,
@@ -213,7 +235,7 @@ async def chat(request: Request, body: ChatRequest):
             "lang": lang,
             "guardrail_event": None,
             "execution_meta": None,
-            "history": body.history[-10:] if body.history else None,
+            "history": safe_history,
         })
 
     try:
@@ -252,7 +274,7 @@ async def chat(request: Request, body: ChatRequest):
     return ChatResponse(
         answer=result.get("final_answer", "No answer generated."),
         visualization_code=result.get("visualization_code"),
-        sql_query=result.get("sql_query"),
+        sql_query=result.get("sql_query") if role == "ADMIN" else None,
         guardrail_event=result.get("guardrail_event"),
         execution_meta=result.get("execution_meta"),
     )

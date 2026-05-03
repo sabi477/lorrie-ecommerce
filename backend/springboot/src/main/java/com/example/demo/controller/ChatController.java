@@ -7,7 +7,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -21,9 +20,17 @@ public class ChatController {
     @PostMapping("/execute")
     public ResponseEntity<?> execute(@RequestBody Map<String, String> request) {
         String query = request.get("query");
-        if (query == null || query.isEmpty()) {
+        if (query == null || query.isBlank()) {
             return ResponseEntity.badRequest().body(Map.of("error", "Query cannot be empty"));
         }
+
+        // Only SELECT statements are allowed — defence-in-depth against DML
+        String trimmed = query.stripLeading().toUpperCase();
+        if (!trimmed.startsWith("SELECT")) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "Only SELECT queries are permitted"));
+        }
+
         try {
             return ResponseEntity.ok(jdbcTemplate.queryForList(query));
         } catch (DataAccessException e) {

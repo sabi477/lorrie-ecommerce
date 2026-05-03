@@ -252,6 +252,91 @@
 
   @if (activeTab() === 'reviews') {
     <div class="pd-reviews">
+
+      @if (canReview) {
+        <div class="review-form">
+          <h4 class="review-form__title">Değerlendirmenizi Yazın</h4>
+          <div class="review-form__stars">
+            @for (s of [1,2,3,4,5]; track s) {
+              <button type="button"
+                      class="review-star-btn"
+                      [class.review-star-btn--on]="s <= (hoverRating || reviewRating)"
+                      (mouseenter)="hoverRating = s"
+                      (mouseleave)="hoverRating = 0"
+                      (click)="setRating(s)">★</button>
+            }
+            <span class="review-form__star-hint">
+              @if (reviewRating === 0) { Puan seçin }
+              @else if (reviewRating === 1) { Çok kötü }
+              @else if (reviewRating === 2) { Kötü }
+              @else if (reviewRating === 3) { Orta }
+              @else if (reviewRating === 4) { İyi }
+              @else { Mükemmel }
+            </span>
+          </div>
+          <textarea
+            class="review-form__text"
+            [(ngModel)]="reviewComment"
+            placeholder="Ürün hakkındaki deneyiminizi paylaşın... (HTML, kod veya script girilemez)"
+            rows="4"
+            maxlength="1000">
+          </textarea>
+          <div class="review-form__meta">
+            <span class="review-form__char" [class.review-form__char--warn]="reviewComment.length > 900">
+              {{ reviewComment.length }} / 1000
+            </span>
+          </div>
+          @if (reviewCommentWarning) {
+            <p class="review-form__warning">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+              {{ reviewCommentWarning }}
+            </p>
+          }
+          @if (reviewError) {
+            <p class="review-form__error">{{ reviewError }}</p>
+          }
+          <button
+            class="review-form__submit"
+            (click)="submitReview()"
+            [disabled]="!canSubmitReview">
+            @if (reviewSubmitting) { Gönderiliyor... } @else { Yorumu Gönder }
+          </button>
+        </div>
+      } @else if (isLoggedIn && canReviewReason === 'NOT_PURCHASED') {
+        <div class="review-notice">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          Bu ürüne yorum yapabilmek için satın almanız gerekiyor.
+        </div>
+      } @else if (isLoggedIn && canReviewReason === 'ALREADY_REVIEWED') {
+        <div class="review-notice review-notice--success">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Bu ürüne zaten yorum yaptınız.
+        </div>
+      } @else if (!isLoggedIn) {
+        <div class="review-notice">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          Yorum yapabilmek için <button class="review-notice__link" (click)="goLogin()">giriş yapın</button>.
+        </div>
+      }
+
+      @if (reviewSuccess) {
+        <div class="review-success-toast">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Yorumunuz başarıyla gönderildi!
+        </div>
+      }
+
       @if (reviews.length === 0) {
         <p class="pd-no-review">Henüz değerlendirme yok.</p>
       }

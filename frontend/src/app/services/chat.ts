@@ -11,6 +11,7 @@ export interface Message {
   status?: 'sending' | 'processing' | 'guardrails' | 'sql' | 'executing' | 'analyzing' | 'done' | 'error' | 'timeout';
   error?: string;
   retryable?: boolean;
+  visualization_code?: string | null;
 }
 
 export interface ChatResponse {
@@ -146,7 +147,7 @@ export class ChatService {
       next: (res) => {
         clearTimeout(timeoutId);
         this._messages.update(msgs => msgs.filter(m => m.id !== botMsgId));
-        this.addMessage({ role: 'bot', text: res.answer, status: 'done' });
+        this.addMessage({ role: 'bot', text: res.answer, status: 'done', visualization_code: res.visualization_code });
       }
     });
   }

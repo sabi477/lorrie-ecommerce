@@ -5,7 +5,7 @@ import { ProductEditDialog } from '../../shared/product-edit-dialog/product-edit
 import { AuthService } from '../../services/auth';
 import { ProductService, Product } from '../../services/product';
 
-type AppRole = 'CUSTOMER' | 'CORPORATE' | 'ADMIN';
+type AppRole = 'CUSTOMER' | 'CORPORATE' | 'ADMIN' | 'SELLER';
 
 @Component({
   selector: 'app-products',
@@ -27,7 +27,8 @@ export class Products implements OnInit {
 
   ngOnInit(): void {
     const userId = this.authService.getUserId();
-    const request = this.role === 'CORPORATE' && userId
+    const isSeller = this.role === 'CORPORATE' || this.role === 'SELLER';
+    const request = isSeller && userId
       ? this.productService.getBySeller(userId)
       : this.productService.getAll();
 
@@ -44,9 +45,9 @@ export class Products implements OnInit {
   }
 
   get pageTitle(): string { return this.role === 'CORPORATE' ? 'Ürünlerim' : 'Ürünler'; }
-  get roleLabel(): string { return { ADMIN: 'Admin', CORPORATE: 'Kurumsal', CUSTOMER: 'Müşteri' }[this.role]; }
+  get roleLabel(): string { return { ADMIN: 'Admin', CORPORATE: 'Kurumsal', CUSTOMER: 'Müşteri', SELLER: 'Satıcı' }[this.role]; }
   get roleBadgeClass(): string { return `role-badge--${this.role.toLowerCase()}`; }
-  get canEdit(): boolean { return this.role === 'ADMIN' || this.role === 'CORPORATE'; }
+  get canEdit(): boolean { return this.role === 'ADMIN' || this.role === 'CORPORATE' || this.role === 'SELLER'; }
 
   getImageUrl(product: Product): string {
     return product.thumbnail ?? product.imageUrl ?? `https://picsum.photos/seed/${product.id}/400/400`;
@@ -72,7 +73,9 @@ export class Products implements OnInit {
     });
   }
 
-  editProduct(product: Product): void {
+  editProduct(product: Product, event: MouseEvent): void {
+    event.stopPropagation();
+    event.preventDefault();
     this.editingProduct = product;
   }
 

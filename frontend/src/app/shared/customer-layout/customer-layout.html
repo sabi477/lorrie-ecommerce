@@ -18,8 +18,34 @@
           <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
         </svg>
         <input type="text" placeholder="Ürün, kategori veya marka ara"
-          [(ngModel)]="searchQuery" (keydown)="onEnter($event)" />
+          [ngModel]="searchQuery" 
+          (ngModelChange)="onSearchInput($event)"
+          (keydown)="onEnter($event)"
+          (focus)="onSearchFocus()" />
         <button (click)="search()">Ara</button>
+
+        @if (isSearchDropdownVisible && searchQuery.trim().length > 0) {
+          <div class="search-dropdown">
+            @if (loadingSearch) {
+              <div class="search-dropdown__loading">
+                <div class="loading-spinner loading-spinner--sm"></div>
+                <span>Aranıyor...</span>
+              </div>
+            } @else if (searchResults.length > 0) {
+              @for (p of searchResults.slice(0, 8); track p.id) {
+                <a class="search-dropdown__item" (click)="selectProduct(p)">
+                  <img [src]="p.imageUrl" [alt]="p.name" />
+                  <div class="search-dropdown__item-info">
+                    <span class="search-dropdown__item-name">{{ p.name }}</span>
+                    <span class="search-dropdown__item-price">{{ formatPrice(p.price) }}</span>
+                  </div>
+                </a>
+              }
+            } @else {
+              <div class="search-dropdown__empty">Ürün bulunamadı</div>
+            }
+          </div>
+        }
       </div>
 
       <div class="cl-nav__actions">

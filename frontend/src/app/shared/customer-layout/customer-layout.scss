@@ -76,7 +76,8 @@ a { text-decoration: none; color: inherit; cursor: pointer; }
   background: $bg;
   border: 1.5px solid $border;
   border-radius: $radius-sm;
-  overflow: hidden;
+  overflow: visible;
+  position: relative;
   transition: border-color .18s, box-shadow .18s;
 
   &:focus-within {
@@ -243,4 +244,96 @@ a { text-decoration: none; color: inherit; cursor: pointer; }
   max-width: 1400px;
   margin: 0 auto;
   padding: 2rem 1.5rem;
+}
+
+// ── Search Dropdown & Spinner ──────────────────────────────────────
+.loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid $border;
+  border-top-color: $primary;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.loading-spinner--sm {
+  width: 20px;
+  height: 20px;
+  border-width: 2px;
+}
+
+.search-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: $radius;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+  z-index: 500;
+  max-height: 400px;
+  overflow-y: auto;
+
+  &__loading {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1.25rem;
+    color: $muted;
+    font-size: 0.85rem;
+  }
+
+  &__empty {
+    padding: 1.25rem;
+    text-align: center;
+    color: $muted;
+    font-size: 0.85rem;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    transition: background 0.12s;
+    text-decoration: none;
+    color: inherit;
+
+    &:hover { background: $bg; }
+
+    img {
+      width: 44px;
+      height: 44px;
+      object-fit: cover;
+      border-radius: 8px;
+      flex-shrink: 0;
+      background: $bg;
+    }
+
+    &-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+      overflow: hidden;
+    }
+
+    &-name {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: $text;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    &-price {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: $primary;
+    }
+  }
 }

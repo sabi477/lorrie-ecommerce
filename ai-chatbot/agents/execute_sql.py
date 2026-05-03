@@ -3,7 +3,6 @@ import os
 import time
 
 SPRING_BOOT_URL = os.getenv("SPRING_BOOT_URL", "http://localhost:8080")
-
 def execute_sql(state):
     sql = state["sql_query"]
 

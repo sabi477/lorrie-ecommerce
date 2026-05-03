@@ -1,0 +1,108 @@
+<div class="page-layout">
+  <app-sidebar />
+
+  <div class="main-area">
+    <div class="od" *ngIf="order && !loading">
+
+      <button class="back-link" (click)="goBack()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        Siparişlere Dön
+      </button>
+
+      <div class="od__header">
+        <div>
+          <h1 class="od__id">#{{ order.id }}</h1>
+          <p class="od__date">{{ formatDate(order.createdAt) }}</p>
+        </div>
+        <span class="status-badge status-badge--{{ order.status.toLowerCase() }}">
+          @switch (order.status) {
+            @case ('PENDING')   { Beklemede }
+            @case ('CONFIRMED') { Onaylandı }
+            @case ('SHIPPED')   { Kargoda }
+            @case ('DELIVERED') { Teslim Edildi }
+            @case ('CANCELLED') { İptal Edildi }
+          }
+        </span>
+      </div>
+
+      @if (!isCancelled) {
+        <div class="timeline-card">
+          <div class="timeline">
+            @for (step of timeline; track step.key; let i = $index) {
+              <div class="timeline__step" [class.timeline__step--done]="i <= currentStep" [class.timeline__step--active]="i === currentStep">
+                <div class="timeline__icon">{{ step.icon }}</div>
+                <div class="timeline__line" [class.timeline__line--filled]="i < currentStep"></div>
+                <p class="timeline__label">{{ step.label }}</p>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <div class="od__grid">
+
+        <div class="card">
+          <h3 class="card__title">Ürünleriniz</h3>
+          @if (sellerItems.length === 0) {
+            <p class="empty-msg">Bu siparişte sizin ürününüz bulunmamaktadır.</p>
+          } @else {
+            <div class="items-list">
+              @for (item of sellerItems; track item.productId) {
+                <div class="item-row">
+                  <div class="item-img" [style.background]="item.thumbnail ? 'transparent' : '#f3f4f6'">
+                    @if (item.thumbnail) {
+                      <img [src]="item.thumbnail" [alt]="item.name" />
+                    }
+                  </div>
+                  <div class="item-info">
+                    <p class="item-name">{{ item.name }}</p>
+                    <p class="item-qty">{{ item.qty }} adet</p>
+                  </div>
+                  <p class="item-price">{{ formatPrice(item.price * item.qty) }}</p>
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="od__right">
+
+          <div class="card">
+            <h3 class="card__title">Sipariş Özeti</h3>
+            <div class="totals">
+              <div class="totals__row">
+                <span>Ara Toplam</span>
+                <span>{{ formatPrice(order.subtotal || 0) }}</span>
+              </div>
+              <div class="totals__row">
+                <span>Kargo</span>
+                <span>{{ order.shippingCost === 0 ? 'Ücretsiz' : formatPrice(order.shippingCost || 0) }}</span>
+              </div>
+              <div class="totals__row totals__row--total">
+                <span>Toplam</span>
+                <span>{{ formatPrice(total) }}</span>
+              </div>
+            </div>
+          </div>
+
+          @if (isConfirmed) {
+            <button class="ship-btn" (click)="markAsShipped()">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+              Kargoya Ver
+            </button>
+          }
+
+        </div>
+      </div>
+
+    </div>
+
+    @if (loading) {
+      <div class="state-msg">Sipariş yükleniyor...</div>
+    }
+
+    @if (!loading && !order) {
+      <div class="state-msg state-msg--error">Sipariş bulunamadı.</div>
+    }
+  </div>
+</div>

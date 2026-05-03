@@ -15,6 +15,7 @@ export interface Product {
   sku: string | null;
   discountPercentage: number | null;
   averageRating: number | null;
+  reviewCount: number | null;
   tags: string[] | null;
   category: { id: number; name: string } | null;
   seller: { id: number; fullName: string; email: string } | null;

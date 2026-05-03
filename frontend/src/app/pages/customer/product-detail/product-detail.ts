@@ -32,6 +32,15 @@ export class CustomerProductDetail implements OnInit {
   activeTab = signal<'desc' | 'reviews'>('desc');
   cartAdded = signal(false);
 
+  canReview = false;
+  canReviewReason = '';
+  reviewRating = 0;
+  reviewComment = '';
+  reviewSubmitting = false;
+  reviewError = '';
+  reviewSuccess = false;
+  hoverRating = 0;
+
   readonly isFav = computed(() =>
     this.product ? this.favSvc.isFavorited(this.product.id) : false
   );
@@ -74,6 +83,12 @@ export class CustomerProductDetail implements OnInit {
     this.relatedProducts = [];
     this.qty.set(1);
     this.activeTab.set('desc');
+    this.canReview = false;
+    this.canReviewReason = '';
+    this.reviewRating = 0;
+    this.reviewComment = '';
+    this.reviewSuccess = false;
+    this.reviewError = '';
 
     this.productSvc.getById(id).subscribe({
       next: (product) => {
@@ -82,6 +97,7 @@ export class CustomerProductDetail implements OnInit {
         this.cdr.detectChanges();
         this.loadReviews(id);
         this.loadRelatedProducts(product);
+        if (this.isLoggedIn) this.checkCanReview(id);
       },
       error: () => {
         this.error = 'Ürün yüklenemedi.';
@@ -136,6 +152,80 @@ export class CustomerProductDetail implements OnInit {
       },
       error: () => {
         this.reviews = [];
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  private checkCanReview(productId: number): void {
+    this.reviewSvc.canReview(productId).subscribe({
+      next: (res) => {
+        this.canReview = res.canReview;
+        this.canReviewReason = res.reason;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.canReview = false;
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  setRating(r: number): void { this.reviewRating = r; }
+
+  private sanitizeComment(text: string): string {
+    // HTML tag, script ve SQL kalıplarını temizle
+    return text
+      .replace(/<[^>]*>/g, '')                                    // HTML tagları
+      .replace(/javascript:|vbscript:|data:/gi, '')               // script protokolleri
+      .replace(/on\w+\s*=/gi, '')                                 // olay işleyicileri
+      .replace(/--|\/\*|\*\//g, '')                               // SQL yorumları
+      .replace(/\b(DROP|DELETE|INSERT|UPDATE|ALTER|EXEC|UNION|SELECT)\b\s*(TABLE|DATABASE|INTO|FROM|\*|--|;)/gi, '') // SQL komutları
+      .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')         // kontrol karakterleri
+      .trim();
+  }
+
+  get reviewCommentWarning(): string {
+    const dangerous = /<[^>]*>|javascript:|on\w+\s*=|--|\/\*/i;
+    if (dangerous.test(this.reviewComment)) {
+      return 'HTML, script veya kod içeremez.';
+    }
+    if (this.reviewComment.trim().length > 0 && this.reviewComment.trim().length < 5) {
+      return 'En az 5 karakter giriniz.';
+    }
+    if (this.reviewComment.length > 1000) {
+      return 'En fazla 1000 karakter girebilirsiniz.';
+    }
+    return '';
+  }
+
+  get canSubmitReview(): boolean {
+    return this.reviewRating > 0
+      && this.reviewComment.trim().length >= 5
+      && this.reviewComment.length <= 1000
+      && !this.reviewCommentWarning
+      && !this.reviewSubmitting;
+  }
+
+  submitReview(): void {
+    if (!this.product || !this.canSubmitReview) return;
+    const cleanComment = this.sanitizeComment(this.reviewComment);
+    this.reviewSubmitting = true;
+    this.reviewError = '';
+    this.reviewSvc.create({ productId: this.product.id, rating: this.reviewRating, comment: cleanComment }).subscribe({
+      next: (review) => {
+        this.reviews = [review, ...this.reviews];
+        this.reviewSuccess = true;
+        this.canReview = false;
+        this.canReviewReason = 'ALREADY_REVIEWED';
+        this.reviewRating = 0;
+        this.reviewComment = '';
+        this.reviewSubmitting = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.reviewError = err?.error ?? 'Yorum gönderilemedi. Lütfen tekrar deneyin.';
+        this.reviewSubmitting = false;
         this.cdr.detectChanges();
       },
     });

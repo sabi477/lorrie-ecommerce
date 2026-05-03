@@ -45,7 +45,30 @@ public class OrderController {
 
     @GetMapping("/seller/{sellerId}")
     public List<OrderResponse> getBySeller(@PathVariable Long sellerId) {
-        return orderRepository.findBySellerIdOrderByIdDesc(sellerId).stream().map(this::toResponse).toList();
+        return orderRepository.findBySellerIdOrderByIdDesc(sellerId).stream()
+                .map(order -> toSellerResponse(order, sellerId)).toList();
+    }
+
+    @GetMapping("/{id}/seller/{sellerId}")
+    public ResponseEntity<?> getOrderForSeller(@PathVariable Long id, @PathVariable Long sellerId) {
+        System.out.println("[OrderController] getOrderForSeller called with id=" + id + ", sellerId=" + sellerId);
+        try {
+            return orderRepository.findById(id)
+                    .map(order -> {
+                        System.out.println("[OrderController] Order found: " + order.getId());
+                        OrderResponse response = toSellerResponse(order, sellerId);
+                        System.out.println("[OrderController] Response created successfully");
+                        return ResponseEntity.ok(response);
+                    })
+                    .orElseGet(() -> {
+                        System.out.println("[OrderController] Order not found for id: " + id);
+                        return ResponseEntity.notFound().build();
+                    });
+        } catch (Exception e) {
+            System.out.println("[OrderController] Exception: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Error: " + e.getClass().getSimpleName() + ": " + e.getMessage());
+        }
     }
 
     @PostMapping
@@ -85,11 +108,12 @@ public class OrderController {
     }
 
     @PatchMapping("/{id}/status")
-    public ResponseEntity<Order> updateStatus(@PathVariable Long id,
+    public ResponseEntity<OrderResponse> updateStatus(@PathVariable Long id,
             @RequestParam Order.OrderStatus status) {
         return orderRepository.findById(id).map(order -> {
             order.setStatus(status);
-            return ResponseEntity.ok(orderRepository.save(order));
+            Order savedOrder = orderRepository.save(order);
+            return ResponseEntity.ok(toResponse(savedOrder));
         }).orElse(ResponseEntity.notFound().build());
     }
 
@@ -105,6 +129,48 @@ public class OrderController {
                             item.getUnitPrice());
                 })
                 .toList();
+
+        BigDecimal subtotal = items.stream()
+                .map(item -> item.price().multiply(BigDecimal.valueOf(item.qty())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal shippingCost = order.getTotalAmount() == null
+                ? BigDecimal.ZERO
+                : order.getTotalAmount().subtract(subtotal).max(BigDecimal.ZERO);
+
+        User customer = order.getCustomer();
+        return new OrderResponse(
+                order.getId(),
+                customer == null ? null : new CustomerResponse(customer.getId(), customer.getFullName(), customer.getEmail()),
+                order.getStatus(),
+                order.getTotalAmount(),
+                order.getCreatedAt(),
+                items,
+                subtotal,
+                shippingCost,
+                new ShippingResponse(
+                        customer == null ? "-" : customer.getFullName(),
+                        "-",
+                        "-",
+                        "-",
+                        "Hazirlaniyor",
+                        "-"));
+    }
+
+    private OrderResponse toSellerResponse(Order order, Long sellerId) {
+        System.out.println("[OrderController] toSellerResponse called for order " + order.getId() + " and seller " + sellerId);
+        List<OrderItemResponse> items = orderItemRepository.findByOrderAndSeller(order.getId(), sellerId).stream()
+                .filter(item -> item.getProduct() != null && item.getProduct().getSeller() != null)
+                .map(item -> {
+                    Product product = item.getProduct();
+                    return new OrderItemResponse(
+                            product.getId(),
+                            product.getName(),
+                            product.getThumbnail(),
+                            item.getQuantity(),
+                            item.getUnitPrice());
+                })
+                .toList();
+        System.out.println("[OrderController] Found " + items.size() + " items for seller");
 
         BigDecimal subtotal = items.stream()
                 .map(item -> item.price().multiply(BigDecimal.valueOf(item.qty())))

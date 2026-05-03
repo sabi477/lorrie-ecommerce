@@ -22,11 +22,12 @@ ROLE_CONFIGS = {
         "filters": {
             "users": "id = {user_id}",
             "orders": "customer_id = {user_id}",
+            "order_items": "order_id IN (SELECT id FROM orders WHERE customer_id = {user_id})",
             "reviews": "customer_id = {user_id}",
             "shipments": "order_id IN (SELECT id FROM orders WHERE customer_id = {user_id})"
         },
         "forbidden_tables": [],
-        "description": "Can access all products and categories. Can access own profile, orders, reviews, and shipments."
+        "description": "Can access all products and categories. Can access own profile, orders, order_items, reviews, and shipments only. Cannot access global sales analytics, aggregate order data across all customers, or revenue statistics."
     },
     "CORPORATE": {
         "filters": {
@@ -186,8 +187,8 @@ STRICT SECURITY RULES — NEVER VIOLATE THESE:
         logger.warning("DANGEROUS_SQL | role=%s sql=%.120r", user_role, sql)
         return {**state, "sql_query": "SELECT 'Access denied' as message;", "error": None}
 
-    # password_hash kontrolü
-    if "password_hash" in sql.lower():
+    # password / password_hash kontrolü
+    if "password" in sql.lower():
         logger.warning("PASSWORD_HASH_LEAK | role=%s", user_role)
         return {**state, "sql_query": "SELECT 'Access denied' as message;", "error": None}
 

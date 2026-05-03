@@ -143,8 +143,20 @@ public class ProductController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Product> update(@PathVariable Long id, @RequestBody Product product) {
-        product.setId(id);
-        return ResponseEntity.ok(productRepository.save(product));
+        return productRepository.findById(id)
+                .map(existing -> {
+                    if (product.getName() != null && !product.getName().isEmpty()) existing.setName(product.getName());
+                    if (product.getDescription() != null && !product.getDescription().isEmpty()) existing.setDescription(product.getDescription());
+                    if (product.getPrice() != null) existing.setPrice(product.getPrice());
+                    if (product.getStockQuantity() != null) existing.setStockQuantity(product.getStockQuantity());
+                    if (product.getImageUrl() != null && !product.getImageUrl().isEmpty()) existing.setImageUrl(product.getImageUrl());
+                    if (product.getThumbnail() != null && !product.getThumbnail().isEmpty()) existing.setThumbnail(product.getThumbnail());
+                    if (product.getBrand() != null && !product.getBrand().isEmpty()) existing.setBrand(product.getBrand());
+                    if (product.getSku() != null && !product.getSku().isEmpty()) existing.setSku(product.getSku());
+                    if (product.getDiscountPercentage() != null) existing.setDiscountPercentage(product.getDiscountPercentage());
+                    return ResponseEntity.ok(productRepository.save(existing));
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")

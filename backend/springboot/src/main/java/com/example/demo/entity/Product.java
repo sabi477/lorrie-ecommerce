@@ -2,6 +2,7 @@ package com.example.demo.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import org.hibernate.annotations.Formula;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -47,6 +48,9 @@ public class Product {
 
     @Column(name = "average_rating")
     private Double averageRating;
+
+    @Formula("(SELECT COUNT(*) FROM reviews r WHERE r.product_id = id)")
+    private Integer reviewCount;
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "product_tags", joinColumns = @JoinColumn(name = "product_id"))

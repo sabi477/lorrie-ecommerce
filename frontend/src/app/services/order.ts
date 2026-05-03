@@ -72,6 +72,10 @@ export class OrderService {
     return this.http.get<Order[]>(`${this.api}/seller/${sellerId}`, { headers: this.headers() });
   }
 
+  getOrderForSeller(orderId: number, sellerId: number): Observable<Order> {
+    return this.http.get<Order>(`${this.api}/${orderId}/seller/${sellerId}`, { headers: this.headers() });
+  }
+
   create(order: CreateOrderRequest): Observable<Order> {
     return this.http.post<Order>(this.api, order, { headers: this.headers() });
   }

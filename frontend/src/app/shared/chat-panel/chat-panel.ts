@@ -1,4 +1,6 @@
-import { Component, ViewChild, ElementRef, AfterViewChecked, inject, HostListener } from '@angular/core';
+import { Component, ViewChild, ViewChildren, QueryList, ElementRef, AfterViewChecked, inject, HostListener } from '@angular/core';
+
+declare const Plotly: any;
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
@@ -15,11 +17,13 @@ import { AuthService } from '../../services/auth';
 export class ChatPanel implements AfterViewChecked {
   @ViewChild('messagesEnd') private messagesEnd!: ElementRef;
   @ViewChild('chatPanel') private chatPanel!: ElementRef;
+  @ViewChildren('chartContainer') private chartContainers!: QueryList<ElementRef>;
 
   isOpen   = false;
   input    = '';
   loading  = false;
   private shouldScroll = false;
+  private renderedCharts = new Set<string>();
 
   panelWidth  = 360;
   panelHeight  = 500;
@@ -40,10 +44,34 @@ export class ChatPanel implements AfterViewChecked {
   get messages() { return this.chat.messages; }
 
   ngAfterViewChecked() {
+    this.renderCharts();
     if (this.shouldScroll) {
       try { this.messagesEnd?.nativeElement.scrollIntoView({ behavior: 'smooth' }); } catch {}
       this.shouldScroll = false;
     }
+  }
+
+  private renderCharts() {
+    if (typeof Plotly === 'undefined' || !this.chartContainers) return;
+    this.chartContainers.forEach(ref => {
+      const el = ref.nativeElement as HTMLElement;
+      const msgId = el.dataset['msgId'];
+      const vizCode = el.dataset['vizCode'];
+      if (!msgId || !vizCode || this.renderedCharts.has(msgId)) return;
+      try {
+        const spec = JSON.parse(vizCode);
+        const layout = {
+          ...spec.layout,
+          margin: { t: 40, r: 20, b: 60, l: 50 },
+          height: 260,
+          paper_bgcolor: 'transparent',
+          plot_bgcolor: 'transparent',
+          font: { family: 'Inter, sans-serif', size: 12 },
+        };
+        Plotly.newPlot(el, spec.data, layout, { responsive: true, displayModeBar: false });
+        this.renderedCharts.add(msgId);
+      } catch { /* invalid JSON, skip */ }
+    });
   }
 
   toggle() {
@@ -122,7 +150,7 @@ export class ChatPanel implements AfterViewChecked {
         clearTimeout(timeoutId);
         if (!this.loading) return;
         this.chat.removeTyping();
-        this.chat.addMessage({ role: 'bot', text: res.answer, status: 'done' });
+        this.chat.addMessage({ role: 'bot', text: res.answer, status: 'done', visualization_code: res.visualization_code });
         this.loading      = false;
         this.shouldScroll = true;
       },

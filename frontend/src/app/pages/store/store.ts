@@ -8,6 +8,7 @@ import {
   OnDestroy,
   OnInit,
   ViewChild,
+  HostListener,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -82,7 +83,7 @@ function mapProduct(p: Product, index: number): StoreProduct {
     category: cat,
     badge,
     rating: p.averageRating ?? (3.8 + (index % 12) * 0.1),
-    reviews: 50 + (index * 17) % 5000,   // review sayısı için ayrı API gerekir
+    reviews: p.reviewCount ?? 0,
     bg: palette.bg,
     accent: palette.accent,
     imageUrl: p.thumbnail ?? p.imageUrl ?? `https://picsum.photos/seed/${p.id}/400/400`,
@@ -116,6 +117,7 @@ export class Store implements OnInit, AfterViewInit, OnDestroy {
   loadingVisualSearch = false;
   visualSearchPreview = '';
   visualSearchResults: StoreProduct[] = [];
+  isSearchDropdownVisible = false;
   currentPage = 0;
   readonly pageSize = 42;
   hasMore = true;
@@ -358,12 +360,41 @@ export class Store implements OnInit, AfterViewInit, OnDestroy {
   goLogin(): void { this.router.navigate(['/login']); }
   goBack(): void { this.router.navigate(['/dashboard']); }
 
-onSearchInput(query: string): void {
+  onSearchInput(query: string): void {
     this.searchQuery = query;
     if (query.trim().length === 0) {
       this.searchResults = [];
+      this.isSearchDropdownVisible = false;
+    } else {
+      this.isSearchDropdownVisible = true;
     }
     this.searchSubject.next(query);
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    const searchContainer = document.querySelector('.navbar__search');
+    const dropdown = document.querySelector('.search-dropdown');
+    
+    if (searchContainer && !searchContainer.contains(target) && 
+        dropdown && !dropdown.contains(target)) {
+      this.isSearchDropdownVisible = false;
+      this.cdr.detectChanges();
+    }
+  }
+
+  onSearchFocus(): void {
+    if (this.searchQuery.trim().length > 0) {
+      this.isSearchDropdownVisible = true;
+    }
+  }
+
+  selectProduct(p: StoreProduct) {
+    this.router.navigate(['/product-detail', p.id]);
+    this.searchQuery = '';
+    this.searchResults = [];
+    this.isSearchDropdownVisible = false;
   }
 
   onImageSearch(event: Event): void {

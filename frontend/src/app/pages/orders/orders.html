@@ -7,7 +7,7 @@
         <h2>{{ pageTitle }}</h2>
         <span class="topbar-subtitle">
           @if (role === 'ADMIN')    { Tüm siparişleri görüntüleyin ve yönetin }
-          @if (role === 'CORPORATE') { Ürünlerinizi içeren siparişler }
+          @if (role === 'CORPORATE' || role === 'SELLER') { Ürünlerinizi içeren siparişler }
           @if (role === 'CUSTOMER') { Kendi siparişlerinizi takip edin }
         </span>
       </div>
@@ -36,8 +36,16 @@
             </thead>
             <tbody>
               @for (order of orders; track order.id; let i = $index) {
-                <tr class="table-row" [style.animation-delay]="(i * 40) + 'ms'">
-                  <td class="order-id">#{{ order.id }}</td>
+                <tr class="table-row" [style.animation-delay]="(i * 40) + 'ms'"
+                    [class.clickable]="isSeller"
+                    (click)="isSeller && viewOrder(order)">
+                  <td class="order-id">
+                    @if (isSeller) {
+                      <span class="order-link">#{{ order.id }} →</span>
+                    } @else {
+                      #{{ order.id }}
+                    }
+                  </td>
                   <td class="customer-name">{{ getCustomerName(order) }}</td>
                   <td class="amount">{{ formatAmount(order.totalAmount) }}</td>
                   <td>
@@ -52,6 +60,10 @@
                           </option>
                         }
                       </select>
+                    } @else if (canSellerUpdate(order)) {
+                      <button class="ship-btn" (click)="markAsShipped(order)">
+                        Kargoya Ver
+                      </button>
                     } @else {
                       <span class="status-badge status-badge--{{ order.status.toLowerCase() }}">
                         {{ statusLabel[order.status] }}

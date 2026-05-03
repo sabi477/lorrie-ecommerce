@@ -32,11 +32,12 @@
           type="text"
           placeholder="Ürün, kategori veya marka ara"
           [ngModel]="searchQuery"
-          (ngModelChange)="onSearchInput($event)" />
+          (ngModelChange)="onSearchInput($event)"
+          (focus)="onSearchFocus()" />
         <button class="navbar__search-btn">Ara</button>
       </div>
 
-      @if (searchQuery.trim().length > 0) {
+      @if (isSearchDropdownVisible && searchQuery.trim().length > 0) {
         <div class="search-dropdown search-dropdown--inline">
           @if (loadingSearch) {
             <div class="search-dropdown__loading">
@@ -45,7 +46,7 @@
             </div>
           } @else if (searchResults.length > 0) {
             @for (p of searchResults.slice(0, 8); track p.id) {
-              <a class="search-dropdown__item" (click)="router.navigate(['/product-detail', p.id]); searchQuery=''; searchResults=[]">
+              <a class="search-dropdown__item" (click)="selectProduct(p)">
                 <img [src]="p.imageUrl" [alt]="p.name" />
                 <div class="search-dropdown__item-info">
                   <span class="search-dropdown__item-name">{{ p.name }}</span>

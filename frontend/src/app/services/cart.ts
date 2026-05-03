@@ -23,7 +23,7 @@ export class CartService {
   readonly items    = this._items.asReadonly();
   readonly count    = computed(() => this._items().reduce((s, i) => s + i.qty, 0));
   readonly subtotal = computed(() => this._items().reduce((s, i) => s + i.price * i.qty, 0));
-  readonly shipping = computed(() => this.subtotal() >= 1500 ? 0 : 49);
+  readonly shipping = computed(() => this.subtotal() >= 1500 ? 0 : 4.99);
   readonly total    = computed(() => this.subtotal() + this.shipping());
 
   constructor(private http: HttpClient, private auth: AuthService) {

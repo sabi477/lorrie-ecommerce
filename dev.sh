@@ -12,6 +12,7 @@ echo -e "${BLUE}🚀 Lorrie Ecommerce Geliştirme Ortamı Başlatılıyor...${NC
 BACKEND_PORT=8080
 CHATBOT_PORT=8000
 FRONTEND_PORT=4200
+DB_PORT=5432
 LEGACY_PORTS=(8081)
 
 # Scriptin bulunduğu dizine git (her yerden çalışabilmesi için)
@@ -32,13 +33,42 @@ trap cleanup SIGINT SIGTERM
 # Port temizleme fonksiyonu
 kill_port() {
     local port=$1
-    local pid
-    pid=$(lsof -ti tcp:"$port" 2>/dev/null)
-    if [ -n "$pid" ]; then
-        echo -e "${YELLOW}⚠️  Port $port meşgul (PID: $pid), temizleniyor...${NC}"
-        kill -9 $pid 2>/dev/null
+    # nc -z ile portun gerçekten açık olup olmadığını kontrol et (lsof bazen yetki nedeniyle göremeyebilir)
+    if nc -z localhost "$port" >/dev/null 2>&1; then
+        echo -e "${YELLOW}⚠️  Port $port meşgul, temizleniyor...${NC}"
+        
+        # 1. Standart lsof ile bulup öldür
+        local pid=$(lsof -ti tcp:"$port" 2>/dev/null)
+        if [ -n "$pid" ]; then
+            kill -9 $pid 2>/dev/null
+        fi
+        
+        # 2. Eğer hala meşgulse ve port 5432 ise (Sistem Postgres'i olabilir)
         sleep 1
-        echo -e "${GREEN}✅ Port $port temizlendi.${NC}"
+        if nc -z localhost "$port" >/dev/null 2>&1; then
+            if [ "$port" == "5432" ]; then
+                # EDB Postgres (v18) gibi sistem servislerini kontrol et
+                if [ -f /Library/LaunchDaemons/postgresql-18.plist ]; then
+                    echo -e "${YELLOW}🐘 Sistem Postgres (v18) tespit edildi. Kapatmak için sudo gerekebilir...${NC}"
+                    sudo launchctl unload /Library/LaunchDaemons/postgresql-18.plist 2>/dev/null
+                    # Alternatif olarak stop komutu
+                    sudo launchctl stop postgresql-18 2>/dev/null
+                fi
+                
+                # Diğer olası postgres process'lerini ps ile bulup öldürmeyi dene
+                local ps_pid=$(ps aux | grep -i "postgres" | grep -v "grep" | awk '{print $2}' | head -n 1)
+                if [ -n "$ps_pid" ]; then
+                    kill -9 $ps_pid 2>/dev/null
+                fi
+            fi
+        fi
+
+        # Son kontrol
+        if nc -z localhost "$port" >/dev/null 2>&1; then
+            echo -e "${RED}❌ Port $port hala kapatılamadı. Lütfen manuel kontrol et.${NC}"
+        else
+            echo -e "${GREEN}✅ Port $port temizlendi.${NC}"
+        fi
     else
         echo -e "${GREEN}✅ Port $port müsait.${NC}"
     fi
@@ -46,7 +76,7 @@ kill_port() {
 
 # Portları temizle
 echo -e "${YELLOW}🔍 Portlar kontrol ediliyor...${NC}"
-for port in "$BACKEND_PORT" "$CHATBOT_PORT" "$FRONTEND_PORT"; do
+for port in "$BACKEND_PORT" "$CHATBOT_PORT" "$FRONTEND_PORT" "$DB_PORT"; do
     kill_port "$port"
 done
 
@@ -57,16 +87,23 @@ done
 
 # 1. Veritabanı Kontrolü
 echo -e "${YELLOW}🐘 Veritabanı kontrol ediliyor...${NC}"
-if docker ps | grep -q ecommerce_db; then
-    echo -e "${GREEN}✅ Veritabanı (Postgres) zaten çalışıyor.${NC}"
+if nc -z localhost "$DB_PORT" >/dev/null 2>&1; then
+    echo -e "${GREEN}✅ Postgres zaten çalışıyor (native/sistem servisi).${NC}"
+elif docker info >/dev/null 2>&1; then
+    if docker ps | grep -q ecommerce_db; then
+        echo -e "${GREEN}✅ Veritabanı (Docker) zaten çalışıyor.${NC}"
+    else
+        echo -e "${YELLOW}🐳 Veritabanı Docker ile başlatılıyor...${NC}"
+        docker-compose up -d postgres
+        echo -e "${YELLOW}⏳ Postgres hazır olana kadar bekleniyor...${NC}"
+        until docker exec ecommerce_db pg_isready -U postgres &>/dev/null; do
+            sleep 1
+        done
+        echo -e "${GREEN}✅ Postgres hazır.${NC}"
+    fi
 else
-    echo -e "${YELLOW}🐳 Veritabanı başlatılıyor...${NC}"
-    docker-compose up -d postgres
-    echo -e "${YELLOW}⏳ Postgres hazır olana kadar bekleniyor...${NC}"
-    until docker exec ecommerce_db pg_isready -U postgres &>/dev/null; do
-        sleep 1
-    done
-    echo -e "${GREEN}✅ Postgres hazır.${NC}"
+    echo -e "${RED}❌ Postgres çalışmıyor ve Docker bulunamadı. Lütfen Postgres'i başlat.${NC}"
+    exit 1
 fi
 
 # 2. Backend (Spring Boot)

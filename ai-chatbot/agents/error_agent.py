@@ -1,5 +1,6 @@
 from llm import llm
 from langchain_core.messages import SystemMessage, HumanMessage
+from sql_agent import _filter_present_in_sql, is_dangerous_sql
 import logging
 
 logger = logging.getLogger("chatbot")
@@ -10,6 +11,9 @@ def error_agent(state):
     error = state["error"]
     question = state["question"]
     iteration_count = state["iteration_count"]
+    user_role = state.get("user_role", "INDIVIDUAL")
+    user_id = state.get("user_id")
+    store_id = state.get("store_id")
 
     logger.warning("SQL_ERROR | iteration=%d error=%.120r", iteration_count, error)
 
@@ -51,12 +55,32 @@ Return the fixed SQL only.""")
     fixed_sql = response.content.strip()
     fixed_sql = fixed_sql.replace("```sql", "").replace("```", "").strip()
 
-    # düzeltilmiş SQL de tehlikeliyse reddet
-    dangerous = ["drop", "delete", "truncate", "insert", "update", "alter"]
-    if any(kw in fixed_sql.lower() for kw in dangerous):
+    # Tehlikeli DML kontrolü
+    if is_dangerous_sql(fixed_sql):
+        logger.warning("ERROR_AGENT_DANGEROUS_SQL | role=%s sql=%.120r", user_role, fixed_sql)
         return {
             **state,
             "sql_query": "SELECT 'Access denied' as message;",
+            "error": None,
+            "iteration_count": iteration_count + 1
+        }
+
+    # password_hash / information_schema kontrolü
+    if "password_hash" in fixed_sql.lower() or "password" in fixed_sql.lower():
+        logger.warning("ERROR_AGENT_PASSWORD_LEAK | role=%s", user_role)
+        return {
+            **state,
+            "sql_query": "SELECT 'Access denied' as message;",
+            "error": None,
+            "iteration_count": iteration_count + 1
+        }
+
+    # Rol filtresi hâlâ geçerli mi?
+    if not _filter_present_in_sql(fixed_sql, user_role, user_id, store_id):
+        logger.error("ERROR_AGENT_FILTER_MISSING | role=%s sql=%.120r", user_role, fixed_sql)
+        return {
+            **state,
+            "sql_query": "SELECT 'Access denied: role filter not applied' as message;",
             "error": None,
             "iteration_count": iteration_count + 1
         }

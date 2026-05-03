@@ -1,19 +1,22 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { OrderService, Order, OrderStatus } from '../../../services/order';
+import { AuthService } from '../../../services/auth';
+import { Sidebar } from '../../../shared/sidebar/sidebar';
 
 @Component({
-  selector: 'app-order-detail',
+  selector: 'app-seller-order-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, Sidebar],
   templateUrl: './order-detail.html',
   styleUrl: './order-detail.scss',
 })
-export class CustomerOrderDetail implements OnInit {
+export class SellerOrderDetail implements OnInit {
   orderId = '';
   order: Order | null = null;
   loading = true;
+  sellerId: number | null = null;
 
   timeline: { key: OrderStatus; label: string; icon: string }[] = [
     { key: 'PENDING',   label: 'Sipariş Alındı', icon: '📋' },
@@ -26,30 +29,43 @@ export class CustomerOrderDetail implements OnInit {
 
   constructor(
     private route: ActivatedRoute,
-    private orderService: OrderService
+    private router: Router,
+    private orderService: OrderService,
+    private authService: AuthService
   ) {}
 
   ngOnInit() {
+    this.sellerId = this.authService.getUserId();
     this.orderId = this.route.snapshot.paramMap.get('id') ?? '';
-    if (this.orderId) {
-      this.orderService.getById(Number(this.orderId)).subscribe({
+    console.log('[SellerOrderDetail] orderId:', this.orderId, 'sellerId:', this.sellerId);
+    if (this.orderId && this.sellerId) {
+      this.orderService.getOrderForSeller(Number(this.orderId), this.sellerId).subscribe({
         next: (data) => {
+          console.log('[SellerOrderDetail] Success:', data);
           this.order = data;
           this.loading = false;
         },
-        error: () => {
+        error: (err) => {
+          console.error('[SellerOrderDetail] Error:', err);
           this.loading = false;
         }
       });
+    } else {
+      console.warn('[SellerOrderDetail] Missing orderId or sellerId');
+      this.loading = false;
     }
   }
 
   get currentStep(): number { return this.order ? this.statusOrder.indexOf(this.order.status) : 0; }
-
   get isCancelled(): boolean { return this.order?.status === 'CANCELLED'; }
   get isPending():   boolean { return this.order?.status === 'PENDING'; }
+  get isConfirmed(): boolean { return this.order?.status === 'CONFIRMED'; }
 
-  get total(): number { return this.order?.totalAmount ?? 0; }
+  get total(): number { return this.order?.subtotal ?? 0; }
+
+  get sellerItems() {
+    return this.order?.items || [];
+  }
 
   formatPrice(n: number) { return '$' + n.toLocaleString('en-US'); }
 
@@ -57,11 +73,15 @@ export class CustomerOrderDetail implements OnInit {
     return new Date(dateStr).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' });
   }
 
-  cancelOrder() {
+  markAsShipped() {
     if (!this.order) return;
-    this.orderService.updateStatus(this.order.id, 'CANCELLED').subscribe({
+    this.orderService.updateStatus(this.order.id, 'SHIPPED').subscribe({
       next: (updated) => { if (this.order) this.order.status = updated.status; },
-      error: (err) => { console.error('Cancel failed', err); }
+      error: (err) => { console.error('Update failed', err); }
     });
+  }
+
+  goBack() {
+    this.router.navigate(['/orders']);
   }
 }

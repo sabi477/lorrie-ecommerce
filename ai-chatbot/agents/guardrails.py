@@ -23,6 +23,18 @@ FILTER_BYPASS_KEYWORDS = [
     "where kaldır", "without where clause",
 ]
 
+INDIVIDUAL_ANALYTICS_KEYWORDS = [
+    "en çok satan", "en çok satılan", "en fazla satılan", "en iyi satan",
+    "en popüler ürün", "en çok tercih", "en çok alınan",
+    "best selling", "best-selling", "bestselling", "most sold", "most popular product",
+    "top selling", "top product", "top products",
+    "tüm satışlar", "toplam satış", "satış sıralaması", "satış analizi",
+    "total sales", "sales ranking", "sales analysis", "overall sales",
+    "how many sold", "kaç tane satıldı", "kaç adet satıldı",
+    "tüm siparişler", "tüm müşteriler", "all orders", "all customers",
+    "gelir analizi", "ciro analizi", "revenue analysis",
+]
+
 DANGEROUS_SQL_KEYWORDS = [
     "drop table", "delete from", "truncate", "insert into",
     "update set", "alter table", "create table", "--", "/*", "*/",
@@ -73,6 +85,7 @@ def guardrails_agent(state):
     user_role = state.get("user_role", "ADMIN")
     store_id = state.get("store_id")
     tr = lang == "TR"
+    q_lower = question.lower()
 
     # ── Step 1: Keyword-based detection ──────────────────────────────────────
     violation_type, matched_kw = _detect_keyword_type(question)
@@ -168,56 +181,19 @@ def guardrails_agent(state):
         )
         return {**state, "is_in_scope": False, "final_answer": answer}
 
-    # ── Step 3: E-ticaret keyword'leri ile hızlı IN_SCOPE tespiti ───────────────
-    ECOMMERCE_KEYWORDS = [
-        # Türkçe
-        "sipariş", "ürün", "satış", "gelir", "ciro", "müşteri", "mağaza",
-        "kargo", "teslimat", "stok", "envanter", "fiyat", "indirim", "kampanya",
-        "değerlendirme", "yorum", "puan", "kategori", "marka", "sepet",
-        # İngilizce
-        "order", "product", "sale", "revenue", "customer", "store", "shop",
-        "shipment", "delivery", "stock", "inventory", "price", "discount",
-        "review", "rating", "category", "brand", "cart",
-    ]
-    q_lower = question.lower()
-    if any(kw in q_lower for kw in ECOMMERCE_KEYWORDS):
-        logger.info("ECOMMERCE_KEYWORD_MATCH | fast IN_SCOPE")
-        return {**state, "is_in_scope": True}
+    # ── Step 3: INDIVIDUAL rolü için global satış analitik engeli ───────────────
+    if user_role == "INDIVIDUAL":
+        for kw in INDIVIDUAL_ANALYTICS_KEYWORDS:
+            if kw in q_lower:
+                logger.warning("INDIVIDUAL_ANALYTICS_BLOCKED | kw=%r question=%.80r", kw, question)
+                answer = (
+                    "Bu bilgiye erişiminiz bulunmamaktadır. Yalnızca kendi siparişleriniz, incelemeleriniz ve ürün detayları hakkında bilgi alabilirsiniz."
+                    if tr else
+                    "You don't have access to this information. You can only view your own orders, reviews, and product details."
+                )
+                return {**state, "is_in_scope": False, "final_answer": answer}
 
-    # ── Step 4: Kısa / anlamsız mesajları LLM'siz reddet ─────────────────────────
-    if len(question.strip()) <= 3:
-        answer = (
-            "Lütfen e-ticaret verileri hakkında daha açıklayıcı bir soru sorun."
-            if tr else
-            "Please ask a more specific question about e-commerce data."
-        )
-        return {**state, "is_in_scope": False, "final_answer": answer}
-
-    # ── Step 5: Belirsiz sorular için LLM intent classification ──────────────────
-    lang_instruction = "Turkish" if tr else "English"
-    messages = [
-        SystemMessage(content=f"""You are a strict guardrails system.
-Classify the question. Respond with ONLY one word:
-- IN_SCOPE  (e-commerce data: sales, orders, products, customers, revenue, inventory)
-- OUT_OF_SCOPE  (anything else)
-
-Always respond in {lang_instruction}."""),
-        HumanMessage(content=question)
-    ]
-
-    response = llm.invoke(messages)
-    result = response.content.strip().upper()
-    logger.info("GUARDRAIL | result=%s lang=%s", result.strip(), lang)
-
-    if "OUT_OF_SCOPE" in result:
-        answer = (
-            "Yalnızca e-ticaret veri analizi sorularını yanıtlayabilirim. Lütfen satış, sipariş veya ürünler hakkında bir soru sorun."
-            if tr else
-            "I can only answer questions about e-commerce data analysis. Please ask about sales, orders, or products."
-        )
-        return {**state, "is_in_scope": False, "final_answer": answer}
-
-    # ── Step 4: Cross-store access check (CORPORATE) ──────────────────────────
+    # ── Step 4: Cross-store access check (CORPORATE) — must run before fast-path ──
     if user_role == "CORPORATE" and store_id is not None:
         requested_store = _extract_store_id(question)
         if requested_store and requested_store != store_id:
@@ -249,5 +225,53 @@ Always respond in {lang_instruction}."""),
             )
             return {**state, "is_in_scope": False, "final_answer": answer,
                     "guardrail_event": guardrail_event}
+
+    # ── Step 5: E-ticaret keyword'leri ile hızlı IN_SCOPE tespiti ───────────────
+    ECOMMERCE_KEYWORDS = [
+        # Türkçe
+        "sipariş", "ürün", "satış", "gelir", "ciro", "müşteri", "mağaza",
+        "kargo", "teslimat", "stok", "envanter", "fiyat", "indirim", "kampanya",
+        "değerlendirme", "yorum", "puan", "kategori", "marka", "sepet",
+        # İngilizce
+        "order", "product", "sale", "revenue", "customer", "store", "shop",
+        "shipment", "delivery", "stock", "inventory", "price", "discount",
+        "review", "rating", "category", "brand", "cart",
+    ]
+    if any(kw in q_lower for kw in ECOMMERCE_KEYWORDS):
+        logger.info("ECOMMERCE_KEYWORD_MATCH | fast IN_SCOPE")
+        return {**state, "is_in_scope": True}
+
+    # ── Step 6: Kısa / anlamsız mesajları LLM'siz reddet ─────────────────────────
+    if len(question.strip()) <= 3:
+        answer = (
+            "Lütfen e-ticaret verileri hakkında daha açıklayıcı bir soru sorun."
+            if tr else
+            "Please ask a more specific question about e-commerce data."
+        )
+        return {**state, "is_in_scope": False, "final_answer": answer}
+
+    # ── Step 7: Belirsiz sorular için LLM intent classification ──────────────────
+    lang_instruction = "Turkish" if tr else "English"
+    messages = [
+        SystemMessage(content=f"""You are a strict guardrails system.
+Classify the question. Respond with ONLY one word:
+- IN_SCOPE  (e-commerce data: sales, orders, products, customers, revenue, inventory)
+- OUT_OF_SCOPE  (anything else)
+
+Always respond in {lang_instruction}."""),
+        HumanMessage(content=question)
+    ]
+
+    response = llm.invoke(messages)
+    result = response.content.strip().upper()
+    logger.info("GUARDRAIL | result=%s lang=%s", result.strip(), lang)
+
+    if "OUT_OF_SCOPE" in result:
+        answer = (
+            "Yalnızca e-ticaret veri analizi sorularını yanıtlayabilirim. Lütfen satış, sipariş veya ürünler hakkında bir soru sorun."
+            if tr else
+            "I can only answer questions about e-commerce data analysis. Please ask about sales, orders, or products."
+        )
+        return {**state, "is_in_scope": False, "final_answer": answer}
 
     return {**state, "is_in_scope": True}

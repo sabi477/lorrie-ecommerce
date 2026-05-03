@@ -25,6 +25,7 @@ import { Shipping } from './pages/info/shipping/shipping';
 import { Returns } from './pages/info/returns/returns';
 import { Faq } from './pages/info/faq/faq';
 import { ContactUs } from './pages/info/contact-us/contact-us';
+import { SellerOrderDetail } from './pages/seller/order-detail/order-detail';
 
 export const routes: Routes = [
   { path: '', component: Store },
@@ -33,6 +34,7 @@ export const routes: Routes = [
 
   { path: 'dashboard', component: Dashboard, canActivate: [authGuard] },
   { path: 'orders', component: Orders, canActivate: [authGuard] },
+  { path: 'seller-order/:id', component: SellerOrderDetail, canActivate: [authGuard] },
   { path: 'products', component: Products, canActivate: [authGuard] },
   { path: 'product-detail/:id', component: CustomerProductDetail },
   { path: 'seller/:sellerId', component: Store },
