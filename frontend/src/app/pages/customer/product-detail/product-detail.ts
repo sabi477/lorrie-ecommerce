@@ -196,7 +196,48 @@ export class CustomerProductDetail implements OnInit {
     if (this.reviewComment.length > 1000) {
       return 'En fazla 1000 karakter girebilirsiniz.';
     }
+    if (this.containsProfanity(this.reviewComment)) {
+      return 'Yorumunuz uygunsuz içerik barındırdığı için kabul edilemez.';
+    }
     return '';
+  }
+
+  private readonly PROFANITY_WORDS = [
+    'amk','amq','amık','a.m.k','a.mq','a mk','a mq','aq','a.q','a q',
+    'anani','ananı','anan','babanı','baban','götün','götun','göt','got',
+    'amcığ','amcık','amcig','amck','amcıg','amcık','amcg','amck',
+    'amına','amina','omına','yarrak','yarak','yarram','yarakam','yarrami','yaraklık',
+    'sikim','sikeyim','sikti','siktim','s1k','s!k','sık','sıkk','sıkı','s1k1','s!k!','s!k1','s1k!',
+    'siktir','siktirgit','siktir et','sokucu','oruspu','orospu','oç','oçsum','oc',
+    'şerefsiz','şerefsizce','şerefiz','porn','porno','pornhub','sex','seks','sekş','sekis',
+    'lgbt','trans','gey','gay','fahişe','fahise','taciz','tecavüz','tecavuz',
+    'gerizekalı','mal','ezik','hıyar','kaltık','keriz','cip','zitung','zart','zort',
+    'pıçı','pic','poşet','çomar','pic','liboş','daşşak','it','göt','sıçtı','sıgar',
+    'şıllık','ştf','tşk','mrb','oruç','peçete','pust','kro','merdiven','defol',
+    'şube','hack','crack','mgm','mg','mgk','mkg','mkk','mk','mkre','sg','sgg','sgm',
+    'yaraklık','bombok','bomok','anlıyorum','bok','sifari','fık','salak','civatal',
+    'a+q','apq','gerzekalı','götveren','ebedi','lan','bı','sülün','asdf','bütün',
+    'kıllım','fistan','şarap','zıkkım','müslüman','kafir','şınav','yavşak','manyak',
+    'pıs','ağa','çük','pıt','şıt','aşk','zina','iblis','şeytan','lanet','beddua',
+    'teşekkür','yarrak','sik','siktir','fahişe','zina','是有','下流','色情','穆斯林',
+    '维尼','国家主席','共产党','天安门','坦克','tibet','uyghur','taiwan','特朗普','拜登','普京'
+  ];
+
+  private normalizeText(text: string): string {
+    return text
+      .toLowerCase()
+      .replace(/@/g, 'a').replace(/4/g, 'a').replace(/3/g, 'e')
+      .replace(/1/g, 'i').replace(/!/g, 'i').replace(/\|/g, 'i').replace(/ı/g, 'i')
+      .replace(/0/g, 'o').replace(/6/g, 'g').replace(/9/g, 'g')
+      .replace(/\$/g, 's').replace(/5/g, 's')
+      .replace(/7/g, 't').replace(/8/g, 'b')
+      .replace(/ç/g, 'c').replace(/ü/g, 'u').replace(/ö/g, 'o')
+      .replace(/ş/g, 's').replace(/ğ/g, 'g');
+  }
+
+  private containsProfanity(text: string): boolean {
+    const normalized = this.normalizeText(text);
+    return this.PROFANITY_WORDS.some(word => normalized.includes(word));
   }
 
   get canSubmitReview(): boolean {
@@ -204,6 +245,7 @@ export class CustomerProductDetail implements OnInit {
       && this.reviewComment.trim().length >= 5
       && this.reviewComment.length <= 1000
       && !this.reviewCommentWarning
+      && !this.containsProfanity(this.reviewComment)
       && !this.reviewSubmitting;
   }
 

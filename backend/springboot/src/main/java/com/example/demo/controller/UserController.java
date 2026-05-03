@@ -35,4 +35,13 @@ public class UserController {
         user.setRole(role);
         return userRepository.save(user);
     }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public void deleteUser(@PathVariable Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        user.setDeleted(true);
+        userRepository.save(user);
+    }
 }

@@ -71,6 +71,10 @@ export class AuthService {
     return localStorage.getItem('phone');
   }
 
+  setPhone(phone: string): void {
+    localStorage.setItem('phone', phone);
+  }
+
   changePassword(currentPassword: string, newPassword: string): Observable<any> {
     return this.http.put(`${this.apiUrl}/password`, { currentPassword, newPassword }, {
       headers: { Authorization: `Bearer ${this.getToken()}` }

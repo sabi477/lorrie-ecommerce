@@ -110,4 +110,8 @@ export class UserProfileService {
   updatePhone(phone: string): Observable<void> {
     return this.http.put<void>(`${this.api}/phone`, { phone }, { headers: this.headers() });
   }
+
+  deleteAccount(): Observable<void> {
+    return this.http.delete<void>(`${this.api}`, { headers: this.headers() });
+  }
 }

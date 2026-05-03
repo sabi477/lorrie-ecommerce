@@ -617,6 +617,7 @@ a { text-decoration: none; color: inherit; cursor: pointer; }
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
   gap: 0.9rem;
+  align-items: start;
 }
 
 // ─── Product Grid (All / Filtered) ───────────────────────────────
@@ -624,6 +625,7 @@ a { text-decoration: none; color: inherit; cursor: pointer; }
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 0.9rem;
+  align-items: start;
 }
 
 // ─── Product Card ─────────────────────────────────────────────────

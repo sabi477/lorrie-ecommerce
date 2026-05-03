@@ -41,6 +41,10 @@ public class AuthService {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
+        if (user.isDeleted()) {
+            throw new RuntimeException("Bu hesap silinmiştir. Giriş yapamazsınız.");
+        }
+
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new RuntimeException("Invalid password");
         }

@@ -360,7 +360,7 @@
         <p>Emin misiniz? Bu işlem <strong>geri alınamaz</strong>.</p>
         <div class="delete-confirm__btns">
           <button class="cancel-btn" (click)="showDeleteConfirm = false">Vazgeç</button>
-          <button class="delete-btn delete-btn--confirm">Evet, Hesabımı Sil</button>
+          <button class="delete-btn delete-btn--confirm" (click)="deleteAccount()">Evet, Hesabımı Sil</button>
         </div>
       </div>
     }

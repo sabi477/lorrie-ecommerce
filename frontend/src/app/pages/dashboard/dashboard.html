@@ -35,6 +35,30 @@
         }
       </div>
 
+      <!-- Charts Grid -->
+      @if (userRole !== 'CUSTOMER') {
+        <div class="charts-grid">
+          <div class="chart-card chart-card--wide">
+            <div class="chart-header">
+              <h3>Aylık Gelir Trendi</h3>
+              <span class="chart-subtitle">Son 6 ay</span>
+            </div>
+            <div class="chart-body">
+              <canvas #revenueChartCanvas></canvas>
+            </div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-header">
+              <h3>Sipariş Durumları</h3>
+              <span class="chart-subtitle">Genel dağılım</span>
+            </div>
+            <div class="chart-body">
+              <canvas #orderStatusChartCanvas></canvas>
+            </div>
+          </div>
+        </div>
+      }
+
       <!-- Recent Section -->
       <div class="section-card">
         <div class="section-header">

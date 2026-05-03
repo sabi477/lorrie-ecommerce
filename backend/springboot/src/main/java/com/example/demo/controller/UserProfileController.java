@@ -62,6 +62,14 @@ public class UserProfileController {
         return ResponseEntity.ok().build();
     }
 
+    @DeleteMapping
+    public ResponseEntity<Void> deleteAccount(Principal principal) {
+        User user = findUser(principal);
+        user.setDeleted(true);
+        userRepo.save(user);
+        return ResponseEntity.ok().build();
+    }
+
     // ── Addresses ──────────────────────────────────────────────────
 
     @GetMapping("/addresses")

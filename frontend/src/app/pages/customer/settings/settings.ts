@@ -63,8 +63,13 @@ export class CustomerSettings implements OnInit {
   saveProfile() {
     this.profileSvc.updatePhone(this.profile.phone).subscribe({
       next: () => {
+        this.auth.setPhone(this.profile.phone);
         this.saved = true;
         setTimeout(() => this.saved = false, 2500);
+      },
+      error: (err) => {
+        console.error('Phone save error:', err);
+        alert(err.error?.message || 'Telefon kaydedilemedi');
       }
     });
   }
@@ -235,4 +240,16 @@ export class CustomerSettings implements OnInit {
   }
 
   maskedCard(lastFour: string) { return `•••• •••• •••• ${lastFour}`; }
+
+  deleteAccount() {
+    this.profileSvc.deleteAccount().subscribe({
+      next: () => {
+        this.auth.logout();
+        window.location.href = '/';
+      },
+      error: (err) => {
+        alert(err.error?.message || 'Hesap silinemedi');
+      }
+    });
+  }
 }

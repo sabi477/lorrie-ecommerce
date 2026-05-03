@@ -174,21 +174,7 @@
 
       <div class="pd-divider"></div>
 
-      <!-- Stok -->
-      <div class="pd-stock-row" [class.low]="stockQuantity < 10">
-        @if (stockQuantity > 0) {
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <polyline points="20 6 9 17 4 12"/>
-          </svg>
-          @if (stockQuantity < 10) {
-            Son {{ stockQuantity }} ürün!
-          } @else {
-            Stokta var ({{ stockQuantity }} adet)
-          }
-        } @else {
-          Stokta yok
-        }
-      </div>
+      
 
       <!-- Adet -->
       <div class="pd-qty-row">

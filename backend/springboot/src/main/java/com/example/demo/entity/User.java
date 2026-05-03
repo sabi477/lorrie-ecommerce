@@ -31,6 +31,9 @@ public class User {
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    @Column(nullable = false)
+    private boolean deleted = false;
+
     public enum Role {
         CUSTOMER, SELLER, ADMIN
     }

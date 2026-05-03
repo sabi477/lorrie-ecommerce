@@ -103,6 +103,9 @@ public class ReviewController {
 
         // Yorum metni sanitizasyonu
         String cleanComment = InputSanitizer.sanitize(request.comment());
+        if (InputSanitizer.containsProfanity(request.comment(), 5, 1000)) {
+            return ResponseEntity.badRequest().body("Yorumunuz uygunsuz içerik barındırdığı için kabul edilemez.");
+        }
         if (!InputSanitizer.isValid(cleanComment, 5, 1000)) {
             return ResponseEntity.badRequest().body("Yorum en az 5, en fazla 1000 karakter olmalıdır. HTML, script veya kod içeremez.");
         }

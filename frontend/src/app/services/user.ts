@@ -24,8 +24,9 @@ export class UserService {
     return new HttpHeaders({ Authorization: `Bearer ${this.auth.getToken()}` });
   }
 
-  getAll(): Observable<User[]> {
-    return this.http.get<User[]>(this.api, { headers: this.headers() });
+  getAll(role?: UserRole): Observable<User[]> {
+    const url = role ? `${this.api}?role=${role}` : this.api;
+    return this.http.get<User[]>(url, { headers: this.headers() });
   }
 
   updateRole(userId: number, role: UserRole): Observable<User> {

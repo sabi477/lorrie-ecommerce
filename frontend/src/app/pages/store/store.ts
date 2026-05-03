@@ -144,14 +144,6 @@ export class Store implements OnInit, AfterViewInit, OnDestroy {
       return this.visualSearchResults;
     }
 
-    const q = this.searchQuery.trim().toLowerCase();
-    if (q) {
-      if (this.searchResults.length > 0) {
-        return this.searchResults;
-      }
-      return [];
-    }
-
     let list = this.activeTab === 'Tümü' || this.activeTab === 'İndirim'
       ? [...this.allProducts]
       : this.allProducts.filter(p => p.category === this.activeTab);

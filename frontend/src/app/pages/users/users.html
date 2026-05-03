@@ -9,7 +9,7 @@
       </div>
       <div class="topbar-right">
         <span class="role-badge-chip role-badge--admin">Admin</span>
-        <span class="record-count">{{ users.length }} kullanıcı</span>
+        <span class="record-count">{{ filteredUsers.length }} kullanıcı</span>
       </div>
     </header>
 
@@ -17,7 +17,14 @@
       <div class="section-card">
         <div class="section-header">
           <h3>Sistemdeki Kullanıcılar</h3>
-          <span class="badge">{{ users.length }} Toplam</span>
+          <div class="header-actions">
+            <select class="role-filter" [(ngModel)]="selectedRole" (change)="onRoleFilterChange()">
+              @for (opt of filterRoleOptions; track opt) {
+                <option [value]="opt">{{ opt ? roleLabel[opt] : 'Tümü' }}</option>
+              }
+            </select>
+            <span class="badge">{{ filteredUsers.length }} Kullanıcı</span>
+          </div>
         </div>
 
         @if (loading) {
@@ -42,7 +49,7 @@
                 </tr>
               </thead>
               <tbody>
-                @for (user of users; track user.id) {
+                @for (user of filteredUsers; track user.id) {
                   <tr>
                     <td>
                       <div class="user-info">
