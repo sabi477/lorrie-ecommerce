@@ -12,6 +12,7 @@ import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -22,6 +23,19 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class ProductController {
 
+    public record BulkProductUpdateRequest(
+            List<Long> ids,
+            String name,
+            String description,
+            BigDecimal price,
+            Integer stockQuantity,
+            String imageUrl,
+            String thumbnail,
+            String brand,
+            String sku,
+            Double discountPercentage
+    ) {}
+
     private final ProductRepository productRepository;
 
     @GetMapping
@@ -30,16 +44,19 @@ public class ProductController {
             @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
             @RequestParam(value = "sellerId", required = false) Long sellerId,
             @RequestParam(value = "search", required = false) String search) {
+        List<Product> products;
         if (sellerId != null) {
-            return productRepository.findBySellerId(sellerId);
+            products = productRepository.findBySellerId(sellerId);
+        } else if (search != null && !search.trim().isEmpty()) {
+            products = productRepository.findByNameContainingIgnoreCase(search.trim());
+        } else if (limit != null && limit > 0) {
+            products = productRepository.findAll(org.springframework.data.domain.PageRequest.of(page, limit)).getContent();
+        } else {
+            products = productRepository.findAll();
         }
-        if (search != null && !search.trim().isEmpty()) {
-            return productRepository.findByNameContainingIgnoreCase(search.trim());
-        }
-        if (limit != null && limit > 0) {
-            return productRepository.findAll(org.springframework.data.domain.PageRequest.of(page, limit)).getContent();
-        }
-        return productRepository.findAll();
+        return products.stream()
+                .filter(p -> p.getStockQuantity() != null && p.getStockQuantity() > 0)
+                .toList();
     }
 
     @GetMapping("/{id}")
@@ -157,6 +174,35 @@ public class ProductController {
                     return ResponseEntity.ok(productRepository.save(existing));
                 })
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PatchMapping("/bulk")
+    public ResponseEntity<List<Product>> bulkUpdate(@RequestBody BulkProductUpdateRequest request) {
+        List<Product> updated = new ArrayList<>();
+        for (Long id : request.ids) {
+            productRepository.findById(id).ifPresent(product -> {
+                if (request.name != null && !request.name.isEmpty()) product.setName(request.name);
+                if (request.description != null) product.setDescription(request.description);
+                if (request.price != null) product.setPrice(request.price);
+                if (request.stockQuantity != null) product.setStockQuantity(request.stockQuantity);
+                if (request.imageUrl != null) product.setImageUrl(request.imageUrl);
+                if (request.thumbnail != null) product.setThumbnail(request.thumbnail);
+                if (request.brand != null) product.setBrand(request.brand);
+                if (request.sku != null) product.setSku(request.sku);
+                if (request.discountPercentage != null) product.setDiscountPercentage(request.discountPercentage);
+                updated.add(productRepository.save(product));
+            });
+        }
+        return ResponseEntity.ok(updated);
+    }
+
+    @DeleteMapping("/bulk")
+    public ResponseEntity<Void> bulkDelete(@RequestBody Map<String, List<Long>> body) {
+        List<Long> ids = body.get("ids");
+        if (ids != null) {
+            productRepository.deleteAllById(ids);
+        }
+        return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{id}")

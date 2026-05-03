@@ -1,4 +1,4 @@
-import { Component, OnInit, HostListener, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, HostListener, ChangeDetectorRef, inject } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -7,6 +7,9 @@ import { AuthService } from '../../services/auth';
 import { CartService } from '../../services/cart';
 import { FavoritesService } from '../../services/favorites';
 import { ProductService, Product } from '../../services/product';
+import { LocaleService } from '../../../i18n/locale.service';
+import { TranslatePipe } from '../../../i18n/translate.pipe';
+import { LanguageSwitcherComponent } from '../language-switcher/language-switcher';
 
 export interface StoreProduct {
   id: number;
@@ -37,7 +40,7 @@ function mapProduct(p: Product): StoreProduct {
 @Component({
   selector: 'app-customer-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, CommonModule, FormsModule],
+  imports: [RouterOutlet, RouterLink, CommonModule, FormsModule, TranslatePipe, LanguageSwitcherComponent],
   templateUrl: './customer-layout.html',
   styleUrl: './customer-layout.scss',
 })
@@ -57,6 +60,7 @@ export class CustomerLayout implements OnInit {
     private cdr: ChangeDetectorRef,
     public cartSvc: CartService,
     public favSvc: FavoritesService,
+    public localeService: LocaleService,
   ) {
     this.searchSubject.pipe(
       debounceTime(300),

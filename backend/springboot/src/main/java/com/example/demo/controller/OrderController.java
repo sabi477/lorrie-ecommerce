@@ -96,6 +96,10 @@ public class OrderController {
             Product product = productRepository.findById(itemRequest.productId())
                     .orElseThrow(() -> new IllegalArgumentException("Product not found: " + itemRequest.productId()));
 
+            int currentStock = product.getStockQuantity() != null ? product.getStockQuantity() : 0;
+            product.setStockQuantity(currentStock - itemRequest.quantity());
+            productRepository.save(product);
+
             OrderItem item = new OrderItem();
             item.setOrder(savedOrder);
             item.setProduct(product);

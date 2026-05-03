@@ -641,6 +641,7 @@ a { text-decoration: none; color: inherit; cursor: pointer; }
   animation: cardUp 0.38s cubic-bezier(0.16,1,0.3,1) var(--delay, 0ms) forwards;
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
   box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  min-height: 420px;
 
   &:hover {
     transform: translateY(-4px);
@@ -737,6 +738,7 @@ a { text-decoration: none; color: inherit; cursor: pointer; }
   flex-direction: column;
   gap: 0.25rem;
   flex: 1;
+  min-height: 120px;
 }
 
 .pcard__brand {
@@ -1182,5 +1184,194 @@ a { text-decoration: none; color: inherit; cursor: pointer; }
       transition: color 0.15s;
       &:hover { color: $text; }
     }
+  }
+}
+
+// ─── Search Page ─────────────────────────────────────────────────
+.search-page {
+  display: flex;
+  gap: 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 1.5rem;
+  align-items: flex-start;
+}
+
+.search-sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: $radius;
+  padding: 1.1rem;
+  position: sticky;
+  top: 80px;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid $border;
+
+    h3 {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: $text;
+    }
+  }
+
+  &__clear {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: $primary;
+    cursor: pointer;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    transition: background 0.12s;
+
+    &:hover { background: $primary-lt; }
+  }
+}
+
+.search-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.search-header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+
+  h2 {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: $text;
+  }
+}
+
+.search-count {
+  font-size: 0.82rem;
+  color: $muted;
+  font-weight: 600;
+}
+
+.filter-group {
+  margin-bottom: 1.1rem;
+
+  &__title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: $text;
+    margin-bottom: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+}
+
+.filter-select {
+  width: 100%;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid $border;
+  border-radius: $radius-sm;
+  background: $surface;
+  font-size: 0.82rem;
+  font-family: $font;
+  color: $text;
+  cursor: pointer;
+  outline: none;
+
+  &:focus { border-color: $primary; }
+}
+
+.filter-checkboxes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.filter-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+  color: $text;
+  cursor: pointer;
+
+  input[type="checkbox"] {
+    width: 15px;
+    height: 15px;
+    accent-color: $primary;
+    cursor: pointer;
+  }
+}
+
+.filter-price {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  span {
+    color: $muted;
+    font-size: 0.8rem;
+  }
+
+  &__input {
+    flex: 1;
+    padding: 0.45rem 0.55rem;
+    border: 1px solid $border;
+    border-radius: $radius-sm;
+    font-size: 0.82rem;
+    font-family: $font;
+    outline: none;
+    width: 0;
+
+    &:focus { border-color: $primary; }
+    &::placeholder { color: #9ca3af; }
+  }
+}
+
+.filter-rating {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+
+  &__btn {
+    padding: 0.3rem 0.6rem;
+    border: 1px solid $border;
+    border-radius: 100px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: $muted;
+    background: $surface;
+    cursor: pointer;
+    transition: all 0.12s;
+
+    &:hover { border-color: $primary; color: $primary; }
+
+    &--active {
+      background: $primary;
+      border-color: $primary;
+      color: #fff;
+    }
+  }
+}
+
+.filter-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+  color: $text;
+  cursor: pointer;
+
+  input[type="checkbox"] {
+    width: 15px;
+    height: 15px;
+    accent-color: $primary;
+    cursor: pointer;
   }
 }

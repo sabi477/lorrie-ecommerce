@@ -30,11 +30,20 @@
         <input
           class="navbar__search-input"
           type="text"
-          placeholder="Ürün, kategori veya marka ara"
+          placeholder="{{ 'store.searchPlaceholder' | translate }}"
           [ngModel]="searchQuery"
           (ngModelChange)="onSearchInput($event)"
+          (keydown.enter)="onEnter($any($event))"
           (focus)="onSearchFocus()" />
-        <button class="navbar__search-btn">Ara</button>
+        <button class="navbar__search-btn" (click)="search()">{{ 'store.search' | translate }}</button>
+        <label class="navbar__search-camera" title="Görsel ile ara">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M8 8h.01M8 16h.01M16 8h.01M16 16h.01"/>
+          </svg>
+          <input type="file" accept="image/*" hidden (change)="onImageSearch($event)" />
+        </label>
       </div>
 
       @if (isSearchDropdownVisible && searchQuery.trim().length > 0) {
@@ -42,7 +51,7 @@
           @if (loadingSearch) {
             <div class="search-dropdown__loading">
               <div class="loading-spinner loading-spinner--sm"></div>
-              <span>Aranıyor...</span>
+              <span>{{ 'common.searching' | translate }}</span>
             </div>
           } @else if (searchResults.length > 0) {
             @for (p of searchResults.slice(0, 8); track p.id) {
@@ -55,7 +64,7 @@
               </a>
             }
           } @else {
-            <div class="search-dropdown__empty">Ürün bulunamadı</div>
+            <div class="search-dropdown__empty">{{ 'common.noResults' | translate }}</div>
           }
         </div>
       }
@@ -73,7 +82,7 @@
         <div class="search-dropdown">
           <div class="search-dropdown__loading">
             <div class="loading-spinner loading-spinner--sm"></div>
-            <span>Görsel aranıyor...</span>
+            <span>{{ 'common.imageSearching' | translate }}</span>
           </div>
         </div>
       }
@@ -82,8 +91,8 @@
       @if (visualSearchResults.length > 0) {
         <div class="visual-search-results">
           <div class="visual-search-results__header">
-            <span>Görsel Arama Sonuçları</span>
-            <button (click)="clearVisualSearch()">Temizle</button>
+            <span>{{ 'store.visualSearchResults' | translate }}</span>
+            <button (click)="clearVisualSearch()">{{ 'store.clear' | translate }}</button>
           </div>
         </div>
       }
@@ -99,7 +108,7 @@
             </svg>
             @if (favSvc.count() > 0) { <span class="cart-badge">{{ favSvc.count() }}</span> }
           </div>
-          <span>Favorilerim</span>
+          <span>{{ 'nav.favorites' | translate }}</span>
         </a>
 
         <a class="navbar__cart" routerLink="/customer/cart">
@@ -110,7 +119,7 @@
             </svg>
             @if (cartSvc.count() > 0) { <span class="cart-badge">{{ cartSvc.count() }}</span> }
           </div>
-          <span>Sepetim</span>
+          <span>{{ 'nav.cart' | translate }}</span>
         </a>
 
         @if (isLoggedIn) {
@@ -124,26 +133,26 @@
               @if (userRole === 'CUSTOMER') {
                 <a routerLink="/customer/profile">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                  Profilim
+                  {{ 'nav.profile' | translate }}
                 </a>
                 <a routerLink="/customer/orders">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-                  Siparişlerim
+                  {{ 'nav.myOrders' | translate }}
                 </a>
                 <a routerLink="/customer/settings">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-                  Ayarlar
+                  {{ 'nav.settings' | translate }}
                 </a>
               } @else {
                 <a routerLink="/dashboard">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-                  Dashboard
+                  {{ 'nav.dashboard' | translate }}
                 </a>
               }
               <div class="navbar__dropdown-divider"></div>
               <button class="navbar__dropdown-logout" (click)="logout()">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                Çıkış Yap
+                {{ 'common.logout' | translate }}
               </button>
             </div>
           </div>
@@ -153,13 +162,135 @@
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
               <circle cx="12" cy="7" r="4"/>
             </svg>
-            Giriş Yap
+            {{ 'common.login' | translate }}
           </button>
         }
       </div>
 
     </div>
   </header>
+
+  @if (isSearchPage) {
+  <div class="search-page">
+    <aside class="search-sidebar">
+      <div class="search-sidebar__header">
+        <h3>{{ 'store.filters' | translate }}</h3>
+        <button class="search-sidebar__clear" (click)="clearFilters()">{{ 'store.clearFilters' | translate }}</button>
+      </div>
+
+      <div class="filter-group">
+        <h4 class="filter-group__title">{{ 'store.sorting' | translate }}</h4>
+        <select class="filter-select" [(ngModel)]="sortBy">
+          <option value="relevance">{{ 'store.sortRelevance' | translate }}</option>
+          <option value="price_asc">{{ 'store.priceLowHigh' | translate }}</option>
+          <option value="price_desc">{{ 'store.priceHighLow' | translate }}</option>
+          <option value="rating">{{ 'store.highestRated' | translate }}</option>
+          <option value="newest">{{ 'store.newest' | translate }}</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <h4 class="filter-group__title">{{ 'store.category' | translate }}</h4>
+        <div class="filter-checkboxes">
+          @for (cat of availableCategories; track cat) {
+            <label class="filter-checkbox">
+              <input type="checkbox" [checked]="selectedCategories.includes(cat)" (change)="toggleCategory(cat)" />
+              <span>{{ cat }}</span>
+            </label>
+          }
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <h4 class="filter-group__title">{{ 'store.priceRange' | translate }}</h4>
+        <div class="filter-price">
+          <input type="number" class="filter-price__input" placeholder="Min" [(ngModel)]="minPrice" />
+          <span>-</span>
+          <input type="number" class="filter-price__input" placeholder="Max" [(ngModel)]="maxPrice" />
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <h4 class="filter-group__title">{{ 'store.minimumRating' | translate }}</h4>
+        <div class="filter-rating">
+          @for (r of [4, 3, 2, 1]; track r) {
+            <button class="filter-rating__btn" [class.filter-rating__btn--active]="minRating === r" (click)="minRating = minRating === r ? null : r">
+              {{ r }}+ ★
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <label class="filter-toggle">
+          <input type="checkbox" [(ngModel)]="onlyDiscounted" />
+          <span>{{ 'store.onlyDiscounted' | translate }}</span>
+        </label>
+      </div>
+    </aside>
+
+    <main class="search-main">
+      @if (searchKeyword) {
+        <div class="search-header">
+          <h2>"{{ searchKeyword }}" {{ 'store.resultsFor' | translate }}</h2>
+          <span class="search-count">{{ searchFilteredProducts.length }} {{ 'store.productsFound' | translate }}</span>
+        </div>
+      }
+
+      @if (loading) {
+        <div class="loading-state">
+          <div class="loading-spinner"></div>
+          <p>{{ 'store.loadingProducts' | translate }}</p>
+        </div>
+      } @else if (searchFilteredProducts.length === 0) {
+        <div class="empty-state">
+          <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <p>{{ 'store.noProductsFound' | translate }}</p>
+          <button (click)="clearFilters(); searchKeyword = ''">{{ 'store.clearFilters' | translate }}</button>
+        </div>
+      } @else {
+        <div class="product-grid">
+          @for (p of searchFilteredProducts; track p.id; let i = $index) {
+            <article class="pcard" [style.--delay]="(i > 24 ? 300 : i * 12) + 'ms'" (click)="router.navigate(['/product-detail', p.id])">
+              <div class="pcard__img" [style.background]="p.bg">
+                @if (p.badge) {
+                  <span class="pcard__badge pcard__badge--{{ p.badge === 'EN ÇOK SATAN' ? 'hot' : p.badge === 'YENİ' ? 'new' : 'sale' }}">
+                    {{ p.badge }}
+                  </span>
+                }
+                <button class="pcard__fav" [class.pcard__fav--on]="favSvc.isFavorited(p.id)" (click)="toggleFav(p, $event)">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" [attr.fill]="favSvc.isFavorited(p.id) ? 'currentColor' : 'none'"/></svg>
+                </button>
+                <img class="pcard__photo" [src]="p.imageUrl" [alt]="p.name" loading="lazy" onerror="this.src='https://picsum.photos/seed/0/400/400'" />
+              </div>
+              <div class="pcard__body">
+                <p class="pcard__brand">{{ p.sellerName ?? p.brand }}</p>
+                <p class="pcard__name">{{ p.name }}</p>
+                <div class="pcard__stars">
+                  @for (s of stars(p.rating); track s) {
+                    <span class="star" [class.star--on]="s <= p.rating">★</span>
+                  }
+                  <span class="pcard__rc">({{ p.reviews.toLocaleString('tr-TR') }})</span>
+                </div>
+                <div class="pcard__prices">
+                  <span class="pcard__price">{{ formatPrice(p.price) }}</span>
+                  @if (p.originalPrice) {
+                    <span class="pcard__old">{{ formatPrice(p.originalPrice) }}</span>
+                    <span class="pcard__disc">%{{ discount(p) }}</span>
+                  }
+                </div>
+              </div>
+              <div class="pcard__btns">
+                <button class="btn-add" (click)="addToCart(p, $event)">{{ 'store.addToCart' | translate }}</button>
+                <button class="btn-buy" (click)="buyNow(p, $event)">{{ 'store.buyNow' | translate }}</button>
+              </div>
+            </article>
+          }
+        </div>
+      }
+    </main>
+  </div>
+  }
 
   @if (sellerId !== null) {
     <section class="seller-hero">
@@ -178,6 +309,7 @@
   }
 
   <!-- ══════════ CATEGORY TABS ══════════════════════════════════ -->
+  @if (!isSearchPage) {
   <nav class="cattabs">
     <div class="cattabs__inner">
       @for (tab of tabs; track tab) {
@@ -192,6 +324,7 @@
       }
     </div>
   </nav>
+  }
 
   <!-- ══════════ LOADING ══════════════════════════════════════════ -->
   @if (loading) {
@@ -202,8 +335,7 @@
   }
 
   <!-- ══════════ POPULAR SECTION ════════════════════════════════ -->
-  @if (!loading) {
-  @if (sellerId === null) {
+  @if (!loading && !isSearchPage && sellerId === null) {
   <section class="section">
     <div class="section__head">
       <h2 class="section__title">Popüler Ürünler</h2>
@@ -225,7 +357,7 @@
                  onerror="this.src='https://picsum.photos/seed/0/400/400'" />
           </div>
           <div class="pcard__body">
-            <p class="pcard__brand">{{ p.brand }}</p>
+            <p class="pcard__brand">{{ p.sellerName ?? p.brand }}</p>
             <p class="pcard__name">{{ p.name }}</p>
             <div class="pcard__stars">
               @for (s of stars(p.rating); track s) {
@@ -255,6 +387,7 @@
   }
 
   <!-- ══════════ ALL / FILTERED PRODUCTS ═══════════════════════ -->
+  @if (!isSearchPage) {
   <section class="section">
     <div class="section__head">
       <h2 class="section__title">
@@ -278,7 +411,7 @@
                  onerror="this.src='https://picsum.photos/seed/0/400/400'" />
           </div>
           <div class="pcard__body">
-            <p class="pcard__brand">{{ p.brand }}</p>
+            <p class="pcard__brand">{{ p.sellerName ?? p.brand }}</p>
             <p class="pcard__name">{{ p.name }}</p>
             <div class="pcard__stars">
               @for (s of stars(p.rating); track s) {
@@ -319,10 +452,10 @@
       <div #loadMoreTrigger class="load-more-trigger" aria-hidden="true"></div>
     }
   </section>
-  } <!-- end @if (!loading) -->
+  }
 
   <!-- ══════════ CTA BANNER ════════════════════════════════════ -->
-  @if (sellerId === null) {
+  @if (!isSearchPage && sellerId === null) {
   <section class="cta-banner">
     <div class="cta-banner__left">
       <h2>Yeni Sezonu<br>Keşfet</h2>

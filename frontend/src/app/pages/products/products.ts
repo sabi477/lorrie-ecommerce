@@ -2,6 +2,7 @@ import { Component, CUSTOM_ELEMENTS_SCHEMA, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Sidebar } from '../../shared/sidebar/sidebar';
 import { ProductEditDialog } from '../../shared/product-edit-dialog/product-edit-dialog';
+import { ProductBulkEditDialog } from '../../shared/product-bulk-edit-dialog/product-bulk-edit-dialog';
 import { AuthService } from '../../services/auth';
 import { ProductService, Product } from '../../services/product';
 
@@ -9,7 +10,7 @@ type AppRole = 'CUSTOMER' | 'CORPORATE' | 'ADMIN' | 'SELLER';
 
 @Component({
   selector: 'app-products',
-  imports: [CommonModule, Sidebar, ProductEditDialog],
+  imports: [CommonModule, Sidebar, ProductEditDialog, ProductBulkEditDialog],
   templateUrl: './products.html',
   styleUrl: './products.scss',
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
@@ -20,6 +21,8 @@ export class Products implements OnInit {
   loading = true;
   error = '';
   editingProduct: Product | null = null;
+  selectedIds = new Set<number>();
+  showBulkEdit = false;
 
   constructor(private authService: AuthService, private productService: ProductService) {
     this.role = (authService.getRole() as AppRole) ?? 'CUSTOMER';
@@ -87,5 +90,56 @@ export class Products implements OnInit {
 
   onDialogClosed(): void {
     this.editingProduct = null;
+  }
+
+  toggleSelect(id: number, event: MouseEvent): void {
+    event.stopPropagation();
+    if (this.selectedIds.has(id)) {
+      this.selectedIds.delete(id);
+    } else {
+      this.selectedIds.add(id);
+    }
+  }
+
+  toggleSelectAll(event: Event): void {
+    event.stopPropagation();
+    if (this.selectedIds.size === this.products.length) {
+      this.selectedIds.clear();
+    } else {
+      this.selectedIds = new Set(this.products.map(p => p.id));
+    }
+  }
+
+  get selectedCount(): number { return this.selectedIds.size; }
+
+  isSelected(id: number): boolean { return this.selectedIds.has(id); }
+
+  openBulkEdit(): void { this.showBulkEdit = true; }
+
+  get selectedProducts(): Product[] {
+    return this.products.filter(p => this.selectedIds.has(p.id));
+  }
+
+  onBulkEditSaved(updated: Product[]): void {
+    updated.forEach(p => {
+      const idx = this.products.findIndex(pr => pr.id === p.id);
+      if (idx !== -1) this.products[idx] = p;
+    });
+    this.selectedIds.clear();
+    this.showBulkEdit = false;
+  }
+
+  onBulkEditClosed(): void { this.showBulkEdit = false; }
+
+  bulkDelete(): void {
+    const ids = Array.from(this.selectedIds);
+    if (confirm(`${ids.length} ürün silinsin mi?`)) {
+      this.productService.bulkDelete(ids).subscribe({
+        next: () => {
+          this.products = this.products.filter(p => !ids.includes(p.id));
+          this.selectedIds.clear();
+        }
+      });
+    }
   }
 }

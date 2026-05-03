@@ -29,6 +29,7 @@ import { SellerOrderDetail } from './pages/seller/order-detail/order-detail';
 
 export const routes: Routes = [
   { path: '', component: Store },
+  { path: 'search', component: Store },
   { path: 'login', component: Login },
   { path: 'register', component: Register },
 

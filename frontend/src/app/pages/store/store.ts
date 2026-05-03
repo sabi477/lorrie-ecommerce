@@ -9,6 +9,7 @@ import {
   OnInit,
   ViewChild,
   HostListener,
+  inject,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -18,6 +19,8 @@ import { AuthService } from '../../services/auth';
 import { CartService } from '../../services/cart';
 import { FavoritesService } from '../../services/favorites';
 import { ProductService, Product } from '../../services/product';
+import { LocaleService } from '../../../i18n/locale.service';
+import { TranslatePipe } from '../../../i18n/translate.pipe';
 
 export interface StoreProduct {
   id: number;
@@ -35,6 +38,7 @@ export interface StoreProduct {
   favorited: boolean;
   stock: number;
   icon: string;
+  sellerName?: string | null;
 }
 
 const CATEGORY_PALETTE: Record<string, { bg: string; accent: string }> = {
@@ -90,12 +94,13 @@ function mapProduct(p: Product, index: number): StoreProduct {
     favorited: false,
     stock: p.stockQuantity,
     icon: '',
+    sellerName: p.seller?.fullName ?? p.sellerName ?? null,
   };
 }
 
 @Component({
   selector: 'app-store',
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, TranslatePipe],
   templateUrl: './store.html',
   styleUrl: './store.scss',
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
@@ -128,6 +133,23 @@ export class Store implements OnInit, AfterViewInit, OnDestroy {
   private readonly onWindowScroll = () => this.onScroll();
   private readonly searchSubject = new Subject<string>();
 
+  isSearchPage = false;
+  searchKeyword = '';
+  selectedCategories: string[] = [];
+  minPrice: number | null = null;
+  maxPrice: number | null = null;
+  minRating: number | null = null;
+  onlyDiscounted = false;
+  sortBy: 'relevance' | 'price_asc' | 'price_desc' | 'rating' | 'newest' = 'relevance';
+
+  get availableCategories(): string[] {
+    return [...new Set(this.allProducts.map(p => p.category))].sort();
+  }
+
+  get availableBrands(): string[] {
+    return [...new Set(this.allProducts.map(p => p.brand).filter(b => b))].sort();
+  }
+
   @ViewChild('loadMoreTrigger')
   set loadMoreTriggerElement(element: ElementRef<HTMLElement> | undefined) {
     this.loadMoreTrigger = element;
@@ -139,22 +161,74 @@ export class Store implements OnInit, AfterViewInit, OnDestroy {
   allProducts: StoreProduct[] = [];
   searchResults: StoreProduct[] = [];
 
+  get popularProducts(): StoreProduct[] {
+    return [...this.allProducts].sort((a, b) => b.reviews - a.reviews).slice(0, 6);
+  }
+
+  get searchFilteredProducts(): StoreProduct[] {
+    let result = [...this.allProducts];
+
+    if (this.searchKeyword) {
+      const kw = this.searchKeyword.toLowerCase();
+      result = result.filter(p =>
+        p.name.toLowerCase().includes(kw) ||
+        p.brand.toLowerCase().includes(kw) ||
+        p.category.toLowerCase().includes(kw)
+      );
+    }
+
+    if (this.selectedCategories.length > 0) {
+      result = result.filter(p => this.selectedCategories.includes(p.category));
+    }
+
+    if (this.minPrice !== null) {
+      result = result.filter(p => p.price >= this.minPrice!);
+    }
+
+    if (this.maxPrice !== null) {
+      result = result.filter(p => p.price <= this.maxPrice!);
+    }
+
+    if (this.minRating !== null) {
+      result = result.filter(p => p.rating >= this.minRating!);
+    }
+
+    if (this.onlyDiscounted) {
+      result = result.filter(p => p.originalPrice !== undefined);
+    }
+
+    switch (this.sortBy) {
+      case 'price_asc':
+        result.sort((a, b) => a.price - b.price);
+        break;
+      case 'price_desc':
+        result.sort((a, b) => b.price - a.price);
+        break;
+      case 'rating':
+        result.sort((a, b) => b.rating - a.rating);
+        break;
+      case 'newest':
+        result.sort((a, b) => b.id - a.id);
+        break;
+    }
+
+    return result;
+  }
+
   get filteredProducts(): StoreProduct[] {
     if (this.visualSearchResults.length > 0) {
       return this.visualSearchResults;
     }
 
+    const popularIds = new Set(this.popularProducts.map(p => p.id));
+
     let list = this.activeTab === 'Tümü' || this.activeTab === 'İndirim'
-      ? [...this.allProducts]
-      : this.allProducts.filter(p => p.category === this.activeTab);
+      ? [...this.allProducts].filter(p => !popularIds.has(p.id))
+      : this.allProducts.filter(p => p.category === this.activeTab && !popularIds.has(p.id));
 
     if (this.activeTab === 'İndirim') list = list.filter(p => p.originalPrice);
 
     return list;
-  }
-
-  get popularProducts(): StoreProduct[] {
-    return [...this.allProducts].sort((a, b) => b.reviews - a.reviews).slice(0, 6);
   }
 
   constructor(
@@ -166,6 +240,7 @@ export class Store implements OnInit, AfterViewInit, OnDestroy {
     public cartSvc: CartService,
     public favSvc: FavoritesService,
     private ngZone: NgZone,
+    public localeService: LocaleService,
   ) {
     this.searchSubject.pipe(
       debounceTime(300),
@@ -202,6 +277,15 @@ export class Store implements OnInit, AfterViewInit, OnDestroy {
     this.userRole = this.authService.getRole() ?? '';
 
     this.favSvc.load();
+
+    this.route.queryParamMap.subscribe(qp => {
+      const q = qp.get('q');
+      this.isSearchPage = this.router.url.startsWith('/search');
+      if (this.isSearchPage && q) {
+        this.searchKeyword = q;
+      }
+    });
+
     this.route.paramMap.subscribe(params => {
       const sellerId = Number(params.get('sellerId'));
       this.sellerId = Number.isFinite(sellerId) && sellerId > 0 ? sellerId : null;
@@ -325,15 +409,15 @@ export class Store implements OnInit, AfterViewInit, OnDestroy {
 
   toggleFav(p: StoreProduct, e: Event): void {
     e.stopPropagation();
-    if (!this.isLoggedIn) { this.toast('Favorilere eklemek için giriş yapın'); return; }
+    if (!this.isLoggedIn) { this.toast(this.localeService.t('store.pleaseLoginToFav')); return; }
     this.favSvc.toggle(p);
   }
 
   addToCart(p: StoreProduct, e?: Event): void {
     e?.stopPropagation();
-    if (!this.isLoggedIn) { this.toast('Sepete eklemek için giriş yapın'); return; }
+    if (!this.isLoggedIn) { this.toast(this.localeService.t('store.pleaseLoginToCart')); return; }
     this.cartSvc.add(p);
-    this.toast(`"${p.name}" sepete eklendi`);
+    this.toast(`"${p.name}" ${this.localeService.t('store.addedToCart')}`);
   }
 
   buyNow(p: StoreProduct, e?: Event) {
@@ -416,5 +500,33 @@ export class Store implements OnInit, AfterViewInit, OnDestroy {
     this.visualSearchPreview = '';
     this.visualSearchResults = [];
     this.loadingVisualSearch = false;
+  }
+
+  clearFilters(): void {
+    this.selectedCategories = [];
+    this.minPrice = null;
+    this.maxPrice = null;
+    this.minRating = null;
+    this.onlyDiscounted = false;
+    this.sortBy = 'relevance';
+  }
+
+  toggleCategory(cat: string): void {
+    const idx = this.selectedCategories.indexOf(cat);
+    if (idx >= 0) {
+      this.selectedCategories.splice(idx, 1);
+    } else {
+      this.selectedCategories.push(cat);
+    }
+  }
+
+  search(): void {
+    if (this.searchQuery.trim()) {
+      this.router.navigate(['/search'], { queryParams: { q: this.searchQuery } });
+    }
+  }
+
+  onEnter(e: KeyboardEvent): void {
+    if (e.key === 'Enter') this.search();
   }
 }

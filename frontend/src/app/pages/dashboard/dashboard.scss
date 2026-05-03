@@ -216,7 +216,8 @@ bl-button::part(button) {
 
 .chart-header {
   display: flex;
-  align-items: baseline;
+  align-items: center;
+  justify-content: space-between;
   gap: 0.75rem;
   margin-bottom: 1.25rem;
 
@@ -225,6 +226,29 @@ bl-button::part(button) {
     font-weight: 700;
     letter-spacing: -0.01em;
   }
+}
+
+.time-range-selector {
+  display: flex;
+  gap: 0.25rem;
+  background: var(--bg);
+  padding: 0.25rem;
+  border-radius: 8px;
+}
+
+.time-range-btn {
+  padding: 0.35rem 0.75rem;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:hover { color: var(--text); background: var(--surface); }
+  &.active { background: var(--surface); color: var(--accent); box-shadow: 0 1px 3px rgba(0,0,0,.08); }
 }
 
 .chart-subtitle {
@@ -321,4 +345,87 @@ bl-button::part(button) {
   color: #95a1b5;
   svg { opacity: 0.5; }
   p { font-size: 0.875rem; font-weight: 500; }
+}
+
+// ─── Top Sellers ─────────────────────────────────────────────────
+.top-sellers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+
+.top-seller-card {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 1rem 1.25rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+    border-color: var(--accent);
+  }
+
+  &.gold {
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+    border-color: #fcd34d;
+    .top-seller-rank { background: #f59e0b; color: #fff; }
+  }
+  &.silver {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-color: #cbd5e1;
+    .top-seller-rank { background: #64748b; color: #fff; }
+  }
+  &.bronze {
+    background: linear-gradient(135deg, #fef7f0 0%, #ffedd5 100%);
+    border-color: #fed7aa;
+    .top-seller-rank { background: #ea580c; color: #fff; }
+  }
+}
+
+.top-seller-rank {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--muted);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.top-seller-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.top-seller-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.top-seller-orders {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.top-seller-revenue {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--accent);
+  white-space: nowrap;
 }

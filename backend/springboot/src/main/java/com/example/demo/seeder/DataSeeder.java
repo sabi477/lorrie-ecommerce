@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Slf4j
@@ -52,7 +53,8 @@ public class DataSeeder implements CommandLineRunner {
 
         if (productRepository.count() > 0) {
             if (productRepository.existsByThumbnailIsNotNull()) {
-                log.info("DummyJSON data already seeded, skipping product seeding.");
+                log.info("DummyJSON data already seeded, adding fake customers and reviews...");
+                seedFakeCustomersAndReviews();
                 return;
             }
             log.info("Old products found (no thumbnails), clearing and re-seeding products...");
@@ -66,6 +68,7 @@ public class DataSeeder implements CommandLineRunner {
 
         log.info("Seeding database products from DummyJSON...");
         seedAllProducts();
+        seedFakeCustomersAndReviews();
         log.info("Seeding complete.");
     }
 
@@ -304,5 +307,125 @@ public class DataSeeder implements CommandLineRunner {
             .map(w -> Character.toUpperCase(w.charAt(0)) + w.substring(1))
             .reduce((a, b) -> a + " " + b)
             .orElse(slug);
+    }
+
+    private void seedFakeCustomersAndReviews() {
+        List<User> fakeCustomers = new ArrayList<>();
+        for (int i = 1; i <= 60; i++) {
+            String email = "fakecustomer" + i + "@fake.com";
+            Optional<User> existing = userRepository.findByEmail(email);
+            User customer;
+            if (existing.isEmpty()) {
+                customer = new User();
+                customer.setEmail(email);
+                customer.setFullName("Fake Customer " + i);
+                customer.setPassword(passwordEncoder.encode("fakepass123"));
+                customer.setRole(User.Role.CUSTOMER);
+                customer = userRepository.save(customer);
+            } else {
+                customer = existing.get();
+            }
+            fakeCustomers.add(customer);
+        }
+        log.info("Fake customers ready: {}", fakeCustomers.size());
+
+        List<Product> products = productRepository.findAll();
+        Random random = new Random(99);
+        int totalReviews = 0;
+
+        List<String> goodComments = Arrays.asList(
+            "Ürünü çok beğendim, kalitesi harika!",
+            "Kesinlikle tavsiye ederim, fiyatı da çok uygun.",
+            "Mükemmel ürün, beklentilerimi aştı.",
+            "Çok hızlı kargo, teşekkürler!",
+            "Ürün tam fotoğraftaki gibi geldi.",
+            "Bir daha alışveriş yapacağım, memnun kaldım.",
+            "Kalitesi beklediğimden daha iyi çıktı.",
+            "Paketleme çok özenliydi, teşekkürler.",
+            "Ürün tam zamanında geldi, sorunsuz.",
+            "Çok iyi bir alışveriş deneyimiydi.",
+            "Fiyatına göre çok iyi bir ürün.",
+            "Günlük kullanım için ideal.",
+            "Kesinlikle aldığınız paraa değer.",
+            "Seller'a teşekküt ederim, sorunsuz.",
+            "Ürün fotoğraftaki ile birebir aynı.",
+            "Kullanımı çok kolay ve pratik.",
+            "Uzun zamandır aradiğim üründü, mutluyum.",
+            "Kalite ve fiyat dengesi çok iyi.",
+            "Ürünü ikinci kez sipariş verdim, memnunum.",
+            "Herkese tavsiye edebileceğim bir ürün."
+        );
+
+        List<String> mediumComments = Arrays.asList(
+            "Ürün fena değil ama beklentimi tam karşılamadı.",
+            "Ortalama kalitede, fiyat ile uyumlu.",
+            "Idare eder, beklediğimden biraz farklı.",
+            "Kargo biraz gecikti ama ürün iyidir.",
+            "Ürün açıklaması ile biraz farklı.",
+            "Tam istediğim gibi değil ama kullanılabilir.",
+            "Biraz daha ucuz olabilirdi.",
+            "İş görüyor ama çokta başarılı değil.",
+            "ortalama bir ürün, idare eder.",
+            "Fiyatı biraz yüksek ama kalite iyi."
+        );
+
+        List<String> badComments = Arrays.asList(
+            "Ürün beklentilerimin çok altında.",
+            "Kargo çok gecikti ve paket hasarlıydı.",
+            "Ürün fotoğraftaki ile aynı değil.",
+            "Kalitesi çok düşük, paramı sokağa attım.",
+            "Bir daha bu satıcıdan alışveriş yapmayacağım.",
+            "Ürün kırıklı geldi, çok hayal kırıklığına uğradım.",
+            "Açıklama yanıltıcıydı, ürün farklı.",
+            "Çok kötü bir deneyim yaşadım.",
+            "Ürün hemen bozuldu, çok kalitesiz.",
+            "Satıcı sorunları çözmek için iletişime geçmedi."
+        );
+
+        for (Product product : products) {
+            int reviewCount = 20 + random.nextInt(21);
+            boolean isGoodProduct = true;
+
+            Set<Long> usedCustomerIds = new HashSet<>();
+            List<Review> productReviews = reviewRepository.findByProductId(product.getId());
+            for (Review r : productReviews) {
+                usedCustomerIds.add(r.getCustomer().getId());
+            }
+
+            int finalReviewCount = Math.min(reviewCount, fakeCustomers.size());
+            int added = 0;
+            List<User> shuffledCustomers = new ArrayList<>(fakeCustomers);
+            Collections.shuffle(shuffledCustomers, random);
+
+            for (User customer : shuffledCustomers) {
+                if (added >= finalReviewCount) break;
+                if (usedCustomerIds.contains(customer.getId())) continue;
+
+                Review review = new Review();
+                review.setProduct(product);
+                review.setCustomer(customer);
+
+                if (isGoodProduct) {
+                    review.setRating(4 + random.nextInt(2));
+                    review.setComment(goodComments.get(random.nextInt(goodComments.size())));
+                } else {
+                    int ratingRoll = random.nextInt(10);
+                    if (ratingRoll < 4) {
+                        review.setRating(1 + random.nextInt(2));
+                        review.setComment(badComments.get(random.nextInt(badComments.size())));
+                    } else {
+                        review.setRating(3);
+                        review.setComment(mediumComments.get(random.nextInt(mediumComments.size())));
+                    }
+                }
+
+                int daysAgo = random.nextInt(90);
+                review.setCreatedAt(LocalDateTime.now().minusDays(daysAgo));
+                reviewRepository.save(review);
+                added++;
+                totalReviews++;
+            }
+        }
+        log.info("Fake reviews seeded: {} total reviews for {} products", totalReviews, products.size());
     }
 }
