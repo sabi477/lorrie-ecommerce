@@ -1,4 +1,4 @@
-import { Component, CUSTOM_ELEMENTS_SCHEMA, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, CUSTOM_ELEMENTS_SCHEMA, OnInit, AfterViewInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth';
@@ -20,7 +20,7 @@ interface Stat { label: string; raw: number; icon: string; currency?: boolean; }
   styleUrl: './dashboard.scss',
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
-export class Dashboard implements OnInit, AfterViewInit {
+export class Dashboard implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('revenueChartCanvas') revenueChartRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('orderStatusChartCanvas') orderStatusChartRef!: ElementRef<HTMLCanvasElement>;
 
@@ -146,7 +146,7 @@ export class Dashboard implements OnInit, AfterViewInit {
             ticks: {
               color: '#6e7787',
               font: { size: 11 },
-              callback: (v) => '₺' + (v as number / 1000).toFixed(0) + 'k'
+              callback: (v: string | number) => '₺' + (Number(v) / 1000).toFixed(0) + 'k'
             }
           }
         },

@@ -22,9 +22,6 @@
   @if (isOpen) {
     <div class="chat-panel" #chatPanel [style.width.px]="panelWidth" [style.height.px]="panelHeight">
 
-      <!-- Resize handle -->
-      <div class="resize-handle" (mousedown)="startResize($event)"></div>
-
       <!-- Header -->
       <div class="chat-panel__header">
         <div class="chat-panel__status-dot"></div>
@@ -112,6 +109,13 @@
           </svg>
         </button>
       </div>
+
+      <!-- Köşe tutamacı en sonda: header'ın altında kalmaz, tıklanabilir -->
+      <div
+        class="resize-handle"
+        (mousedown)="startResize($event)"
+        role="presentation"
+        aria-hidden="true"></div>
 
     </div>
   }

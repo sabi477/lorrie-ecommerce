@@ -12,6 +12,7 @@ frontend/.angular/
 *.pyc
 ai-chatbot/.env
 ai-chatbot/venv/
+ai-chatbot/.venv/
 
 # System
 .DS_Store

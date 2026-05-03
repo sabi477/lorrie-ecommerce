@@ -1,5 +1,5 @@
 import { Injectable, signal } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError, timer } from 'rxjs';
 import { switchMap, catchError } from 'rxjs/operators';
 
@@ -23,6 +23,33 @@ export interface ChatResponse {
 
 const SESSION_KEY = 'chat_messages';
 const MAX_HISTORY = 5;
+
+/** Angular HttpClient hatasından kullanıcıya gösterilecek metin (CORS, bağlantı, FastAPI detail). */
+export function formatChatHttpError(err: unknown, fallback: string): string {
+  if (err instanceof HttpErrorResponse) {
+    if (err.status === 0) {
+      return (
+        'Sohbet sunucusuna bağlanılamıyor (http://localhost:8000). ' +
+        'Chatbot\'u başlattığınızdan emin olun (`./dev.sh` veya ai-chatbot klasöründe uvicorn).'
+      );
+    }
+    const body = err.error;
+    if (body && typeof body === 'object' && 'detail' in body) {
+      const d = (body as { detail: unknown }).detail;
+      if (typeof d === 'string') return d;
+      if (Array.isArray(d)) {
+        const msgs = d
+          .map((item) => (item && typeof item === 'object' && 'msg' in item ? String((item as { msg: unknown }).msg) : ''))
+          .filter(Boolean);
+        if (msgs.length) return msgs.join(' ');
+      }
+    }
+    if (typeof err.message === 'string' && err.message.includes('Unknown Error') && err.status) {
+      return `Sunucu hatası (${err.status}).`;
+    }
+  }
+  return fallback;
+}
 
 @Injectable({ providedIn: 'root' })
 export class ChatService {
@@ -139,7 +166,7 @@ export class ChatService {
       catchError(err => {
         clearTimeout(timeoutId);
         this._messages.update(msgs => msgs.filter(m => m.id !== botMsgId));
-        const errorText = err.error?.detail || 'Üzgünüm, şu an yanıt veremiyorum.';
+        const errorText = formatChatHttpError(err, 'Üzgünüm, şu an yanıt veremiyorum. Lütfen tekrar deneyin.');
         this.addMessage({ role: 'bot', text: errorText, status: 'error', retryable: true });
         return throwError(() => err);
       })

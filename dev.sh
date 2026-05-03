@@ -76,8 +76,13 @@ BACKEND_PID=$!
 
 # 3. Chatbot (FastAPI)
 echo -e "${BLUE}🤖 Chatbot (FastAPI) başlatılıyor...${NC}"
-# Uvicorn yüklü mü kontrol et, değilse python -m ile dene
-(cd ai-chatbot && SPRING_BOOT_URL=http://localhost:$BACKEND_PORT python3 -m uvicorn main:app --reload --port "$CHATBOT_PORT") &
+CHATBOT_VENV="$SCRIPT_DIR/ai-chatbot/.venv"
+if [ ! -x "$CHATBOT_VENV/bin/python" ]; then
+    echo -e "${YELLOW}📦 Chatbot venv oluşturuluyor...${NC}"
+    python3 -m venv "$CHATBOT_VENV"
+fi
+"$CHATBOT_VENV/bin/pip" install -q -r "$SCRIPT_DIR/ai-chatbot/requirements.txt"
+(cd "$SCRIPT_DIR/ai-chatbot" && SPRING_BOOT_URL=http://localhost:$BACKEND_PORT "$CHATBOT_VENV/bin/python" -m uvicorn main:app --reload --port "$CHATBOT_PORT") &
 CHATBOT_PID=$!
 
 # 4. Frontend (Angular)

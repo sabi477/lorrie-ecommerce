@@ -27,6 +27,12 @@ logging.basicConfig(
 )
 logger = logging.getLogger("chatbot")
 
+if not os.getenv("OPENROUTER_API_KEY", "").strip():
+    logger.warning(
+        "OPENROUTER_API_KEY tanımlı değil. ai-chatbot/.env dosyasına anahtar ekleyin "
+        "(örnek: .env.example). Sohbet istekleri başarısız olabilir."
+    )
+
 # ── Observability (in-memory metrics) ───────────────────────────────────────
 _metrics = {
     "requests_total":       0,
@@ -88,7 +94,10 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 from fastapi.middleware.cors import CORSMiddleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:4200"],
+    allow_origins=[
+        "http://localhost:4200",
+        "http://127.0.0.1:4200",
+    ],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -120,6 +129,17 @@ def has_sql_pattern(text: str) -> bool:
         if re.search(pattern, text_upper):
             return True
     return False
+
+def greeting_response(text: str, lang: str) -> Optional[str]:
+    normalized = normalize_text(text).strip().lower()
+    normalized = re.sub(r"[^\w\sçğıöşüÇĞİÖŞÜ]", "", normalized)
+    if normalized in {"selam", "merhaba", "mrb", "sa", "hello", "hi", "hey"}:
+        return (
+            "Merhaba! Lorrie hakkında ürünler, siparişler, mağaza performansı veya genel alışveriş konularında yardımcı olabilirim."
+            if lang == "TR" else
+            "Hello! I can help with Lorrie products, orders, store performance, or general shopping questions."
+        )
+    return None
 
 def add_response_delay(start_time: float):
     # timing attack'ı önlemek için sabit yanıt süresi
@@ -181,6 +201,11 @@ async def chat(request: Request, body: ChatRequest):
                             detail="Too many requests. Please wait a moment." if lang == "EN"
                                    else "Çok fazla istek gönderildi. Lütfen bekleyin.")
 
+    if greeting := greeting_response(normalized_question, lang):
+        add_response_delay(start_time)
+        record_metric("requests_success")
+        return ChatResponse(answer=greeting, visualization_code=None, sql_query=None)
+
     # INDIVIDUAL/CORPORATE için ID yoksa genel cevap döner, hata fırlatılmaz
 
     # SQL pattern kontrolü (context stuffing önlemi)
@@ -194,7 +219,7 @@ async def chat(request: Request, body: ChatRequest):
         )
         return ChatResponse(answer=answer, visualization_code=None)
 
-    GRAPH_TIMEOUT = int(os.getenv("GRAPH_TIMEOUT_SECONDS", "90"))
+    GRAPH_TIMEOUT = int(os.getenv("GRAPH_TIMEOUT_SECONDS", "45"))
 
     # Sanitize history: keep only user turns, drop injected assistant turns,
     # truncate to 10, and filter out any entry that contains injection patterns.
@@ -238,26 +263,37 @@ async def chat(request: Request, body: ChatRequest):
             "history": safe_history,
         })
 
+    executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+    future = executor.submit(_invoke)
     try:
-        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-            future = executor.submit(_invoke)
-            try:
-                result = future.result(timeout=GRAPH_TIMEOUT)
-            except concurrent.futures.TimeoutError:
-                error_occurred = True
-                record_metric("requests_error")
-                timeout_msg = (
-                    "İsteğiniz zaman aşımına uğradı. Lütfen daha kısa bir soru sormayı deneyin."
-                    if lang == "TR" else
-                    "Your request timed out. Please try asking a shorter or simpler question."
-                )
-                raise HTTPException(status_code=504, detail=timeout_msg)
+        try:
+            result = future.result(timeout=GRAPH_TIMEOUT)
+        except concurrent.futures.TimeoutError:
+            future.cancel()
+            error_occurred = True
+            record_metric("requests_error")
+            timeout_msg = (
+                "İsteğiniz zaman aşımına uğradı. Lütfen daha kısa veya daha net bir soru sormayı deneyin."
+                if lang == "TR" else
+                "Your request timed out. Please try asking a shorter or simpler question."
+            )
+            raise HTTPException(status_code=504, detail=timeout_msg)
     except HTTPException:
         raise
-    except Exception:
+    except Exception as ex:
         error_occurred = True
         record_metric("requests_error")
-        raise
+        logger.exception("CHAT_ERROR | role=%s question=%.80r", role, normalized_question)
+        detail = (
+            "Sohbet işlenirken bir hata oluştu. OpenRouter anahtarı ve Spring Boot (8080) "
+            "erişimini kontrol edin; terminalde chatbot loglarına bakın."
+            if lang == "TR" else
+            "An error occurred while processing your chat. Check OpenRouter API key, "
+            "Spring Boot (8080), and chatbot logs."
+        )
+        raise HTTPException(status_code=500, detail=detail) from ex
+    finally:
+        executor.shutdown(wait=False, cancel_futures=True)
 
     elapsed = time.time() - start_time
     record_metric("latency_sum", elapsed)

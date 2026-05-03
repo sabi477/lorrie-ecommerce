@@ -1,6 +1,6 @@
 from llm import llm
 from langchain_core.messages import SystemMessage, HumanMessage
-from sql_agent import _filter_present_in_sql, is_dangerous_sql
+from agents.sql_agent import _filter_present_in_sql, is_dangerous_sql
 import logging
 
 logger = logging.getLogger("chatbot")

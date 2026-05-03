@@ -4,7 +4,7 @@ declare const Plotly: any;
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { ChatService } from '../../services/chat';
+import { ChatService, formatChatHttpError } from '../../services/chat';
 import { AuthService } from '../../services/auth';
 
 @Component({
@@ -158,7 +158,10 @@ export class ChatPanel implements AfterViewChecked {
         clearTimeout(timeoutId);
         if (!this.loading) return;
         this.chat.removeTyping();
-        const errorText = err.error?.detail || 'Üzgünüm, şu an yanıt veremiyorum. Lütfen tekrar deneyin.';
+        const errorText = formatChatHttpError(
+          err,
+          'Üzgünüm, şu an yanıt veremiyorum. Lütfen tekrar deneyin.'
+        );
         this.chat.addMessage({ role: 'bot', text: errorText, status: 'error', retryable: true });
         this.loading      = false;
         this.shouldScroll = true;
@@ -167,21 +170,23 @@ export class ChatPanel implements AfterViewChecked {
   }
 
   startResize(event: MouseEvent) {
+    event.preventDefault();
+    event.stopPropagation();
     this.isResizing = true;
     this.resizeStartX = event.clientX;
     this.resizeStartY = event.clientY;
     this.startWidth = this.panelWidth;
     this.startHeight = this.panelHeight;
-    event.preventDefault();
   }
 
   @HostListener('document:mousemove', ['$event'])
   onMouseMove(event: MouseEvent) {
     if (!this.isResizing) return;
+    // Tutamak sol üst köşede; panel sağ-alt hizalı — genişlik/yükseklik artışı imleç sola/yukarı giderken olmalı.
     const dx = event.clientX - this.resizeStartX;
     const dy = event.clientY - this.resizeStartY;
-    this.panelWidth  = Math.min(this.maxWidth,  Math.max(this.minWidth,  this.startWidth  + dx));
-    this.panelHeight = Math.min(this.maxHeight, Math.max(this.minHeight, this.startHeight + dy));
+    this.panelWidth  = Math.min(this.maxWidth,  Math.max(this.minWidth,  this.startWidth  - dx));
+    this.panelHeight = Math.min(this.maxHeight, Math.max(this.minHeight, this.startHeight - dy));
   }
 
   @HostListener('document:mouseup')

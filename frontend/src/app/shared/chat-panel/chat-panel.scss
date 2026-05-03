@@ -57,7 +57,7 @@
   flex-direction: column;
   overflow: hidden;
   animation: panelIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
-  resize: both;
+  resize: none;
 }
 
 @keyframes panelIn {
@@ -65,34 +65,42 @@
   to   { opacity: 1; transform: translateY(0)   scale(1);    }
 }
 
-// ─── Resize handle ───────────────────────────────────────────────
+// ─── Resize handle (sol üst köşe, header üstünde; geniş hit alanı) ─
 .resize-handle {
   position: absolute;
   top: 0;
   left: 0;
-  width: 16px;
-  height: 16px;
-  cursor: se-resize;
-  z-index: 10;
+  width: 28px;
+  height: 28px;
+  cursor: nw-resize;
+  z-index: 50;
+  touch-action: none;
   opacity: 0;
+  // Tıklanabilir alan küçük kutuda kalsa da kolay yakalamak için hafif gradient hit
+  background: transparent;
 
   &::after {
     content: '';
     position: absolute;
-    bottom: 3px;
-    right: 3px;
-    width: 8px;
-    height: 8px;
-    border-right: 2px solid #d1d5db;
-    border-bottom: 2px solid #d1d5db;
-    border-radius: 0 0 2px 0;
+    top: 6px;
+    left: 6px;
+    width: 9px;
+    height: 9px;
+    border-left: 2px solid #d1d5db;
+    border-top: 2px solid #d1d5db;
+    border-radius: 2px 0 0 0;
   }
 }
 
-.chat-panel:hover .resize-handle { opacity: 1; }
+.chat-panel:hover .resize-handle,
+.resize-handle:active {
+  opacity: 1;
+}
 
 // ─── Header ──────────────────────────────────────────────────────
 .chat-panel__header {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   gap: 10px;
