@@ -230,7 +230,7 @@ def guardrails_agent(state):
     ECOMMERCE_KEYWORDS = [
         # Türkçe
         "sipariş", "ürün", "satış", "gelir", "ciro", "müşteri", "mağaza",
-        "kargo", "teslimat", "stok", "envanter", "fiyat", "indirim", "kampanya",
+        "kargo", "sevkiyat", "teslimat", "stok", "envanter", "fiyat", "indirim", "kampanya",
         "değerlendirme", "yorum", "puan", "kategori", "marka", "sepet",
         # İngilizce
         "order", "product", "sale", "revenue", "customer", "store", "shop",

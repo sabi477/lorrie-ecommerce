@@ -20,7 +20,12 @@
 
   <!-- Chat panel -->
   @if (isOpen) {
-    <div class="chat-panel" #chatPanel [style.width.px]="panelWidth" [style.height.px]="panelHeight">
+    <div
+      class="chat-panel"
+      #chatPanel
+      [class.chat-panel--fullscreen]="isFullscreen"
+      [style.width.px]="isFullscreen ? null : panelWidth"
+      [style.height.px]="isFullscreen ? null : panelHeight">
 
       <!-- Header -->
       <div class="chat-panel__header">
@@ -29,6 +34,27 @@
           <div class="chat-panel__title">AI Asistan</div>
           <div class="chat-panel__subtitle">Çevrimiçi</div>
         </div>
+        <button
+          class="chat-panel__action"
+          (click)="toggleFullscreen($event)"
+          [attr.aria-label]="isFullscreen ? 'Pencere moduna dön' : 'Tam ekran yap'"
+          [title]="isFullscreen ? 'Pencere moduna dön' : 'Tam ekran yap'">
+          @if (!isFullscreen) {
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <polyline points="9 21 3 21 3 15"></polyline>
+              <line x1="21" y1="3" x2="14" y2="10"></line>
+              <line x1="3" y1="21" x2="10" y2="14"></line>
+            </svg>
+          } @else {
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="4 14 10 14 10 20"></polyline>
+              <polyline points="20 10 14 10 14 4"></polyline>
+              <line x1="14" y1="10" x2="21" y2="3"></line>
+              <line x1="3" y1="21" x2="10" y2="14"></line>
+            </svg>
+          }
+        </button>
         <button class="chat-panel__close" (click)="toggle()" aria-label="Kapat">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
             <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
@@ -62,6 +88,46 @@
                     <span class="status-label" [ngClass]="getStatusClass(msg.status)">{{ getStatusLabel(msg.status) }}</span>
                   }
                 </div>
+              } @else if (msg.guardrail_event) {
+                <div class="guard-card">
+                  <div class="guard-text">{{ msg.text }}</div>
+                  <span class="guard-badge" [ngClass]="getGuardrailBadgeClass(msg.guardrail_event)">
+                    Guardrail Agent — {{ msg.guardrail_event.badge_label || 'ENGELLENDİ' }}
+                  </span>
+
+                  <div class="guard-alert" [ngClass]="getGuardrailAlertClass(msg.guardrail_event)">
+                    <div class="guard-alert__header">⚠ {{ msg.guardrail_event.title || 'Güvenlik Kuralı Tetiklendi' }}</div>
+                    @if (msg.guardrail_event.details?.length) {
+                      <div class="guard-alert__details">
+                        @for (detail of msg.guardrail_event.details; track detail[0]) {
+                          <span class="guard-alert__key">{{ detail[0] }}</span>
+                          <span class="guard-alert__value">{{ detail[1] }}</span>
+                        }
+                      </div>
+                    }
+                  </div>
+
+                  @if (msg.guardrail_event.example_sql) {
+                    <pre class="blocked-sql">{{ msg.guardrail_event.example_sql }}</pre>
+                  }
+
+                  @if (msg.guardrail_event.note) {
+                    <div class="guard-note">{{ msg.guardrail_event.note }}</div>
+                  }
+
+                  @if (msg.guardrail_event.alternative) {
+                    <div class="guard-alternative">
+                      <strong>Bunun yerine yapabilirim:</strong>
+                      <span>{{ msg.guardrail_event.alternative }}</span>
+                    </div>
+                  }
+
+                  @if (msg.guardrail_event.footer_badge) {
+                    <span class="guard-footer-badge" [ngClass]="getGuardrailBadgeClass(msg.guardrail_event)">
+                      {{ msg.guardrail_event.footer_badge }}
+                    </span>
+                  }
+                </div>
               } @else {
                 <div class="msg-bubble" [class.msg-bubble--error]="msg.status === 'error'" [class.msg-bubble--timeout]="msg.status === 'timeout'">
                   @if (msg.status && msg.status !== 'done' && msg.status !== 'sending') {
@@ -74,6 +140,9 @@
                          [attr.data-msg-id]="msg.id"
                          [attr.data-viz-code]="msg.visualization_code">
                     </div>
+                  }
+                  @if (msg.sql_query) {
+                    <pre class="sql-block">{{ msg.sql_query }}</pre>
                   }
                   @if ((msg.status === 'error' || msg.status === 'timeout') && msg.retryable) {
                     <button class="retry-btn" (click)="retry(msg.id, $event)">
@@ -92,6 +161,21 @@
       </div>
 
       <!-- Input -->
+      <div class="suggested-questions" aria-label="Örnek sorular">
+        <div class="suggested-questions__label">Örnek sorular — tıklayarak dene:</div>
+        <div class="suggested-questions__list">
+          @for (question of suggestedQuestions; track question) {
+            <button
+              type="button"
+              class="suggested-question"
+              (click)="askSuggested(question)"
+              [disabled]="loading">
+              {{ question }}
+            </button>
+          }
+        </div>
+      </div>
+
       <div class="chat-panel__footer">
         <input
           class="chat-panel__input"
@@ -114,6 +198,7 @@
       <div
         class="resize-handle"
         (mousedown)="startResize($event)"
+        [class.resize-handle--hidden]="isFullscreen"
         role="presentation"
         aria-hidden="true"></div>
 

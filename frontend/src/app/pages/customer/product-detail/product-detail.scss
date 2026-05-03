@@ -1,6 +1,14 @@
 $primary:#f27a1a; $text:#111827; $muted:#6b7280; $border:#e5e7eb; $bg:#f3f4f6; $surface:#fff; $radius:10px; $font:'Inter',-apple-system,sans-serif;
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 a{text-decoration:none;color:inherit} button{cursor:pointer;border:none;background:none;font-family:$font} :host{display:block}
+.navbar{position:sticky;top:0;z-index:200;background:$surface;border-bottom:1px solid $border;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.navbar__inner{max-width:1100px;margin:0 auto;height:62px;display:flex;align-items:center;justify-content:space-between;gap:1.25rem;padding:0 1.5rem}
+.navbar__brand{display:flex;align-items:center;gap:.45rem;flex-shrink:0}
+.brand-mark{width:42px;height:42px;background:$surface;border:1px solid $border;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;
+  img{width:170%;height:170%;object-fit:contain;display:block}}
+.brand-mark--sm{width:32px;height:32px;border-radius:8px}
+.brand-text{font-family:'Montserrat',$font;font-size:1.35rem;font-weight:900;letter-spacing:.06em;color:$text}
+.footer__logo{display:flex;align-items:center;gap:.4rem;font-family:'Montserrat',$font;font-size:1.05rem;font-weight:900;letter-spacing:.06em;color:$text}
 .pd{max-width:1100px;margin:0 auto;padding:1.5rem;font-family:$font;color:$text}
 .pd-crumb{display:flex;align-items:center;gap:.5rem;font-size:.8rem;color:$muted;margin-bottom:1.5rem;flex-wrap:wrap; a:hover{color:$primary} span:last-child{color:$text;font-weight:500}}
 .pd-grid{display:grid;grid-template-columns:1fr 1fr;gap:2.5rem;align-items:start; @media(max-width:700px){grid-template-columns:1fr}}

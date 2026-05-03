@@ -4,7 +4,7 @@ declare const Plotly: any;
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { ChatService, formatChatHttpError } from '../../services/chat';
+import { ChatService, GuardrailEvent, formatChatHttpError } from '../../services/chat';
 import { AuthService } from '../../services/auth';
 
 @Component({
@@ -20,6 +20,7 @@ export class ChatPanel implements AfterViewChecked {
   @ViewChildren('chartContainer') private chartContainers!: QueryList<ElementRef>;
 
   isOpen   = false;
+  isFullscreen = false;
   input    = '';
   loading  = false;
   private shouldScroll = false;
@@ -42,6 +43,16 @@ export class ChatPanel implements AfterViewChecked {
   private sanitizer = inject(DomSanitizer);
 
   get messages() { return this.chat.messages; }
+
+  get suggestedQuestions(): string[] {
+    return [
+      'En yüksek puanlı 5 ürün hangileri?',
+      'Fiyatı en düşük 5 ürün hangileri?',
+      'Hangi kategoriler var?',
+      'Stokta olan popüler ürünleri göster',
+      '799 TL’nin yüzde 20 indirimi kaç TL?',
+    ];
+  }
 
   ngAfterViewChecked() {
     this.renderCharts();
@@ -77,6 +88,19 @@ export class ChatPanel implements AfterViewChecked {
   toggle() {
     this.isOpen = !this.isOpen;
     if (this.isOpen) this.shouldScroll = true;
+    if (!this.isOpen) this.isFullscreen = false;
+  }
+
+  toggleFullscreen(event: MouseEvent) {
+    event.stopPropagation();
+    this.isFullscreen = !this.isFullscreen;
+    this.isResizing = false;
+    this.shouldScroll = true;
+  }
+
+  askSuggested(question: string) {
+    if (this.loading) return;
+    this.send(question);
   }
 
   sanitize(html: string): SafeHtml {
@@ -112,6 +136,19 @@ export class ChatPanel implements AfterViewChecked {
     return map[status || ''] || '';
   }
 
+  getGuardrailBadgeClass(event: GuardrailEvent | null | undefined): string {
+    switch (event?.type) {
+      case 'PROMPT_INJECTION': return 'badge-injection';
+      case 'FILTER_BYPASS': return 'badge-outscope';
+      case 'CROSS_STORE_ACCESS': return 'badge-blocked';
+      default: return 'badge-info';
+    }
+  }
+
+  getGuardrailAlertClass(event: GuardrailEvent | null | undefined): string {
+    return event?.type === 'PROMPT_INJECTION' ? 'warning' : 'danger';
+  }
+
   retry(msgId: string, event: MouseEvent) {
     event.stopPropagation();
     this.chat.retryMessage(msgId);
@@ -121,11 +158,11 @@ export class ChatPanel implements AfterViewChecked {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); this.send(); }
   }
 
-  send() {
-    const text = this.input.trim();
+  send(question?: string) {
+    const text = (question ?? this.input).trim();
     if (!text || this.loading) return;
 
-    this.input   = '';
+    this.input   = question ? this.input : '';
     this.loading = true;
     this.shouldScroll = true;
     const userMsgId = this.chat.addMessage({ role: 'user', text, status: 'sending' });
@@ -150,7 +187,15 @@ export class ChatPanel implements AfterViewChecked {
         clearTimeout(timeoutId);
         if (!this.loading) return;
         this.chat.removeTyping();
-        this.chat.addMessage({ role: 'bot', text: res.answer, status: 'done', visualization_code: res.visualization_code });
+        this.chat.addMessage({
+          role: 'bot',
+          text: res.answer,
+          status: 'done',
+          visualization_code: res.visualization_code,
+          sql_query: res.sql_query,
+          guardrail_event: res.guardrail_event,
+          execution_meta: res.execution_meta,
+        });
         this.loading      = false;
         this.shouldScroll = true;
       },
@@ -170,6 +215,7 @@ export class ChatPanel implements AfterViewChecked {
   }
 
   startResize(event: MouseEvent) {
+    if (this.isFullscreen) return;
     event.preventDefault();
     event.stopPropagation();
     this.isResizing = true;
@@ -181,7 +227,7 @@ export class ChatPanel implements AfterViewChecked {
 
   @HostListener('document:mousemove', ['$event'])
   onMouseMove(event: MouseEvent) {
-    if (!this.isResizing) return;
+    if (!this.isResizing || this.isFullscreen) return;
     // Tutamak sol üst köşede; panel sağ-alt hizalı — genişlik/yükseklik artışı imleç sola/yukarı giderken olmalı.
     const dx = event.clientX - this.resizeStartX;
     const dy = event.clientY - this.resizeStartY;

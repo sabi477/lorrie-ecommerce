@@ -9,6 +9,7 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from collections import defaultdict
 from typing import Optional, Union
+import ast
 import unicodedata
 import logging
 import threading
@@ -130,6 +131,113 @@ def has_sql_pattern(text: str) -> bool:
             return True
     return False
 
+def _format_number(value: float) -> str:
+    if abs(value - round(value)) < 1e-10:
+        return str(int(round(value)))
+    return f"{value:.6f}".rstrip("0").rstrip(".")
+
+def _safe_eval_math(node: ast.AST) -> tuple[float, list[str]]:
+    if isinstance(node, ast.Expression):
+        return _safe_eval_math(node.body)
+    if isinstance(node, ast.Constant) and isinstance(node.value, (int, float)):
+        return float(node.value), []
+    if isinstance(node, ast.UnaryOp) and isinstance(node.op, (ast.UAdd, ast.USub)):
+        value, steps = _safe_eval_math(node.operand)
+        return (value if isinstance(node.op, ast.UAdd) else -value), steps
+    if isinstance(node, ast.BinOp) and isinstance(node.op, (ast.Add, ast.Sub, ast.Mult, ast.Div, ast.Pow, ast.Mod)):
+        left, left_steps = _safe_eval_math(node.left)
+        right, right_steps = _safe_eval_math(node.right)
+        if isinstance(node.op, (ast.Div, ast.Mod)) and right == 0:
+            raise ValueError("division by zero")
+        if isinstance(node.op, ast.Pow) and abs(right) > 10:
+            raise ValueError("exponent too large")
+        if isinstance(node.op, ast.Add):
+            symbol, result = "+", left + right
+        elif isinstance(node.op, ast.Sub):
+            symbol, result = "-", left - right
+        elif isinstance(node.op, ast.Mult):
+            symbol, result = "×", left * right
+        elif isinstance(node.op, ast.Div):
+            symbol, result = "÷", left / right
+        elif isinstance(node.op, ast.Mod):
+            symbol, result = "mod", left % right
+        else:
+            symbol, result = "^", left ** right
+        step = f"{_format_number(left)} {symbol} {_format_number(right)} = {_format_number(result)}"
+        return float(result), [*left_steps, *right_steps, step]
+    raise ValueError("unsupported expression")
+
+def _extract_math_expression(text: str) -> Optional[str]:
+    normalized = normalize_text(text).lower()
+    normalized = re.sub(r"(?<=\d),(?=\d)", ".", normalized)
+    replacements = [
+        (r"\bartı\b", "+"),
+        (r"\beksi\b", "-"),
+        (r"\bçarpı\b|\bcarpi\b|\bçarp\b|\bx\b", "*"),
+        (r"\bbölü\b|\bbolu\b|\bböl\b", "/"),
+        (r"\büzeri\b|\bussu\b|\büssü\b", "**"),
+    ]
+    for pattern, replacement in replacements:
+        normalized = re.sub(pattern, replacement, normalized)
+    normalized = normalized.replace("^", "**")
+    tokens = re.findall(r"\d+(?:\.\d+)?|\*\*|[+\-*/()]", normalized)
+    expression = "".join(tokens)
+    if not re.search(r"\d", expression) or not re.search(r"[+\-*/]|\*\*", expression):
+        return None
+    return expression
+
+def math_response(text: str, lang: str) -> Optional[str]:
+    normalized = normalize_text(text).strip().lower()
+    normalized = re.sub(r"(?<=\d),(?=\d)", ".", normalized)
+
+    percent_patterns = [
+        r"(?P<base>\d+(?:\.\d+)?)\s*(?:tl)?\s*(?:['’]?(?:in|ın|un|ün|nin|nın|nun|nün))?\s*(?:yüzde|%)\s*(?P<pct>\d+(?:\.\d+)?)",
+        r"(?:yüzde|%)\s*(?P<pct>\d+(?:\.\d+)?)\s*(?:['’]?(?:i|ı|u|ü)?|of)?\s*(?P<base>\d+(?:\.\d+)?)",
+    ]
+    for pattern in percent_patterns:
+        match = re.search(pattern, normalized)
+        if match:
+            base = float(match.group("base"))
+            pct = float(match.group("pct"))
+            result = base * pct / 100
+            if lang == "TR":
+                return (
+                    f"Sonuç: {_format_number(result)}\n\n"
+                    "Nasıl yaptım:\n"
+                    f"1. Yüzde hesabı formülü: değer × yüzde / 100\n"
+                    f"2. Yerine koydum: {_format_number(base)} × {_format_number(pct)} / 100\n"
+                    f"3. Hesapladım: {_format_number(base * pct)} / 100 = {_format_number(result)}"
+                )
+            return (
+                f"Result: {_format_number(result)}\n\n"
+                "How I calculated it:\n"
+                "1. Percentage formula: value × percent / 100\n"
+                f"2. Substitute values: {_format_number(base)} × {_format_number(pct)} / 100\n"
+                f"3. Calculate: {_format_number(base * pct)} / 100 = {_format_number(result)}"
+            )
+
+    expression = _extract_math_expression(text)
+    if not expression:
+        return None
+    try:
+        parsed = ast.parse(expression, mode="eval")
+        result, steps = _safe_eval_math(parsed)
+    except Exception:
+        return None
+    if lang == "TR":
+        step_lines = "\n".join(f"{i + 1}. {step}" for i, step in enumerate(steps[-6:]))
+        return (
+            f"Sonuç: {_format_number(result)}\n\n"
+            "Nasıl yaptım:\n"
+            f"{step_lines}"
+        )
+    step_lines = "\n".join(f"{i + 1}. {step}" for i, step in enumerate(steps[-6:]))
+    return (
+        f"Result: {_format_number(result)}\n\n"
+        "How I calculated it:\n"
+        f"{step_lines}"
+    )
+
 def greeting_response(text: str, lang: str) -> Optional[str]:
     normalized = normalize_text(text).strip().lower()
     normalized = re.sub(r"[^\w\sçğıöşüÇĞİÖŞÜ]", "", normalized)
@@ -205,6 +313,11 @@ async def chat(request: Request, body: ChatRequest):
         add_response_delay(start_time)
         record_metric("requests_success")
         return ChatResponse(answer=greeting, visualization_code=None, sql_query=None)
+
+    if math_answer := math_response(normalized_question, lang):
+        add_response_delay(start_time)
+        record_metric("requests_success")
+        return ChatResponse(answer=math_answer, visualization_code=None, sql_query=None)
 
     # INDIVIDUAL/CORPORATE için ID yoksa genel cevap döner, hata fırlatılmaz
 
@@ -310,7 +423,7 @@ async def chat(request: Request, body: ChatRequest):
     return ChatResponse(
         answer=result.get("final_answer", "No answer generated."),
         visualization_code=result.get("visualization_code"),
-        sql_query=result.get("sql_query") if role == "ADMIN" else None,
+        sql_query=result.get("sql_query") if role in {"ADMIN", "CORPORATE"} else None,
         guardrail_event=result.get("guardrail_event"),
         execution_meta=result.get("execution_meta"),
     )

@@ -90,19 +90,28 @@ $shadow-card: 0 4px 6px -1px rgba(0,0,0,.04),
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
-  background: $color-primary;
-  color: #fff;
+  width: 48px;
+  height: 48px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
   border-radius: 10px;
   flex-shrink: 0;
+  overflow: hidden;
+
+  img {
+    width: 170%;
+    height: 170%;
+    object-fit: contain;
+    display: block;
+  }
 }
 
 .brand-name {
-  font-size: 1.3rem;
-  font-weight: 700;
+  font-family: 'Montserrat', 'Inter', -apple-system, sans-serif;
+  font-size: 1.55rem;
+  font-weight: 900;
   color: $color-primary;
-  letter-spacing: -0.02em;
+  letter-spacing: 0.06em;
 }
 
 // ─── Card Header ─────────────────────────────────────────────────

@@ -12,13 +12,33 @@ export interface Message {
   error?: string;
   retryable?: boolean;
   visualization_code?: string | null;
+  sql_query?: string | null;
+  guardrail_event?: GuardrailEvent | null;
+  execution_meta?: ExecutionMeta | null;
+}
+
+export interface GuardrailEvent {
+  type: 'PROMPT_INJECTION' | 'CROSS_STORE_ACCESS' | 'FILTER_BYPASS' | 'DANGEROUS_SQL' | string;
+  title?: string;
+  badge_label?: string;
+  details?: [string, string][];
+  note?: string;
+  alternative?: string;
+  footer_badge?: string;
+  example_sql?: string;
+}
+
+export interface ExecutionMeta {
+  row_count: number;
+  elapsed_time: number;
 }
 
 export interface ChatResponse {
   answer: string;
   visualization_code: string | null;
   sql_query: string | null;
-  guardrail_event?: unknown;
+  guardrail_event?: GuardrailEvent | null;
+  execution_meta?: ExecutionMeta | null;
 }
 
 const SESSION_KEY = 'chat_messages';
@@ -85,7 +105,16 @@ export class ChatService {
 
   private saveToStorage(messages: Message[]) {
     try {
-      const toSave = messages.map(m => ({ id: m.id, role: m.role, text: m.text }));
+      const toSave = messages.map(m => ({
+        id: m.id,
+        role: m.role,
+        text: m.text,
+        status: m.status,
+        visualization_code: m.visualization_code,
+        sql_query: m.sql_query,
+        guardrail_event: m.guardrail_event,
+        execution_meta: m.execution_meta,
+      }));
       sessionStorage.setItem(SESSION_KEY, JSON.stringify(toSave));
     } catch {}
   }
@@ -145,7 +174,7 @@ export class ChatService {
     const role = this.mapRole(JSON.parse(sessionStorage.getItem('chat_role') || '"INDIVIDUAL"'));
     const isLoggedIn = JSON.parse(sessionStorage.getItem('chat_isLoggedIn') || 'false');
     const userId = JSON.parse(sessionStorage.getItem('chat_userId') || 'null');
-    const storeId = role === 'CORPORATE' ? userId : null;
+    const storeId = JSON.parse(sessionStorage.getItem('chat_storeId') || 'null');
 
     const botMsgId = this.addMessage({ role: 'bot', text: '', typing: true, status: 'processing' });
     this._updateBotStatus(botMsgId, 'processing');
@@ -174,7 +203,15 @@ export class ChatService {
       next: (res) => {
         clearTimeout(timeoutId);
         this._messages.update(msgs => msgs.filter(m => m.id !== botMsgId));
-        this.addMessage({ role: 'bot', text: res.answer, status: 'done', visualization_code: res.visualization_code });
+        this.addMessage({
+          role: 'bot',
+          text: res.answer,
+          status: 'done',
+          visualization_code: res.visualization_code,
+          sql_query: res.sql_query,
+          guardrail_event: res.guardrail_event,
+          execution_meta: res.execution_meta,
+        });
       }
     });
   }
@@ -202,6 +239,7 @@ export class ChatService {
     sessionStorage.setItem('chat_role', JSON.stringify(userRole));
     sessionStorage.setItem('chat_isLoggedIn', JSON.stringify(isLoggedIn));
     sessionStorage.setItem('chat_userId', JSON.stringify(userId));
+    sessionStorage.setItem('chat_storeId', JSON.stringify(storeId));
 
     const history = this.buildHistory();
 
@@ -268,6 +306,7 @@ export class ChatService {
   mapRole(angularRole: string | null): string {
     switch (angularRole?.toUpperCase()) {
       case 'ADMIN':    return 'ADMIN';
+      case 'CORPORATE': return 'CORPORATE';
       case 'SELLER':   return 'CORPORATE';
       case 'CUSTOMER': return 'INDIVIDUAL';
       default:         return 'INDIVIDUAL';
