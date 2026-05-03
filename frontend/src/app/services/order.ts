@@ -40,6 +40,7 @@ export interface CreateOrderRequest {
     quantity: number;
     unitPrice: number;
   }[];
+  campaignCode?: string;
 }
 
 @Injectable({ providedIn: 'root' })

@@ -19,6 +19,7 @@ export interface StoreProduct {
   originalPrice?: number;
   category: string;
   imageUrl: string;
+  sellerName?: string | null;
 }
 
 function mapProduct(p: Product): StoreProduct {
@@ -34,6 +35,7 @@ function mapProduct(p: Product): StoreProduct {
     originalPrice,
     category: p.category?.name ?? 'Genel',
     imageUrl: p.thumbnail ?? p.imageUrl ?? `https://picsum.photos/seed/${p.id}/400/400`,
+    sellerName: p.seller?.fullName ?? p.sellerName ?? null,
   };
 }
 

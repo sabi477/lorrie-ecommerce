@@ -1,0 +1,108 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1>Kampanyalar</h1>
+      <p class="subtitle">Satıcı kampanya kodlarınızı yönetin</p>
+    </div>
+    <button class="btn-primary" (click)="openForm()">+ Yeni Kampanya</button>
+  </div>
+
+  @if (error) { <div class="alert alert-error">{{ error }}</div> }
+  @if (success) { <div class="alert alert-success">{{ success }}</div> }
+
+  @if (campaigns.length === 0 && !loading) {
+    <div class="empty">
+      <p>Henüz kampanya oluşturmadınız.</p>
+    </div>
+  } @else {
+    <div class="campaigns-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Kod</th>
+            <th>Tür</th>
+            <th>Değer</th>
+            <th>Min Sipariş</th>
+            <th>Kullanım</th>
+            <th>Başlangıç</th>
+            <th>Bitiş</th>
+            <th>Durum</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (c of campaigns; track c.id) {
+            <tr [class.inactive]="!c.isActive">
+              <td><span class="code-badge">{{ c.code }}</span></td>
+              <td>{{ c.discountType === 'PERCENTAGE' ? 'Yüzde' : 'Sabit Tutar' }}</td>
+              <td>{{ c.discountType === 'PERCENTAGE' ? c.discountValue + '%' : '$' + c.discountValue }}</td>
+              <td>{{ c.minOrderAmount > 0 ? '$' + c.minOrderAmount : '-' }}</td>
+              <td>{{ c.currentUses }}{{ c.maxUses ? ' / ' + c.maxUses : ' / ∞' }}</td>
+              <td>{{ formatDate(c.startsAt) }}</td>
+              <td>{{ formatDate(c.expiresAt) }}</td>
+              <td>
+                <span class="status-badge" [class.active]="c.isActive" [class.inactive]="!c.isActive">
+                  {{ c.isActive ? 'Aktif' : 'Pasif' }}
+                </span>
+              </td>
+              <td>
+                <button class="btn-sm" (click)="toggleActive(c)">{{ c.isActive ? 'Pasifleştir' : 'Aktifleştir' }}</button>
+                <button class="btn-sm btn-danger" (click)="deleteCampaign(c)">Sil</button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  @if (showForm) {
+    <div class="modal-overlay" (click)="closeForm()">
+      <div class="modal" (click)="$event.stopPropagation()">
+        <h2>Yeni Kampanya</h2>
+        <div class="form-grid">
+          <div class="field">
+            <label>Kampanya Kodu</label>
+            <input type="text" placeholder="örn: YAZ25" [(ngModel)]="form.code" />
+          </div>
+          <div class="field">
+            <label>İndirim Türü</label>
+            <select [(ngModel)]="form.discountType">
+              <option value="PERCENTAGE">Yüzde (%)</option>
+              <option value="FIXED_AMOUNT">Sabit Tutar ($)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>İndirim Değeri</label>
+            <input type="number" placeholder="25" [(ngModel)]="form.discountValue" />
+          </div>
+          <div class="field">
+            <label>Min Sipariş Tutarı ($)</label>
+            <input type="number" placeholder="0" [(ngModel)]="form.minOrderAmount" />
+          </div>
+          <div class="field">
+            <label>Max Kullanım (0 = sınırsız)</label>
+            <input type="number" placeholder="0" [(ngModel)]="form.maxUses" />
+          </div>
+          <div class="field">
+            <label>Kullanım / Kullanıcı</label>
+            <input type="number" placeholder="1" [(ngModel)]="form.maxUsesPerUser" />
+          </div>
+          <div class="field">
+            <label>Başlangıç Tarihi</label>
+            <input type="datetime-local" [(ngModel)]="form.startsAt" />
+          </div>
+          <div class="field">
+            <label>Bitiş Tarihi</label>
+            <input type="datetime-local" [(ngModel)]="form.expiresAt" />
+          </div>
+        </div>
+        @if (error) { <div class="alert alert-error">{{ error }}</div> }
+        <div class="modal-actions">
+          <button class="btn-secondary" (click)="closeForm()">İptal</button>
+          <button class="btn-primary" (click)="createCampaign()">Oluştur</button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

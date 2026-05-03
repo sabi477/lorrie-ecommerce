@@ -2,6 +2,7 @@ package com.example.demo.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.time.LocalDateTime;
 
 @Entity
@@ -15,6 +16,7 @@ public class User {
     @Column(unique = true, nullable = false)
     private String email;
 
+    @JsonIgnore
     @Column(nullable = false)
     private String password;
 
@@ -33,6 +35,15 @@ public class User {
 
     @Column(nullable = false)
     private boolean deleted = false;
+
+    @Column(name = "last_login_ip")
+    private String lastLoginIp;
+
+    @Column(name = "last_login_city")
+    private String lastLoginCity;
+
+    @Column(name = "last_login_date")
+    private LocalDateTime lastLoginDate;
 
     public enum Role {
         CUSTOMER, SELLER, ADMIN

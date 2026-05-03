@@ -26,6 +26,7 @@ import { Returns } from './pages/info/returns/returns';
 import { Faq } from './pages/info/faq/faq';
 import { ContactUs } from './pages/info/contact-us/contact-us';
 import { SellerOrderDetail } from './pages/seller/order-detail/order-detail';
+import { SellerCampaigns } from './pages/seller/campaigns/campaigns';
 
 export const routes: Routes = [
   { path: '', component: Store },
@@ -36,9 +37,11 @@ export const routes: Routes = [
   { path: 'dashboard', component: Dashboard, canActivate: [authGuard] },
   { path: 'orders', component: Orders, canActivate: [authGuard] },
   { path: 'seller-order/:id', component: SellerOrderDetail, canActivate: [authGuard] },
+  { path: 'campaigns', component: SellerCampaigns, canActivate: [authGuard] },
   { path: 'products', component: Products, canActivate: [authGuard] },
   { path: 'product-detail/:id', component: CustomerProductDetail },
   { path: 'seller/:sellerId', component: Store },
+  { path: 'category/:categoryId', component: Store },
   { path: 'users', component: Users, canActivate: [roleGuard(['ADMIN'])] },
 
   {

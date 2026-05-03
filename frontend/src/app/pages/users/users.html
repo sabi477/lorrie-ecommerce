@@ -45,6 +45,7 @@
                   <th>E-posta</th>
                   <th>Rol</th>
                   <th>Katılım Tarihi</th>
+                  <th>Son Oturum</th>
                   <th>İşlem</th>
                 </tr>
               </thead>
@@ -64,6 +65,16 @@
                       </span>
                     </td>
                     <td>{{ formatDate(user.createdAt) }}</td>
+                    <td>
+                      @if (user.lastLoginCity) {
+                        <div class="login-info">
+                          <span class="city">{{ user.lastLoginCity }}</span>
+                          <span class="ip">{{ user.lastLoginIp }}</span>
+                        </div>
+                      } @else {
+                        <span class="no-login">—</span>
+                      }
+                    </td>
                     <td>
                       <select class="role-select" (change)="updateRole(user, $event)">
                         @for (opt of roleOptions; track opt) {

@@ -91,7 +91,11 @@
   <nav class="pd-crumb">
     <a routerLink="/">Mağaza</a>
     <span>/</span>
-    <span>{{ product.category?.name ?? 'Kategori' }}</span>
+    @if (product.category) {
+      <a [routerLink]="['/category', product.category.id]">{{ product.category.name }}</a>
+    } @else {
+      <span>Kategori</span>
+    }
     @if (product.seller) {
       <span>/</span>
       <a [routerLink]="['/seller', product.seller.id]">{{ product.seller.fullName }}</a>
@@ -236,6 +240,21 @@
 
   @if (activeTab() === 'reviews') {
     <div class="pd-reviews">
+
+      @if (aiSummaryLoading) {
+        <div class="ai-summary-loading">AI özeti yükleniyor...</div>
+      } @else if (aiSummary) {
+        <div class="ai-summary">
+          <div class="ai-summary__header">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2a10 10 0 0 1 10 10c0 5.52-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2"/>
+              <path d="M12 6v6l4 2"/>
+            </svg>
+            <span>AI Özet</span>
+          </div>
+          <p class="ai-summary__text">{{ aiSummary }}</p>
+        </div>
+      }
 
       @if (canReview) {
         <div class="review-form">

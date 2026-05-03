@@ -1,6 +1,8 @@
 package com.example.demo.controller;
 
+import com.example.demo.entity.LoginHistory;
 import com.example.demo.entity.User;
+import com.example.demo.repository.LoginHistoryRepository;
 import com.example.demo.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -14,6 +16,7 @@ import java.util.List;
 public class UserController {
 
     private final UserRepository userRepository;
+    private final LoginHistoryRepository loginHistoryRepository;
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
@@ -25,6 +28,12 @@ public class UserController {
     @PreAuthorize("hasRole('ADMIN')")
     public List<User> getAllSellers() {
         return userRepository.findByRole(User.Role.SELLER);
+    }
+
+    @GetMapping("/{id}/login-history")
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<LoginHistory> getUserLoginHistory(@PathVariable Long id) {
+        return loginHistoryRepository.findByUserIdOrderByLoginDateDesc(id);
     }
 
     @PatchMapping("/{id}/role")

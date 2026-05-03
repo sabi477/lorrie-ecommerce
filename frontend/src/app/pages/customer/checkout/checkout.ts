@@ -2,6 +2,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { CartService } from '../../../services/cart';
 import { AuthService } from '../../../services/auth';
 import { OrderService } from '../../../services/order';
@@ -19,11 +20,16 @@ export class CustomerCheckout implements OnInit {
   private auth = inject(AuthService);
   private orderService = inject(OrderService);
   private profileSvc = inject(UserProfileService);
+  private http = inject(HttpClient);
 
   confirmed = false;
   loading   = false;
   orderId   = '';
   errorMessage = '';
+  campaignCode = '';
+  campaignError = '';
+  campaignDiscount = 0;
+  campaignLoading = false;
 
   // Saved data
   savedAddresses: SavedAddress[] = [];
@@ -42,7 +48,7 @@ export class CustomerCheckout implements OnInit {
 
   get subtotal() { return this.cartSvc.subtotal(); }
   get shipping()  { return this.cartSvc.shipping(); }
-  get total()     { return this.cartSvc.total(); }
+  get total()     { return this.cartSvc.total() - this.campaignDiscount; }
 
   ngOnInit() {
     const userId = this.auth.getUserId();
@@ -73,6 +79,38 @@ export class CustomerCheckout implements OnInit {
     } else if (!token) {
       this.errorMessage = 'Oturum süreniz dolmuş. Lütfen tekrar giriş yapın.';
     }
+  }
+
+  applyCampaign() {
+    if (!this.campaignCode.trim()) {
+      this.campaignError = '';
+      this.campaignDiscount = 0;
+      return;
+    }
+    this.campaignLoading = true;
+    this.campaignError = '';
+    const userId = this.auth.getUserId();
+    const headers = new HttpHeaders({ Authorization: `Bearer ${this.auth.getToken()}` });
+    this.http.get<any>('http://localhost:8080/api/campaigns/validate', {
+      headers,
+      params: { code: this.campaignCode, subtotal: this.subtotal, userId: userId ?? 0 }
+    }).subscribe({
+      next: (res) => {
+        this.campaignLoading = false;
+        if (res.valid) {
+          this.campaignDiscount = res.discountAmount;
+          this.campaignError = '';
+        } else {
+          this.campaignDiscount = 0;
+          this.campaignError = res.errorMessage;
+        }
+      },
+      error: () => {
+        this.campaignLoading = false;
+        this.campaignDiscount = 0;
+        this.campaignError = 'Kod geçersiz.';
+      }
+    });
   }
 
   formatPrice(n: number) { return '$' + n.toLocaleString('en-US'); }
@@ -150,7 +188,7 @@ export class CustomerCheckout implements OnInit {
     const total = this.total;
 
     const placeOrder = () => {
-      this.orderService.create({ customerId, totalAmount: total, items: snapshot }).subscribe({
+      this.orderService.create({ customerId, totalAmount: total, items: snapshot, campaignCode: this.campaignCode || undefined }).subscribe({
         next: (order) => {
           this.orderId = String(order.id);
           this.loading = false;

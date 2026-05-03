@@ -29,35 +29,56 @@ export class FavoritesService {
 
   constructor(private http: HttpClient, private auth: AuthService) {
     this.load();
+    this.auth.onLogin(() => this.load());
   }
 
   load(): void {
-    if (!this.auth.getToken()) {
+    const token = this.auth.getToken();
+    console.log('[FavService] load() called, token:', token ? 'present' : 'null');
+
+    if (!token) {
       this._items.set([]);
       return;
     }
 
-    this.http.get<Product[]>(this.api, { headers: this.headers() }).subscribe({
-      next: products => this._items.set(products.map(product => this.normalizeItem(product))),
-      error: () => this._items.set([]),
+    const hdrs = this.headers();
+    console.log('[FavService] load headers:', hdrs.get('Authorization'));
+
+    this.http.get<Product[]>(this.api, { headers: hdrs }).subscribe({
+      next: products => {
+        console.log('[FavService] load success, products:', products.length);
+        this._items.set(products.map(product => this.normalizeItem(product)));
+      },
+      error: (err) => {
+        console.error('[FavService] load error:', err);
+        this._items.set([]);
+      },
     });
   }
 
   toggle(item: FavoriteItem | Product | any): void {
-    if (this.isFavorited(item.id)) {
-      this.remove(item.id);
+    const itemId = Number(item.id);
+    console.log('[FavService] toggle called, id:', itemId, 'isFav:', this.isFavorited(itemId));
+
+    if (this.isFavorited(itemId)) {
+      this.remove(itemId);
       return;
     }
 
     const optimisticItem = this.normalizeItem(item);
     this._items.update(list => [...list, optimisticItem]);
 
-    this.http.post<Product>(`${this.api}/${item.id}`, null, { headers: this.headers() }).subscribe({
+    const hdrs = this.headers();
+    console.log('[FavService] toggle headers:', hdrs.get('Authorization'));
+
+    this.http.post<Product>(`${this.api}/${itemId}`, null, { headers: hdrs }).subscribe({
       next: product => {
-        this._items.update(list => list.map(i => i.id === product.id ? this.normalizeItem(product) : i));
+        console.log('[FavService] toggle success, product:', product);
+        this._items.update(list => list.map(i => i.id === itemId ? this.normalizeItem(product) : i));
       },
-      error: () => {
-        this._items.update(list => list.filter(i => i.id !== item.id));
+      error: (err) => {
+        console.error('[FavService] toggle error:', err);
+        this._items.update(list => list.filter(i => i.id !== itemId));
       },
     });
   }
@@ -67,11 +88,15 @@ export class FavoritesService {
   }
 
   remove(id: number): void {
+    console.log('[FavService] remove called, id:', id);
     const previous = this._items();
     this._items.update(list => list.filter(i => i.id !== id));
 
     this.http.delete<void>(`${this.api}/${id}`, { headers: this.headers() }).subscribe({
-      error: () => this._items.set(previous),
+      error: (err) => {
+        console.error('[FavService] remove error:', err);
+        this._items.set(previous);
+      },
     });
   }
 

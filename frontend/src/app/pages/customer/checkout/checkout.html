@@ -229,7 +229,29 @@
           @if (subtotal < 1500) {
             <p class="free-hint">${{ (1500 - subtotal).toLocaleString('en-US') }} daha ekleyin, kargo ücretsiz!</p>
           }
+          @if (campaignDiscount > 0) {
+            <div class="tot-row tot-row--discount">
+              <span>İndirim <span class="camp-code">{{ campaignCode }}</span></span>
+              <span class="discount-val">-{{ formatPrice(campaignDiscount) }}</span>
+            </div>
+          }
           <div class="tot-row tot-row--total"><span>Toplam</span><span>{{ formatPrice(total) }}</span></div>
+        </div>
+
+        <div class="campaign-input">
+          <div class="campaign-row">
+            <input type="text" placeholder="Kampanya kodu" [(ngModel)]="campaignCode" (keyup.enter)="applyCampaign()" class="campaign-field" />
+            <button class="campaign-apply-btn" [disabled]="campaignLoading" (click)="applyCampaign()">
+              @if (campaignLoading) { ... }
+              @else { Uygula }
+            </button>
+          </div>
+          @if (campaignError) {
+            <p class="campaign-error">{{ campaignError }}</p>
+          }
+          @if (campaignDiscount > 0) {
+            <p class="campaign-success">{{ campaignCode }} indirim uygulandı!</p>
+          }
         </div>
 
         <button class="submit-btn" [disabled]="!canSubmit || loading" (click)="submit()">

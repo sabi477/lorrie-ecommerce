@@ -19,6 +19,7 @@ import { AuthService } from '../../services/auth';
 import { CartService } from '../../services/cart';
 import { FavoritesService } from '../../services/favorites';
 import { ProductService, Product } from '../../services/product';
+import { CategoryService } from '../../services/category';
 import { LocaleService } from '../../../i18n/locale.service';
 import { TranslatePipe } from '../../../i18n/translate.pipe';
 
@@ -35,6 +36,7 @@ export interface StoreProduct {
   bg: string;
   accent: string;
   imageUrl: string;
+  thumbnail?: string | null;
   favorited: boolean;
   stock: number;
   icon: string;
@@ -60,6 +62,34 @@ const CATEGORY_PALETTE: Record<string, { bg: string; accent: string }> = {
   'Watches': { bg: '#F0F4F8', accent: '#3D5A80' },
   'Blouse': { bg: '#FFF0F3', accent: '#C1485E' },
   'Ethnic Dress': { bg: '#FDF6E3', accent: '#D4AC0D' },
+  'Smartphones': { bg: '#EBF3FF', accent: '#2D6EA6' },
+  'Laptops': { bg: '#EBF3FF', accent: '#2D6EA6' },
+  'Tablets': { bg: '#EBF3FF', accent: '#2D6EA6' },
+  'Mobile Accessories': { bg: '#EBF3FF', accent: '#2D6EA6' },
+  'Automotive': { bg: '#F0F4F8', accent: '#3D5A80' },
+  'Lighting': { bg: '#FDF6E3', accent: '#D4AC0D' },
+  'Womens Dresses': { bg: '#FFF0F3', accent: '#C1485E' },
+  'Womens Bags': { bg: '#F5F0E8', accent: '#8B6914' },
+  'Womens Shoes': { bg: '#F5F0E8', accent: '#8B6914' },
+  'Womens Jewellery': { bg: '#FDF6E3', accent: '#D4AC0D' },
+  'Womens Watches': { bg: '#F0F4F8', accent: '#3D5A80' },
+  'Tops': { bg: '#F3EEF8', accent: '#7B52A6' },
+  'Mens Shirts': { bg: '#EBF3FF', accent: '#2D6EA6' },
+  'Mens Shoes': { bg: '#F5F0E8', accent: '#8B6914' },
+  'Mens Watches': { bg: '#F0F4F8', accent: '#3D5A80' },
+  'Sunglasses': { bg: '#F0F4F8', accent: '#3D5A80' },
+  'Beauty': { bg: '#F8F0F5', accent: '#9C3F6B' },
+  'Fragrances': { bg: '#F8F0F5', accent: '#9C3F6B' },
+  'Skin Care': { bg: '#F8F0F5', accent: '#9C3F6B' },
+  'Furniture': { bg: '#FFF5EB', accent: '#C47928' },
+  'Home Decoration': { bg: '#FFF5EB', accent: '#C47928' },
+  'Kitchen Accessories': { bg: '#FFF5EB', accent: '#C47928' },
+  'Bedding': { bg: '#EDFAF0', accent: '#2E7D4F' },
+  'Toilet': { bg: '#EDFAF0', accent: '#2E7D4F' },
+  'Groceries': { bg: '#EDFAF7', accent: '#267D6A' },
+  'Sports Accessories': { bg: '#EDFAF0', accent: '#2E7D4F' },
+  'Motorcycle': { bg: '#F0F4F8', accent: '#3D5A80' },
+  'Vehicle': { bg: '#F0F4F8', accent: '#3D5A80' },
 };
 const DEFAULT_PALETTE = { bg: '#F1F2F7', accent: '#6E7787' };
 
@@ -91,6 +121,7 @@ function mapProduct(p: Product, index: number): StoreProduct {
     bg: palette.bg,
     accent: palette.accent,
     imageUrl: p.thumbnail ?? p.imageUrl ?? `https://picsum.photos/seed/${p.id}/400/400`,
+    thumbnail: p.thumbnail ?? p.imageUrl ?? null,
     favorited: false,
     stock: p.stockQuantity,
     icon: '',
@@ -119,14 +150,13 @@ export class Store implements OnInit, AfterViewInit, OnDestroy {
   loading = true;
   loadingMore = false;
   loadingSearch = false;
-  loadingVisualSearch = false;
-  visualSearchPreview = '';
-  visualSearchResults: StoreProduct[] = [];
   isSearchDropdownVisible = false;
   currentPage = 0;
   readonly pageSize = 42;
   hasMore = true;
   sellerId: number | null = null;
+  categoryId: number | null = null;
+  categoryName = '';
   sellerName = '';
   private loadMoreObserver?: IntersectionObserver;
   private loadMoreTrigger?: ElementRef<HTMLElement>;
@@ -143,7 +173,12 @@ export class Store implements OnInit, AfterViewInit, OnDestroy {
   sortBy: 'relevance' | 'price_asc' | 'price_desc' | 'rating' | 'newest' = 'relevance';
 
   get availableCategories(): string[] {
-    return [...new Set(this.allProducts.map(p => p.category))].sort();
+    const productCats = [...new Set(this.allProducts.map(p => p.category))].sort();
+    if (this.allCategories.length > 0) {
+      const apiCats = this.allCategories.sort();
+      return [...new Set([...apiCats, ...productCats])];
+    }
+    return productCats;
   }
 
   get availableBrands(): string[] {
@@ -156,7 +191,9 @@ export class Store implements OnInit, AfterViewInit, OnDestroy {
     this.observeLoadMoreTrigger();
   }
 
+  allCategories: string[] = [];
   tabs: string[] = ['Tümü'];
+  categoryTab: string | null = null;
 
   allProducts: StoreProduct[] = [];
   searchResults: StoreProduct[] = [];
@@ -173,7 +210,8 @@ export class Store implements OnInit, AfterViewInit, OnDestroy {
       result = result.filter(p =>
         p.name.toLowerCase().includes(kw) ||
         p.brand.toLowerCase().includes(kw) ||
-        p.category.toLowerCase().includes(kw)
+        p.category.toLowerCase().includes(kw) ||
+        (p.sellerName && p.sellerName.toLowerCase().includes(kw))
       );
     }
 
@@ -216,10 +254,6 @@ export class Store implements OnInit, AfterViewInit, OnDestroy {
   }
 
   get filteredProducts(): StoreProduct[] {
-    if (this.visualSearchResults.length > 0) {
-      return this.visualSearchResults;
-    }
-
     const popularIds = new Set(this.popularProducts.map(p => p.id));
 
     let list = this.activeTab === 'Tümü' || this.activeTab === 'İndirim'
@@ -234,6 +268,7 @@ export class Store implements OnInit, AfterViewInit, OnDestroy {
   constructor(
     private authService: AuthService,
     private productService: ProductService,
+    private categoryService: CategoryService,
     private cdr: ChangeDetectorRef,
     private route: ActivatedRoute,
     public router: Router,
@@ -277,6 +312,7 @@ export class Store implements OnInit, AfterViewInit, OnDestroy {
     this.userRole = this.authService.getRole() ?? '';
 
     this.favSvc.load();
+    this.loadCategories();
 
     this.route.queryParamMap.subscribe(qp => {
       const q = qp.get('q');
@@ -288,7 +324,9 @@ export class Store implements OnInit, AfterViewInit, OnDestroy {
 
     this.route.paramMap.subscribe(params => {
       const sellerId = Number(params.get('sellerId'));
+      const categoryId = Number(params.get('categoryId'));
       this.sellerId = Number.isFinite(sellerId) && sellerId > 0 ? sellerId : null;
+      this.categoryId = Number.isFinite(categoryId) && categoryId > 0 ? categoryId : null;
       this.sellerName = '';
       this.activeTab = 'Tümü';
       this.searchQuery = '';
@@ -320,25 +358,32 @@ export class Store implements OnInit, AfterViewInit, OnDestroy {
   loadProducts(): void {
     this.loading = true;
     this.currentPage = 0;
-    this.hasMore = this.sellerId === null;
-    const request = this.sellerId === null
-      ? this.productService.getAll(this.pageSize, 0)
-      : this.productService.getBySeller(this.sellerId);
+    this.hasMore = this.sellerId === null && this.categoryId === null;
+    const request = this.sellerId !== null
+      ? this.productService.getBySeller(this.sellerId)
+      : this.categoryId !== null
+        ? this.productService.getByCategory(this.categoryId)
+        : this.productService.getAll(this.pageSize, 0);
 
     request.subscribe({
       next: (products) => {
         this.allProducts = products.map((p, i) => mapProduct(p, i));
-        this.sellerName = this.sellerId === null
-          ? ''
-          : products[0]?.seller?.fullName ?? 'Satıcı Mağazası';
+        if (this.sellerId !== null) {
+          this.sellerName = products[0]?.seller?.fullName ?? 'Satıcı Mağazası';
+        } else if (this.categoryId !== null) {
+          this.categoryName = products[0]?.category?.name ?? 'Kategori';
+          this.categoryTab = this.categoryName;
+          this.activeTab = this.categoryName;
+        }
         this.updateTabs();
         this.loading = false;
-        this.hasMore = this.sellerId === null && products.length === this.pageSize;
+        this.hasMore = this.sellerId === null && this.categoryId === null && products.length === this.pageSize;
         this.cdr.detectChanges();
       },
       error: () => {
         this.allProducts = [];
-        this.sellerName = this.sellerId === null ? '' : 'Satıcı Mağazası';
+        this.sellerName = this.sellerId !== null ? 'Satıcı Mağazası' : '';
+        this.categoryName = this.categoryId !== null ? 'Kategori' : '';
         this.loading = false;
         this.hasMore = false;
         this.cdr.detectChanges();
@@ -369,8 +414,21 @@ export class Store implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private updateTabs(): void {
-    const cats = [...new Set(this.allProducts.map(p => p.category))].sort();
+    const cats = [...new Set([...this.allCategories, ...this.allProducts.map(p => p.category)])].sort();
     this.tabs = ['Tümü', ...cats, 'İndirim'];
+  }
+
+  loadCategories(): void {
+    this.categoryService.getAll().subscribe({
+      next: (cats) => {
+        this.allCategories = cats.map(c => c.name);
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.allCategories = [];
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   private observeLoadMoreTrigger(): void {
@@ -471,35 +529,6 @@ export class Store implements OnInit, AfterViewInit, OnDestroy {
     this.searchQuery = '';
     this.searchResults = [];
     this.isSearchDropdownVisible = false;
-  }
-
-  onImageSearch(event: Event): void {
-    const file = (event.target as HTMLInputElement).files?.[0];
-    if (!file) return;
-
-    this.visualSearchPreview = URL.createObjectURL(file);
-    this.loadingVisualSearch = true;
-    this.searchQuery = '';
-    this.searchResults = [];
-    this.visualSearchResults = [];
-
-    this.productService.visualSearch(file).subscribe({
-      next: (products) => {
-        this.visualSearchResults = products.map((p, i) => mapProduct(p, i));
-        this.loadingVisualSearch = false;
-        this.cdr.detectChanges();
-      },
-      error: () => {
-        this.loadingVisualSearch = false;
-        this.cdr.detectChanges();
-      }
-    });
-  }
-
-  clearVisualSearch(): void {
-    this.visualSearchPreview = '';
-    this.visualSearchResults = [];
-    this.loadingVisualSearch = false;
   }
 
   clearFilters(): void {

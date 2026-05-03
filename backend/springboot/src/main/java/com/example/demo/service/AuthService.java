@@ -4,18 +4,24 @@ import com.example.demo.dto.AuthResponse;
 import com.example.demo.dto.ChangePasswordRequest;
 import com.example.demo.dto.LoginRequest;
 import com.example.demo.dto.RegisterRequest;
+import com.example.demo.entity.LoginHistory;
 import com.example.demo.entity.User;
+import com.example.demo.repository.LoginHistoryRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final LoginHistoryRepository loginHistoryRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
@@ -48,6 +54,38 @@ public class AuthService {
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new RuntimeException("Invalid password");
         }
+
+        String ip = request.getIp() != null ? request.getIp() : "unknown";
+        String city = request.getCity() != null ? request.getCity() : "unknown";
+
+        boolean isNewIp = true;
+        boolean isRisky = false;
+
+        List<LoginHistory> history = loginHistoryRepository.findByUserIdOrderByLoginDateDesc(user.getId());
+        if (!history.isEmpty()) {
+            String lastIp = history.get(0).getIp();
+            if (!lastIp.equals(ip) && !lastIp.equals("unknown")) {
+                isNewIp = true;
+                isRisky = true;
+            } else {
+                isNewIp = false;
+                isRisky = false;
+            }
+        }
+
+        LoginHistory loginRecord = new LoginHistory();
+        loginRecord.setUser(user);
+        loginRecord.setIp(ip);
+        loginRecord.setCity(city);
+        loginRecord.setLoginDate(LocalDateTime.now());
+        loginRecord.setNewIp(isNewIp);
+        loginRecord.setRisky(isRisky);
+        loginHistoryRepository.save(loginRecord);
+
+        user.setLastLoginIp(ip);
+        user.setLastLoginCity(city);
+        user.setLastLoginDate(LocalDateTime.now());
+        userRepository.save(user);
 
         String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name());
         return new AuthResponse(token, user.getRole().name(), user.getEmail(), user.getFullName(), user.getId(), user.getPhone());

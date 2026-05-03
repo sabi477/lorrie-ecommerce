@@ -35,6 +35,9 @@
                   <img [src]="p.imageUrl" [alt]="p.name" />
                   <div class="search-dropdown__item-info">
                     <span class="search-dropdown__item-name">{{ p.name }}</span>
+                    @if (p.sellerName) {
+                      <span class="search-dropdown__item-seller">{{ p.sellerName }}</span>
+                    }
                     <span class="search-dropdown__item-price">{{ formatPrice(p.price) }}</span>
                   </div>
                 </a>

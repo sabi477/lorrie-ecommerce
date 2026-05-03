@@ -7,6 +7,8 @@ import com.example.demo.repository.FavoriteRepository;
 import com.example.demo.repository.ProductRepository;
 import com.example.demo.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -20,6 +22,8 @@ import java.util.List;
 @RequestMapping("/api/favorites")
 @RequiredArgsConstructor
 public class FavoriteController {
+
+    private static final Logger log = LoggerFactory.getLogger(FavoriteController.class);
 
     private final FavoriteRepository favoriteRepository;
     private final ProductRepository productRepository;
@@ -37,7 +41,9 @@ public class FavoriteController {
 
     @PostMapping("/{productId}")
     public ResponseEntity<Product> addFavorite(@PathVariable Long productId, Authentication authentication) {
+        log.info("addFavorite called: productId={}, auth={}", productId, authentication);
         User user = currentUser(authentication);
+        log.info("addFavorite user: {}", user.getEmail());
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found"));
 

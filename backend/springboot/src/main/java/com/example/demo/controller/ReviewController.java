@@ -39,6 +39,42 @@ public class ReviewController {
         return reviewRepository.findByProductId(productId);
     }
 
+    @GetMapping("/summary/{productId}")
+    public ResponseEntity<Map<String, Object>> getAiSummary(@PathVariable Long productId) {
+        List<Review> reviews = reviewRepository.findByProductId(productId);
+        if (reviews.isEmpty()) {
+            return ResponseEntity.ok(Map.of("summary", "Bu ürün için henüz değerlendirme bulunmuyor.", "reviewCount", 0));
+        }
+
+        double avgRating = reviews.stream().mapToInt(r -> r.getRating() != null ? r.getRating() : 0).average().orElse(0);
+        long positiveCount = reviews.stream().filter(r -> r.getRating() != null && r.getRating() >= 4).count();
+        long neutralCount = reviews.stream().filter(r -> r.getRating() != null && r.getRating() == 3).count();
+        long negativeCount = reviews.stream().filter(r -> r.getRating() != null && r.getRating() <= 2).count();
+
+        StringBuilder summary = new StringBuilder();
+        summary.append(String.format("Bu ürün %.1f/5 ortalama puan almış (%d değerlendirme). ", avgRating, reviews.size()));
+        summary.append(String.format("Müşteri görüşleri: %d olumlu, %d nötr, %d olumsuz. ", positiveCount, neutralCount, negativeCount));
+
+        if (avgRating >= 4.5) {
+            summary.append("Ürün çok beğenilmiş ve tavsiye ediliyor. ");
+        } else if (avgRating >= 4.0) {
+            summary.append("Genel olarak memnun kalınmış, kaliteli bir seçim olabilir. ");
+        } else if (avgRating >= 3.0) {
+            summary.append("Orta düzey bir ürün, beklentileri karşılayabilir. ");
+        } else {
+            summary.append("Düşük puanlı bir ürün, satın almadan önce dikkatli olunması tavsiye ediliyor. ");
+        }
+
+        return ResponseEntity.ok(Map.of(
+            "summary", summary.toString(),
+            "reviewCount", reviews.size(),
+            "averageRating", Math.round(avgRating * 10.0) / 10.0,
+            "positiveCount", positiveCount,
+            "neutralCount", neutralCount,
+            "negativeCount", negativeCount
+        ));
+    }
+
     @GetMapping("/customer/{customerId}")
     public List<Review> getByCustomer(@PathVariable Long customerId) {
         return reviewRepository.findByCustomerId(customerId);

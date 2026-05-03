@@ -46,8 +46,8 @@ Task 1 (ANALYSIS): Analyze the SQL query results in 3-5 sentences.
 - Be friendly and professional.
 - Respond ONLY in {lang_name}.
 - IMPORTANT: When responding about orders, products, or any data that has a direct URL link, you MUST include clickable HTML links.
-  - For orders: use URL pattern /customer/order-detail/{{id}} → <a href="/customer/order-detail/{{id}}">Sipariş #{{id}}</a>
-  - For products: use URL pattern /product-detail/{{id}} → <a href="/product-detail/{{id}}">{{name}}</a>
+  - For orders: use URL pattern /customer/order-detail/{{{{id}}}} → <a href="/customer/order-detail/{{{{id}}}}">Sipariş #{{{{id}}}}</a>
+  - For products: use URL pattern /product-detail/{{{{id}}}} → <a href="/product-detail/{{{{id}}}}">{{{{name}}}}</a>
   - Example in Turkish: "En pahalı siparişiniz 5,999₺ - <a href="/customer/order-detail/124">Sipariş #124</a> sayfasından detayları görün"
   - Example in English: "Your most expensive order is $5,999 - view details at <a href="/customer/order-detail/124">Order #124</a>"
   - Always use relative URLs starting with / (they will work in the app)

@@ -1,0 +1,14 @@
+CREATE TABLE login_history (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    ip VARCHAR(45) NOT NULL,
+    city VARCHAR(100),
+    login_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    is_risky BOOLEAN NOT NULL DEFAULT FALSE,
+    is_new_ip BOOLEAN NOT NULL DEFAULT FALSE,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+ALTER TABLE users ADD COLUMN last_login_ip VARCHAR(45);
+ALTER TABLE users ADD COLUMN last_login_city VARCHAR(100);
+ALTER TABLE users ADD COLUMN last_login_date TIMESTAMP;

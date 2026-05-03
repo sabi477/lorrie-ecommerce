@@ -37,4 +37,10 @@ export class ReviewService {
   create(review: { productId: number; rating: number; comment: string }): Observable<Review> {
     return this.http.post<Review>(this.api, review, { headers: this.headers() });
   }
+
+  getAiSummary(productId: number): Observable<{ summary: string; reviewCount: number; averageRating: number; positiveCount: number; neutralCount: number; negativeCount: number }> {
+    return this.http.get<{ summary: string; reviewCount: number; averageRating: number; positiveCount: number; neutralCount: number; negativeCount: number }>(
+      `${this.api}/summary/${productId}`
+    );
+  }
 }

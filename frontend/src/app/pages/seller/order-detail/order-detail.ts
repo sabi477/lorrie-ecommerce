@@ -84,4 +84,8 @@ export class SellerOrderDetail implements OnInit {
   goBack() {
     this.router.navigate(['/orders']);
   }
+
+  printOrder() {
+    window.print();
+  }
 }

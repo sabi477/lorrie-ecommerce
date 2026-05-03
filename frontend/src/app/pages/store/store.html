@@ -34,14 +34,6 @@
           (keydown.enter)="onEnter($any($event))"
           (focus)="onSearchFocus()" />
         <button class="navbar__search-btn" (click)="search()">{{ 'store.search' | translate }}</button>
-        <label class="navbar__search-camera" title="Görsel ile ara">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="3" width="18" height="18" rx="2"/>
-            <circle cx="12" cy="12" r="3"/>
-            <path d="M8 8h.01M8 16h.01M16 8h.01M16 16h.01"/>
-          </svg>
-          <input type="file" accept="image/*" hidden (change)="onImageSearch($event)" />
-        </label>
       </div>
 
       @if (isSearchDropdownVisible && searchQuery.trim().length > 0) {
@@ -57,6 +49,9 @@
                 <img [src]="p.imageUrl" [alt]="p.name" />
                 <div class="search-dropdown__item-info">
                   <span class="search-dropdown__item-name">{{ p.name }}</span>
+                  @if (p.sellerName) {
+                    <span class="search-dropdown__item-seller">{{ p.sellerName }}</span>
+                  }
                   <span class="search-dropdown__item-price">{{ formatPrice(p.price) }}</span>
                 </div>
               </a>
@@ -64,34 +59,6 @@
           } @else {
             <div class="search-dropdown__empty">{{ 'common.noResults' | translate }}</div>
           }
-        </div>
-      }
-
-      @if (visualSearchPreview) {
-        <div class="visual-search-preview">
-          <img [src]="visualSearchPreview" alt="Arama görseli" />
-          <button class="visual-search-preview__clear" (click)="clearVisualSearch()">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          </button>
-        </div>
-      }
-
-      @if (loadingVisualSearch) {
-        <div class="search-dropdown">
-          <div class="search-dropdown__loading">
-            <div class="loading-spinner loading-spinner--sm"></div>
-            <span>{{ 'common.imageSearching' | translate }}</span>
-          </div>
-        </div>
-      }
-
-
-      @if (visualSearchResults.length > 0) {
-        <div class="visual-search-results">
-          <div class="visual-search-results__header">
-            <span>{{ 'store.visualSearchResults' | translate }}</span>
-            <button (click)="clearVisualSearch()">{{ 'store.clear' | translate }}</button>
-          </div>
         </div>
       }
 
@@ -306,8 +273,24 @@
     </section>
   }
 
+  @if (categoryId !== null) {
+    <section class="seller-hero">
+      <div class="seller-hero__inner">
+        <a class="seller-hero__back" routerLink="/">Mağazaya dön</a>
+        <div class="seller-hero__main">
+          <div class="seller-hero__mark">{{ (categoryName || 'K').charAt(0).toUpperCase() }}</div>
+          <div>
+            <p class="seller-hero__eyebrow">Kategori</p>
+            <h1>{{ categoryName || 'Kategori' }}</h1>
+            <p>{{ allProducts.length }} ürün listeleniyor</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  }
+
   <!-- ══════════ CATEGORY TABS ══════════════════════════════════ -->
-  @if (!isSearchPage) {
+  @if (!isSearchPage && categoryId === null) {
   <nav class="cattabs">
     <div class="cattabs__inner">
       @for (tab of tabs; track tab) {
@@ -389,7 +372,7 @@
   <section class="section">
     <div class="section__head">
       <h2 class="section__title">
-        {{ visualSearchResults.length > 0 ? 'Görsel Arama Sonuçları' : (sellerId === null ? (activeTab === 'Tümü' ? 'Tüm Ürünler' : activeTab) : (activeTab === 'Tümü' ? 'Mağazadaki Ürünler' : activeTab)) }}
+        {{ sellerId !== null ? (activeTab === 'Tümü' ? 'Mağazadaki Ürünler' : activeTab) : (categoryId !== null ? (activeTab === 'Tümü' ? categoryName : activeTab) : (activeTab === 'Tümü' ? 'Tüm Ürünler' : activeTab)) }}
         <span class="section__count">{{ filteredProducts.length }} ürün</span>
       </h2>
     </div>

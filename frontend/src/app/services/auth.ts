@@ -8,11 +8,22 @@ import { Observable, tap } from 'rxjs';
 export class AuthService {
 
   private apiUrl = 'http://localhost:8080/api/auth';
+  private onLoginCallbacks: (() => void)[] = [];
 
   constructor(private http: HttpClient) { }
 
+  onLogin(callback: () => void): void {
+    this.onLoginCallbacks.push(callback);
+  }
+
   login(email: string, password: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/login`, { email, password }).pipe(
+    const loginData = {
+      email,
+      password,
+      ip: '',
+      city: ''
+    };
+    return this.http.post(`${this.apiUrl}/login`, loginData).pipe(
       tap((res: any) => {
         localStorage.setItem('token', res.token);
         localStorage.setItem('role', res.role);
@@ -20,6 +31,8 @@ export class AuthService {
         localStorage.setItem('fullName', res.fullName);
         localStorage.setItem('id', res.id);
         localStorage.setItem('phone', res.phone || '');
+        console.log('[AuthService] login success, token:', res.token ? 'present' : 'null');
+        this.onLoginCallbacks.forEach(cb => cb());
       })
     );
   }
@@ -33,6 +46,7 @@ export class AuthService {
         localStorage.setItem('fullName', res.fullName);
         localStorage.setItem('id', res.id);
         localStorage.setItem('phone', res.phone || '');
+        this.onLoginCallbacks.forEach(cb => cb());
       })
     );
   }

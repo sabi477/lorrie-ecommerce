@@ -54,6 +54,15 @@ export class ProductService {
     return this.http.get<Product[]>(this.api, options);
   }
 
+  getByCategory(categoryId: number): Observable<Product[]> {
+    const token = this.auth.getToken();
+    const options: { headers?: HttpHeaders; params: HttpParams } = {
+      params: new HttpParams().set('categoryId', categoryId.toString()),
+    };
+    if (token) options.headers = this.headers();
+    return this.http.get<Product[]>(this.api, options);
+  }
+
   getById(id: number): Observable<Product> {
     const token = this.auth.getToken();
     const options = token ? { headers: this.headers() } : {};
@@ -81,12 +90,6 @@ export class ProductService {
 
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.api}/${id}`, { headers: this.headers() });
-  }
-
-  visualSearch(file: File): Observable<Product[]> {
-    const formData = new FormData();
-    formData.append('image', file);
-    return this.http.post<Product[]>(`${this.api}/visual-search`, formData);
   }
 
   bulkUpdate(ids: number[], fields: Partial<Product>): Observable<Product[]> {

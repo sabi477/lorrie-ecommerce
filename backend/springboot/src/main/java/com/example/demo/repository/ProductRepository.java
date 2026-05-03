@@ -14,4 +14,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     boolean existsByThumbnailIsNotNull();
 
     List<Product> findByNameContainingIgnoreCase(String name);
+
+    @Query("SELECT p FROM Product p JOIN FETCH p.seller WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(p.seller.fullName) LIKE LOWER(CONCAT('%', :query, '%'))")
+    List<Product> searchByNameOrSeller(String query);
 }

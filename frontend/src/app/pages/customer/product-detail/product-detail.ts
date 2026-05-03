@@ -41,6 +41,9 @@ export class CustomerProductDetail implements OnInit {
   reviewSuccess = false;
   hoverRating = 0;
 
+  aiSummary = '';
+  aiSummaryLoading = false;
+
   readonly isFav = computed(() =>
     this.product ? this.favSvc.isFavorited(this.product.id) : false
   );
@@ -152,6 +155,19 @@ export class CustomerProductDetail implements OnInit {
       },
       error: () => {
         this.reviews = [];
+        this.cdr.detectChanges();
+      },
+    });
+    this.aiSummaryLoading = true;
+    this.reviewSvc.getAiSummary(productId).subscribe({
+      next: (data) => {
+        this.aiSummary = data.summary;
+        this.aiSummaryLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.aiSummary = '';
+        this.aiSummaryLoading = false;
         this.cdr.detectChanges();
       },
     });

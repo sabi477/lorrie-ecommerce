@@ -46,16 +46,16 @@
       <div class="items-list">
         @for (item of order.items || []; track item.productId) {
           <div class="item-row">
-            <div class="item-img" [style.background]="item.thumbnail ? 'transparent' : '#f3f4f6'">
+            <a class="item-img" [routerLink]="['/product-detail', item.productId]" [style.background]="item.thumbnail ? 'transparent' : '#f3f4f6'">
               @if (item.thumbnail) {
                 <img [src]="item.thumbnail" [alt]="item.name" />
               }
-            </div>
+            </a>
             <div class="item-info">
-              <p class="item-name">{{ item.name }}</p>
+              <a class="item-name" [routerLink]="['/product-detail', item.productId]">{{ item.name }}</a>
               <p class="item-qty">{{ item.qty }} adet</p>
             </div>
-            <p class="item-price">{{ formatPrice(item.price * item.qty) }}</p>
+            <a class="item-price" [routerLink]="['/product-detail', item.productId]">{{ formatPrice(item.price * item.qty) }}</a>
           </div>
         }
       </div>

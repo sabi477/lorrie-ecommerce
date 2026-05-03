@@ -17,7 +17,7 @@ export interface CartItem {
 
 @Injectable({ providedIn: 'root' })
 export class CartService {
-  private _items = signal<CartItem[]>([]);
+  private _items = signal<CartItem[]>(this.loadFromStorage());
   private api = 'http://localhost:8080/api/cart';
 
   readonly items    = this._items.asReadonly();
@@ -30,9 +30,20 @@ export class CartService {
     if (auth.isLoggedIn()) this.loadFromServer();
   }
 
+  private loadFromStorage(): CartItem[] {
+    try {
+      const stored = localStorage.getItem('cart');
+      return stored ? JSON.parse(stored) : [];
+    } catch { return []; }
+  }
+
+  private saveToStorage() {
+    localStorage.setItem('cart', JSON.stringify(this._items()));
+  }
+
   loadFromServer() {
     this.http.get<any[]>(this.api, { headers: this.headers() }).subscribe({
-      next: items => this._items.set(items.map(this.mapResponse)),
+      next: items => { this._items.set(items.map(this.mapResponse)); this.saveToStorage(); },
       error: () => {}
     });
   }
@@ -44,6 +55,7 @@ export class CartService {
     } else {
       this._items.update(list => [...list, { ...item, qty: 1 }]);
     }
+    this.saveToStorage();
     if (this.auth.isLoggedIn()) {
       this.http.post(`${this.api}/${item.id}`, {}, { headers: this.headers() }).subscribe({ error: () => {} });
     }
@@ -51,6 +63,7 @@ export class CartService {
 
   remove(id: number) {
     this._items.update(list => list.filter(i => i.id !== id));
+    this.saveToStorage();
     if (this.auth.isLoggedIn()) {
       this.http.delete(`${this.api}/${id}`, { headers: this.headers() }).subscribe({ error: () => {} });
     }
@@ -61,6 +74,7 @@ export class CartService {
     if (!item) return;
     const newQty = Math.max(1, item.qty + delta);
     this._items.update(list => list.map(i => i.id === id ? { ...i, qty: newQty } : i));
+    this.saveToStorage();
     if (this.auth.isLoggedIn()) {
       this.http.put(`${this.api}/${id}`, { qty: newQty }, { headers: this.headers() }).subscribe({ error: () => {} });
     }
@@ -68,6 +82,7 @@ export class CartService {
 
   clear() {
     this._items.set([]);
+    this.saveToStorage();
     if (this.auth.isLoggedIn()) {
       this.http.delete(this.api, { headers: this.headers() }).subscribe({ error: () => {} });
     }

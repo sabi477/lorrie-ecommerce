@@ -26,4 +26,7 @@ public class Review {
 
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Column(columnDefinition = "TEXT")
+    private String aiSummary;
 }

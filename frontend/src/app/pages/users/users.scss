@@ -100,3 +100,14 @@
 
   &:focus { outline: none; border-color: #3b82f6; }
 }
+
+.login-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+
+  .city { color: #1e293b; font-weight: 500; font-size: 0.9rem; }
+  .ip { color: #64748b; font-size: 0.8rem; font-family: monospace; }
+}
+
+.no-login { color: #94a3b8; }

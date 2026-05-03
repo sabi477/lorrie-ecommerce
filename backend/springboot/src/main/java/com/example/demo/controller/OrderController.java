@@ -8,6 +8,7 @@ import com.example.demo.repository.OrderItemRepository;
 import com.example.demo.repository.OrderRepository;
 import com.example.demo.repository.ProductRepository;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.service.CampaignService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +26,7 @@ public class OrderController {
     private final OrderItemRepository orderItemRepository;
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
+    private final CampaignService campaignService;
 
     @GetMapping
     public List<OrderResponse> getAll() {
@@ -85,10 +87,28 @@ public class OrderController {
         User customer = userRepository.findById(request.customerId())
                 .orElseThrow(() -> new IllegalArgumentException("Customer not found"));
 
+        BigDecimal subtotal = request.items().stream()
+                .map(item -> item.unitPrice().multiply(BigDecimal.valueOf(item.quantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        CampaignService.CampaignValidationResult campaignResult = null;
+        if (request.campaignCode() != null && !request.campaignCode().isBlank()) {
+            campaignResult = campaignService.validate(request.campaignCode(), subtotal, request.customerId(), null);
+            if (!campaignResult.valid()) {
+                return ResponseEntity.badRequest().body("Kampanya hatası: " + campaignResult.errorMessage());
+            }
+        }
+
         Order order = new Order();
         order.setCustomer(customer);
         order.setStatus(Order.OrderStatus.PENDING);
         order.setTotalAmount(request.totalAmount());
+
+        if (campaignResult != null && campaignResult.valid()) {
+            order.setCampaign(campaignResult.campaign());
+            order.setDiscountAmount(campaignResult.discountAmount());
+            campaignService.incrementUsage(campaignResult.campaign());
+        }
 
         Order savedOrder = orderRepository.save(order);
 
@@ -202,7 +222,7 @@ public class OrderController {
                         "-"));
     }
 
-    public record CreateOrderRequest(Long customerId, BigDecimal totalAmount, List<CreateOrderItemRequest> items) {
+    public record CreateOrderRequest(Long customerId, BigDecimal totalAmount, List<CreateOrderItemRequest> items, String campaignCode) {
     }
 
     public record CreateOrderItemRequest(Long productId, Integer quantity, BigDecimal unitPrice) {

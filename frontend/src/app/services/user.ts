@@ -11,6 +11,18 @@ export interface User {
   email: string;
   role: UserRole;
   createdAt: string;
+  lastLoginIp?: string;
+  lastLoginCity?: string;
+  lastLoginDate?: string;
+}
+
+export interface LoginHistory {
+  id: number;
+  ip: string;
+  city: string;
+  loginDate: string;
+  isRisky: boolean;
+  isNewIp: boolean;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -31,5 +43,9 @@ export class UserService {
 
   updateRole(userId: number, role: UserRole): Observable<User> {
     return this.http.patch<User>(`${this.api}/${userId}/role?role=${role}`, {}, { headers: this.headers() });
+  }
+
+  getLoginHistory(userId: number): Observable<LoginHistory[]> {
+    return this.http.get<LoginHistory[]>(`${this.api}/${userId}/login-history`, { headers: this.headers() });
   }
 }

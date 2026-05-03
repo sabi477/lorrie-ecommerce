@@ -23,6 +23,13 @@ public class Order {
     @Column(name = "total_amount")
     private BigDecimal totalAmount;
 
+    @ManyToOne
+    @JoinColumn(name = "campaign_id")
+    private Campaign campaign;
+
+    @Column(name = "discount_amount")
+    private BigDecimal discountAmount = BigDecimal.ZERO;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 

@@ -310,15 +310,31 @@ public class DataSeeder implements CommandLineRunner {
     }
 
     private void seedFakeCustomersAndReviews() {
+        String[][] fakeNames = {
+            {"Ali", "Yılmaz"}, {"Ayşe", "Demir"}, {"Mehmet", "Kaya"}, {"Fatma", "Çelik"}, {"Ahmet", "Şahin"},
+            {"Emine", "Yıldırım"}, {"Mustafa", "Öztürk"}, {"Hatice", "Aydın"}, {"İbrahim", "Gül"},
+            {"Zeynep", "Özkan"}, {"Hüseyin", "Arslan"}, {"Elif", "Yıldız"}, {"Hasan", "Korkmaz"}, {"Merve", "Çiçek"},
+            {"İbrahim", "Karaca"}, {"Selin", "Koç"}, {"Murat", "Çetin"}, {"Gül", "Polat"}, {"Recep", "Aktaş"},
+            {"Damla", "Erdoğan"}, {"Tolga", "Yavuz"}, {"Buse", "Baran"}, {"Kadir", "Günay"}, {"Naz", "Aksoy"},
+            {"Burak", "Kara"}, {"Pınar", "Soysal"}, {"Enes", "Bülbül"}, {"Seda", "Güler"}, {"Emir", "Karataş"},
+            {"Eda", "Yılmaz"}, {"Berat", "Özbek"}, {"Selma", "Güneş"}, {"Oğuz", "Kaplan"}, {"Dilan", "Ergin"},
+            {"Eren", "Kuzcu"}, {"İlayda", "Uyar"}, {"Batuhan", "Alkan"}, {"Gizem", "Yalçın"}, {"Süleyman", "Önal"},
+            {"Melisa", "Gürel"}, {"Barış", "Tuna"}, {"Bahar", "Çelik"}, {"Fırat", "Karahan"}, {"Şeyma", "Yıldırım"},
+            {"Mert", "Acar"}, {"Duygu", "Koçak"}, {"Kaan", "Özdemir"}, {"Ayça", "Bayram"}, {"Gökhan", "Sever"},
+            {"Ebru", "Taş"}, {"Levent", "Kaynak"}, {"Cemre", "Erdemir"}, {"Umut", "Altın"}, {"Deniz", "Tetik"},
+            {"Melek", "Dağdeviren"}, {"Burcu", "Gürsoy"}, {"Ali", "Duman"}, {"Şilan", "Eroğlu"}, {"Berkin", "Uslu"},
+            {"Gülşen", "Bayraktar"}, {"Koray", "Şenel"}
+        };
+
         List<User> fakeCustomers = new ArrayList<>();
-        for (int i = 1; i <= 60; i++) {
-            String email = "fakecustomer" + i + "@fake.com";
+        for (int i = 0; i < 60; i++) {
+            String email = "fakecustomer" + (i + 1) + "@fake.com";
             Optional<User> existing = userRepository.findByEmail(email);
             User customer;
             if (existing.isEmpty()) {
                 customer = new User();
                 customer.setEmail(email);
-                customer.setFullName("Fake Customer " + i);
+                customer.setFullName(fakeNames[i % fakeNames.length][0] + " " + fakeNames[i % fakeNames.length][1]);
                 customer.setPassword(passwordEncoder.encode("fakepass123"));
                 customer.setRole(User.Role.CUSTOMER);
                 customer = userRepository.save(customer);
